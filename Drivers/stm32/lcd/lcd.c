@@ -524,7 +524,6 @@ void LCD_ScrollSentence(uint8_t* ptr, uint16_t nScroll, uint16_t ScrollSpeed)
 	ptr1 = ptr;
 
 	LCD_DisplayString(str);
-//	delay_ms(ScrollSpeed);
 
 	/* To shift the string for scrolling display*/
 	for (repetition = 0; repetition < nScroll; repetition++)
@@ -537,7 +536,7 @@ void LCD_ScrollSentence(uint8_t* ptr, uint16_t nScroll, uint16_t ScrollSpeed)
 			*(str+3) =* (ptr1+((nbrchar+3)%sizestr));
 			*(str+4) =* (ptr1+((nbrchar+4)%sizestr));
 			*(str+5) =* (ptr1+((nbrchar+5)%sizestr));
-//			LCD_Clear();
+			LCD_DisplayString((uint8_t*)"      ");
 			LCD_DisplayString(str);
 
 			/* user button pressed stop the scrolling sentence */

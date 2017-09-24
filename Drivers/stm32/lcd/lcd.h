@@ -181,10 +181,10 @@
   */
 
 /* code for '(' character */
-#define C_OPENPARMAP          ((uint16_t) 0x0028)
+#define C_OPENPARMAP          ((uint16_t) 0x0041)
 
 /* code for ')' character */
-#define C_CLOSEPARMAP         ((uint16_t) 0x0011)
+#define C_CLOSEPARMAP         ((uint16_t) 0x0088)
 
 /* code for 'd' character */
 #define C_DMAP                ((uint16_t) 0xf300)
