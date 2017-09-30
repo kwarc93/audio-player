@@ -270,7 +270,8 @@ void LCD_DisplayString(uint8_t* ptr);
 void LCD_ScrollSentence(uint8_t* ptr, uint16_t nScroll, uint16_t ScrollSpeed);
 void LCD_DisplayBar(LCD_BarSeg_t BarId, _Bool state);
 void LCD_DisplayBarLevel(LCD_BattLevel_t BarLevel);
-void LCD_Clear(void);
+void LCD_ClearAll(void);
+void LCD_ClearText(void);
 /**
   * @}
   */

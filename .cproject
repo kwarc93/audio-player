@@ -55,7 +55,7 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.1685851956" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 							</tool>
 							<tool id="fr.ac6.managedbuild.tool.gnu.cross.c.linker.835706444" name="MCU GCC Linker" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker">
-								<option id="gnu.c.link.option.ldflags.1740810155" name="Linker flags" superClass="gnu.c.link.option.ldflags" useByScannerDiscovery="false" value="-specs=nano.specs -specs=nosys.specs" valueType="string"/>
+								<option id="gnu.c.link.option.ldflags.1740810155" name="Linker flags" superClass="gnu.c.link.option.ldflags" useByScannerDiscovery="false" value="-specs=nano.specs  -specs=nosys.specs" valueType="string"/>
 								<option id="gnu.c.link.option.other.1814214043" name="Other options (-Xlinker [option])" superClass="gnu.c.link.option.other" useByScannerDiscovery="false" valueType="stringList">
 									<listOptionValue builtIn="false" value="--print-memory-usage"/>
 								</option>

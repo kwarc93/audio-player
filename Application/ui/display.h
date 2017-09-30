@@ -10,7 +10,9 @@
 
 #define LCD_STACK_SIZE 128
 
-void vStartLCDTasks(unsigned portBASE_TYPE uxPriority);
+void Display_StartTasks(unsigned portBASE_TYPE uxPriority);
+void Display_SendText(char* txt);
+void Display_SendBarLevel(uint8_t lvl);
 
 
 #endif /* UI_DISPLAY_H_ */

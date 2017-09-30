@@ -10,6 +10,6 @@
 
 #define LED_STACK_SIZE	32
 
-void vStartLEDTasks(unsigned portBASE_TYPE uxPriority);
+void Led_StartTasks(unsigned portBASE_TYPE uxPriority);
 
 #endif /* UI_LEDS_H_ */

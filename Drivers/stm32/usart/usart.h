@@ -27,12 +27,8 @@ uint8_t USART_RxTail;
 #define USART_TX_CB_SIZE 128					// Length of USART circular buffer
 char USART_TxCB[USART_TX_CB_SIZE];				// USART tx circular buffer
 
-/* Message decoder */
-char msg_id;									// Message id (c - command, d - data)
-int32_t msg_data;								// Message data/command in decimal
-_Bool msg_ready;
-enum  commands {RESET = 0, TOGGLE_LED };
-_Bool DMA1C7_TC;
+/* DMA 1 Channel 7 Transfer Complete Flag */
+volatile _Bool DMA1C7_TC;
 
 void USART_Init(void);
 void USART_Tx(char data);

@@ -9,6 +9,13 @@
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "leds.h"
+#include "debug.h"
+
+#ifdef DEBUG
+#define DBG_MSG(MSG)	(Debug_Msg("[LEDS] " MSG "\r\n"))
+#else
+#define DBG_MSG(MSG)	do{}while(0);
+#endif
 
 static TaskHandle_t xHandleTaskLEDG, xHandleTaskLEDR;
 
@@ -22,7 +29,7 @@ static inline void vhToggleLEDR(void)
 	GPIOB->ODR ^= GPIO_ODR_ODR_2;
 }
 
-void vTaskLEDG(void * pvParameters)
+static void vTaskLEDG(void * pvParameters)
 {
 	TickType_t xLastFlashTime;
 	// Read state of system counter
@@ -39,7 +46,7 @@ void vTaskLEDG(void * pvParameters)
 	vTaskDelete(xHandleTaskLEDG);
 }
 
-void vTaskLEDR(void * pvParameters)
+static void vTaskLEDR(void * pvParameters)
 {
 	TickType_t xLastFlashTime;
 	// Read state of system counter
@@ -56,7 +63,7 @@ void vTaskLEDR(void * pvParameters)
 	vTaskDelete(xHandleTaskLEDR);
 }
 
-void vStartLEDTasks(unsigned portBASE_TYPE uxPriority)
+void Led_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
 	// Init hardware
 	RCC->AHB2ENR |=  RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOEEN;
@@ -68,4 +75,5 @@ void vStartLEDTasks(unsigned portBASE_TYPE uxPriority)
 	xTaskCreate(vTaskLEDG, "LEDG", LED_STACK_SIZE, NULL, uxPriority, &xHandleTaskLEDG);
 	xTaskCreate(vTaskLEDR, "LEDR", LED_STACK_SIZE, NULL, uxPriority, &xHandleTaskLEDR);
 
+	DBG_MSG("Task(s) started!");
 }

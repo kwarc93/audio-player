@@ -255,7 +255,7 @@ void LCD_Init(void)
 	/*!< Wait Until the LCD Booster is ready */
 	while(!(LCD->SR & LCD_SR_RDY));
 
-	LCD_Clear();
+	LCD_ClearAll();
 
 
 }
@@ -394,18 +394,21 @@ void LCD_DisplayBarLevel(LCD_BattLevel_t BarLevel)
 		/* BARLEVEL 1/4 */
 	case BARLEVEL_1_4:
 		LCD_DisplayBar(LCD_BAR_0, true);
+		LCD_DisplayBar(LCD_BAR_1 | LCD_BAR_2 | LCD_BAR_3, false);
 		LCDBar = BARLEVEL_1_4;
 		break;
 
 		/* BARLEVEL 1/2 */
 	case BARLEVEL_1_2:
 		LCD_DisplayBar(LCD_BAR_0 | LCD_BAR_1, true);
+		LCD_DisplayBar(LCD_BAR_2 | LCD_BAR_3, false);
 		LCDBar = BARLEVEL_1_2;
 		break;
 
 		/* Battery Level 3/4 */
 	case BARLEVEL_3_4:
 		LCD_DisplayBar(LCD_BAR_0 | LCD_BAR_1 | LCD_BAR_2, true);
+		LCD_DisplayBar(LCD_BAR_3, false);
 		LCDBar = BARLEVEL_3_4;
 		break;
 
@@ -480,7 +483,7 @@ void LCD_DisplayString(uint8_t* ptr)
  * @brief  Clear the whole LCD RAM buffer.
  * @retval None
  */
-void LCD_Clear(void)
+void LCD_ClearAll(void)
 {
 	// Wait until LCD ready */
 	while ((LCD->SR & LCD_SR_UDR) != 0); // Wait for Update Display Request Bit
@@ -492,6 +495,15 @@ void LCD_Clear(void)
 
 	/* Update the LCD display */
 	LCD->SR |= LCD_SR_UDR;
+}
+
+/**
+ * @brief  Clear only text field.
+ * @retval None
+ */
+void LCD_ClearText(void)
+{
+	LCD_DisplayString("      ");
 }
 
 /**

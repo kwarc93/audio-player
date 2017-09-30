@@ -10,6 +10,14 @@
 #include "FreeRTOS/task.h"
 #include "ui/leds.h"
 #include "ui/display.h"
+#include "ui/joystick.h"
+#include "debug.h"
+
+#ifdef DEBUG
+#define DBG_MSG(MSG)	(Debug_Msg("[MAIN] " MSG "\r\n"))
+#else
+#define DBG_MSG(MSG)	do{}while(0);
+#endif
 
 #define mainFLASH_TASK_PRIORITY ( tskIDLE_PRIORITY + 1 )
 
@@ -19,10 +27,16 @@ int main(void)
 {
 	// Clock configuration
 	prvConfigureClock();
+	// Init debug module
+	Debug_Init();
+	DBG_MSG("-MP3 PLAYER-");
 	// Tasks startup
-	vStartLEDTasks(mainFLASH_TASK_PRIORITY);
-	vStartLCDTasks(mainFLASH_TASK_PRIORITY);
+	DBG_MSG("Starting tasks...");
+	Led_StartTasks(mainFLASH_TASK_PRIORITY);
+	Display_StartTasks(mainFLASH_TASK_PRIORITY);
+	Joystick_StartTasks(mainFLASH_TASK_PRIORITY + 1);
 	// Scheduler startup
+	DBG_MSG("Starting scheduler...");
 	vTaskStartScheduler();
 }
 
