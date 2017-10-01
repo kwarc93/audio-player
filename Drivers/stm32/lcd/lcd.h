@@ -267,7 +267,7 @@ void LCD_BlinkConfig(uint32_t BlinkMode, uint32_t BlinkFrequency);
 void LCD_Contrast(uint32_t Contrast);
 void LCD_DisplayChar(uint8_t* ch, _Bool dot, _Bool colon, LCD_Digit_t Position);
 void LCD_DisplayString(uint8_t* ptr);
-void LCD_ScrollSentence(uint8_t* ptr, uint16_t nScroll, uint16_t ScrollSpeed);
+void LCD_ScrollSentence(uint8_t* ptr, _Bool reset);
 void LCD_DisplayBar(LCD_BarSeg_t BarId, _Bool state);
 void LCD_DisplayBarLevel(LCD_BattLevel_t BarLevel);
 void LCD_ClearAll(void);

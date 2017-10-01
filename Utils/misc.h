@@ -10,6 +10,8 @@
 
 #include "main.h"
 
+#define ARRAY_LEN(a)	(sizeof(a)/sizeof(a[0]))
+
 void delay_ms(uint32_t t);
 char* mystrcat( char* dest, char* src );
 

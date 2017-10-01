@@ -6,6 +6,7 @@
  */
 
 #include <string.h>
+#include "misc.h"
 #include "lcd/lcd.h"
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
@@ -25,43 +26,63 @@ static QueueHandle_t qhDisplayBar;
 
 static void vTaskDisplay(void * pvParameters)
 {
-	const uint32_t delay_ms = 300;
-	uint8_t bar_lvl = 0;
-	char* text = NULL;
-	char display_buffer[64] = {0};
+	const uint32_t delay_ms = 50;
+	const uint32_t scroll_delay = 4*delay_ms;
+	uint32_t task_tick = 0;
+	uint8_t q_bar_lvl = 0;
+	char* q_text = NULL;
+	char display_buffer[64] = "";
 	uint32_t text_len = 0;
+	_Bool is_new_text = 0;
+
+	TickType_t xLastFlashTime;
+	// Read state of system counter
+	xLastFlashTime = xTaskGetTickCount();
 
 	// Task's infinite loop
 	for(;;)
 	{
-		if(xQueueReceive(qhDisplayBar, &bar_lvl, 0))
+		/* Receive and display bar level */
+		if(xQueueReceive(qhDisplayBar, &q_bar_lvl, 0))
 		{
-			LCD_DisplayBarLevel(bar_lvl);
+			LCD_DisplayBarLevel(q_bar_lvl);
 		}
 
-		if(xQueueReceive(qhDisplayText, &text, 0))
+		/* Receive and display text */
+		if(xQueueReceive(qhDisplayText, &q_text, 0))
 		{
-			LCD_ClearText();
-			text_len = strlen(text);
+			is_new_text = true;
+			text_len = strlen(q_text);
 
-			if(text_len > LCD_DIGIT_MAX_NUMBER)
+			LCD_ClearText();
+
+			if(text_len > LCD_DIGIT_MAX_NUMBER && text_len < ARRAY_LEN(display_buffer))
 			{
 				// Copy to buffer
-				strcpy(display_buffer,text);
+				strcpy(display_buffer,q_text);
 				// Add empty space to end of the text
 				strcat(display_buffer, "  ");
 			}
 			else
 			{
-				LCD_DisplayString((uint8_t*)text);
+				LCD_DisplayString((uint8_t*)q_text);
 			}
 		}
 
 		if(text_len > LCD_DIGIT_MAX_NUMBER)	// Scroll if string is longer than 6 characters
 		{
-			//@ TODO: Rewrite scrolling function to be non-blocking
-			LCD_ScrollSentence((uint8_t*)display_buffer, 1, delay_ms);
+			if(task_tick > scroll_delay)
+			{
+				LCD_ScrollSentence((uint8_t*)display_buffer, is_new_text);
+				task_tick = 0;
+				is_new_text = false;
+			}
 		}
+
+		task_tick += delay_ms;
+
+		// Delay 50ms
+		vTaskDelayUntil( &xLastFlashTime, delay_ms/portTICK_PERIOD_MS );
 	}
 	/* Should never go there */
 	vTaskDelete(xHandleTaskDisplay);
