@@ -44,27 +44,29 @@ static void vTaskJoystick(void *pvParameters)
 			{
 			case KEY_OK:
 				ClrKeyb( KBD_LOCK );
-				Display_SendText("Key OK");
+				Display_SendText("MP3 PLAYER");
 				DBG_MSG("Key OK");
 				break;
 			case KEY_UP:
 				ClrKeyb( KBD_LOCK );
 				if(bar_lvl < 4) Display_SendBarLevel(++bar_lvl);
+				Display_SendText("VOL+");
 				DBG_MSG("Key UP");
 				break;
 			case KEY_DOWN:
 				ClrKeyb( KBD_LOCK );
 				if(bar_lvl > 0) Display_SendBarLevel(--bar_lvl);
+				Display_SendText("VOL-");
 				DBG_MSG("Key DOWN");
 				break;
 			case KEY_LEFT:
 				ClrKeyb( KBD_LOCK );
-				Display_SendText("Key LEFT");
+				Display_SendText("PREV");
 				DBG_MSG("Key LEFT");
 				break;
 			case KEY_RIGHT:
 				ClrKeyb( KBD_LOCK );
-				Display_SendText("Key RIGHT");
+				Display_SendText("NEXT");
 				DBG_MSG("Key RIGHT");
 				break;
 			default: break;

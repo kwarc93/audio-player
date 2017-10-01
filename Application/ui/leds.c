@@ -54,7 +54,7 @@ static void vTaskLEDR(void * pvParameters)
 	// Task's infinite loop
 	for(;;)
 	{
-		// Delay 250ms
+		// Delay 500ms
 		vTaskDelayUntil( &xLastFlashTime, 500/portTICK_PERIOD_MS );
 		// Change LED state
 		vhToggleLEDR();

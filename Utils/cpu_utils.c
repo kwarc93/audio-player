@@ -52,7 +52,7 @@ void vApplicationIdleHook(void)
 }
 
 /**
-  * @brief  Application Idle Hook
+  * @brief  Application Tick Hook
   * @param  None
   * @retval None
   */

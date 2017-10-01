@@ -94,7 +94,7 @@
 #define configUSE_TICK_HOOK				1
 #define configCPU_CLOCK_HZ				( CPU_CLOCK )
 #define configTICK_RATE_HZ				( ( TickType_t ) 1000 )
-#define configMAX_PRIORITIES			( 6 )
+#define configMAX_PRIORITIES			( 5 )
 #define configMINIMAL_STACK_SIZE		( ( unsigned short ) 128 )
 #define configTOTAL_HEAP_SIZE			( ( size_t ) ( 8 * 1024 ) )
 #define configMAX_TASK_NAME_LEN			( 10 )
@@ -166,6 +166,12 @@ standard names. */
 #define vPortSVCHandler SVC_Handler
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler
+
+/* Definitions needed by cpu_utils.c */
+#define traceTASK_SWITCHED_IN()  extern void StartIdleMonitor(void); \
+                                       StartIdleMonitor()
+#define traceTASK_SWITCHED_OUT() extern void EndIdleMonitor(void); \
+                                       EndIdleMonitor()
 
 #endif /* FREERTOS_CONFIG_H */
 

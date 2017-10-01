@@ -71,13 +71,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-/** @defgroup STM32L476G_DISCOVERY_GLASS_LCD_Private_Variables Private Variables
- * @{
- */
-
-/* this variable can be used for accelerate the scrolling exit when push user button */
-__IO uint8_t bLCDGlass_KeyPressed = 0;
-
 /**
   @verbatim
 ================================================================================
@@ -256,8 +249,6 @@ void LCD_Init(void)
 	while(!(LCD->SR & LCD_SR_RDY));
 
 	LCD_ClearAll();
-
-
 }
 
 /**
@@ -503,7 +494,7 @@ void LCD_ClearAll(void)
  */
 void LCD_ClearText(void)
 {
-	LCD_DisplayString("      ");
+	LCD_DisplayString((uint8_t*)"      ");
 }
 
 /**
@@ -516,18 +507,21 @@ void LCD_ClearText(void)
  * @note   Required preconditions: The LCD should be cleared before to start the
  *         write operation.
  */
-void LCD_ScrollSentence(uint8_t* ptr, uint16_t nScroll, uint16_t ScrollSpeed)
+void LCD_ScrollSentence(uint8_t* ptr, _Bool reset)
 {
-	uint8_t repetition = 0, nbrchar = 0, sizestr = 0;
+	static uint8_t nbrchar = 0;
+	uint8_t sizestr = 0;
 	uint8_t* ptr1;
 	uint8_t str[6] = "";
-
-	/* Reset interrupt variable in case key was press before entering function */
-	bLCDGlass_KeyPressed = 0;
 
 	if(ptr == 0)
 	{
 		return;
+	}
+
+	if(reset)
+	{
+		nbrchar = 0;
 	}
 
 	/* To calculate end of string */
@@ -535,31 +529,23 @@ void LCD_ScrollSentence(uint8_t* ptr, uint16_t nScroll, uint16_t ScrollSpeed)
 
 	ptr1 = ptr;
 
+	/* To shift the string for scrolling display*/
+	*(str) =* (ptr1+((nbrchar+0)%sizestr));
+	*(str+1) =* (ptr1+((nbrchar+1)%sizestr));
+	*(str+2) =* (ptr1+((nbrchar+2)%sizestr));
+	*(str+3) =* (ptr1+((nbrchar+3)%sizestr));
+	*(str+4) =* (ptr1+((nbrchar+4)%sizestr));
+	*(str+5) =* (ptr1+((nbrchar+5)%sizestr));
+
 	LCD_DisplayString(str);
 
-	/* To shift the string for scrolling display*/
-	for (repetition = 0; repetition < nScroll; repetition++)
-	{
-		for(nbrchar = 0; nbrchar < sizestr; nbrchar++)
-		{
-			*(str) =* (ptr1+((nbrchar+0)%sizestr));
-			*(str+1) =* (ptr1+((nbrchar+1)%sizestr));
-			*(str+2) =* (ptr1+((nbrchar+2)%sizestr));
-			*(str+3) =* (ptr1+((nbrchar+3)%sizestr));
-			*(str+4) =* (ptr1+((nbrchar+4)%sizestr));
-			*(str+5) =* (ptr1+((nbrchar+5)%sizestr));
-			LCD_DisplayString((uint8_t*)"      ");
-			LCD_DisplayString(str);
+	nbrchar++;
 
-			/* user button pressed stop the scrolling sentence */
-			if(bLCDGlass_KeyPressed)
-			{
-				bLCDGlass_KeyPressed = 0;
-				return;
-			}
-			delay_ms(ScrollSpeed);
-		}
+	if(nbrchar >= sizestr)
+	{
+		nbrchar = 0;
 	}
+
 }
 
 /**
