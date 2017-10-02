@@ -9,12 +9,12 @@
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "leds.h"
-#include "debug.h"
 
 #ifdef DEBUG
-#define DBG_MSG(MSG)	(Debug_Msg("[LEDS] " MSG "\r\n"))
+#include "debug.h"
+#define DBG_MSG(...)	(Debug_Msg("[LED] " __VA_ARGS__))
 #else
-#define DBG_MSG(MSG)	do{}while(0);
+#define DBG_MSG(...)
 #endif
 
 static TaskHandle_t xHandleTaskLEDG, xHandleTaskLEDR;
@@ -65,7 +65,7 @@ static void vTaskLEDR(void * pvParameters)
 
 void Led_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
-	// Init hardware
+	// Init
 	RCC->AHB2ENR |=  RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOEEN;
 	__DSB();
 	GPIO_PinConfig(GPIOB,2,GPIO_OUT_PP_2MHz);

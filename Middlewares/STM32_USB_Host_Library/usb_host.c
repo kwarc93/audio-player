@@ -59,7 +59,7 @@
 
 /* USB Host Core handle declaration */
 USBH_HandleTypeDef hUsbHostFS;
-USB_Host_State_t Appli_state = USB_HOST_IDLE;
+USB_Host_State_t USB_HostState = USB_HOST_IDLE;
 
 /*
 * user callback declaration
@@ -97,22 +97,29 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
   break;
     
   case HOST_USER_DISCONNECTION:
-  Appli_state = USB_HOST_DISCONNECT;
+  USB_HostState = USB_HOST_DISCONNECT;
+  DBG_MSG("USBH disconnection event");
   break;
     
   case HOST_USER_CLASS_ACTIVE:
-  Appli_state = USB_HOST_READY;
+  USB_HostState = USB_HOST_READY;
+  DBG_MSG("USBH class active");
   break;
 
   case HOST_USER_CONNECTION:
-  Appli_state = USB_HOST_START;
+  USB_HostState = USB_HOST_START;
+  DBG_MSG("USBH connection event");
   break;
 
   default:
   break; 
   }
 }
-	
+
+void OTG_FS_IRQHandler(void)
+{
+	HAL_HCD_IRQHandler(&hhcd);
+}
 
 /**
   * @}

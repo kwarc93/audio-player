@@ -65,10 +65,11 @@
 #define USBH_KEEP_CFG_DESCRIPTOR              0
 #define USBH_MAX_SIZE_CONFIGURATION           0x200
 #define USBH_MAX_DATA_BUFFER                  0x200
-#define USBH_DEBUG_LEVEL                      0
+#define USBH_DEBUG_LEVEL                      1
 #define USBH_USE_OS                           0
 
 /* Exported constants --------------------------------------------------------*/
+extern HCD_HandleTypeDef hhcd;
 /* Exported macro ------------------------------------------------------------*/
 /* CMSIS OS macros */
 #if (USBH_USE_OS == 1)
@@ -85,27 +86,27 @@
 #define USBH_memcpy               memcpy
     
 /* DEBUG macros */
+#ifdef DEBUG
+#include "debug.h"
+#define DBG_MSG(...)	(Debug_Msg("[USB HOST] " __VA_ARGS__))
+#else
+#define DBG_MSG(...)
+#endif
+
 #if (USBH_DEBUG_LEVEL > 0)
-#define USBH_UsrLog(...)   printf(__VA_ARGS__);\
-                           printf("\n");
+#define USBH_UsrLog(...)   (Debug_Msg("[USB HOST] User: " __VA_ARGS__))
 #else
 #define USBH_UsrLog(...)   
 #endif 
-                            
-                            
-#if (USBH_DEBUG_LEVEL > 1)
 
-#define USBH_ErrLog(...)   printf("ERROR: ") ;\
-                           printf(__VA_ARGS__);\
-                           printf("\n");
+#if (USBH_DEBUG_LEVEL > 1)
+#define USBH_ErrLog(...)   (Debug_Msg("[USB HOST] Error: " __VA_ARGS__))
 #else
 #define USBH_ErrLog(...)   
 #endif 
 
 #if (USBH_DEBUG_LEVEL > 2)                         
-#define USBH_DbgLog(...)   printf("DEBUG : ") ;\
-                           printf(__VA_ARGS__);\
-                           printf("\n");
+#define USBH_DbgLog(...)   (Debug_Msg("[USB HOST] Debug: " __VA_ARGS__))
 #else
 #define USBH_DbgLog(...)                         
 #endif

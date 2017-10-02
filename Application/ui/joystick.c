@@ -12,12 +12,12 @@
 #include "FreeRTOS/semphr.h"
 #include "joystick.h"
 #include "ui/display.h"
-#include "debug.h"
 
 #ifdef DEBUG
-#define DBG_MSG(MSG)	(Debug_Msg("[JOYSTICK] " MSG "\r\n"))
+#include "debug.h"
+#define DBG_MSG(...)	(Debug_Msg("[Joystick] " __VA_ARGS__))
 #else
-#define DBG_MSG(MSG)	do{}while(0);
+#define DBG_MSG(...)
 #endif
 
 static TaskHandle_t xHandleTaskJoystick;

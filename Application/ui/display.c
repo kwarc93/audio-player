@@ -12,12 +12,12 @@
 #include "FreeRTOS/task.h"
 #include "FreeRTOS/queue.h"
 #include "display.h"
-#include "debug.h"
 
 #ifdef DEBUG
-#define DBG_MSG(MSG)	(Debug_Msg("[DISPLAY] " MSG "\r\n"))
+#include "debug.h"
+#define DBG_MSG(...)	(Debug_Msg("[DISPLAY] " __VA_ARGS__))
 #else
-#define DBG_MSG(MSG)	do{}while(0);
+#define DBG_MSG(...)
 #endif
 
 static TaskHandle_t xHandleTaskDisplay;

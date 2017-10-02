@@ -9,6 +9,6 @@
 #define DEBUG_H_
 
 void Debug_Init(void);
-void Debug_Msg(char* msg);
+void Debug_Msg(char* msg, ...);
 
 #endif /* DEBUG_H_ */

@@ -11,12 +11,14 @@
 #include "ui/leds.h"
 #include "ui/display.h"
 #include "ui/joystick.h"
+#include "app/mp3player.h"
 #include "debug.h"
 
 #ifdef DEBUG
-#define DBG_MSG(MSG)	(Debug_Msg("[MAIN] " MSG "\r\n"))
+#include "debug.h"
+#define DBG_MSG(...)	(Debug_Msg("[MAIN] " __VA_ARGS__))
 #else
-#define DBG_MSG(MSG)	do{}while(0);
+#define DBG_MSG(...)
 #endif
 
 static void prvConfigureClock(void);
@@ -33,6 +35,7 @@ int main(void)
 	Led_StartTasks(mainFLASH_TASK_PRIORITY);
 	Display_StartTasks(mainFLASH_TASK_PRIORITY);
 	Joystick_StartTasks(mainFLASH_TASK_PRIORITY + 1);
+	Mp3Player_StartTasks(mainFLASH_TASK_PRIORITY);
 	// Scheduler startup
 	DBG_MSG("Starting scheduler...");
 	vTaskStartScheduler();
@@ -42,7 +45,7 @@ static void prvConfigureClock(void)
 {
 #if defined(USE_MSI_CLOCK)
 	/* Config RCC */
-	// Select MSI as the clock source of System Clock
+	// Enable MSI
 	RCC->CR |= RCC_CR_MSION;
 
 	// Wait until MSI ready
@@ -57,7 +60,7 @@ static void prvConfigureClock(void)
 	// If MSIREGSEL is 1, the MSIRANGE in RCC->CR is used
 	RCC->CR |= RCC_CR_MSIRGSEL;
 
-	// Enable MSI and wait until it's ready
+	// Wait until it's ready
 	while ((RCC->CR & RCC_CR_MSIRDY) == 0);
 
 #elif defined(USE_HSI_CLOCK)
@@ -109,6 +112,25 @@ RCC->CFGR |= RCC_CFGR_SW_PLL;
 while((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS);
 
 //@ TODO: Enable USB 48MHz clock
+// Enable MSI
+RCC->CR |= RCC_CR_MSION;
+
+// Wait until MSI ready
+while ((RCC->CR & RCC_CR_MSIRDY) == 0);
+
+// MSIRANGE can be modified when MSI is off (MSION=0) or when MSI is ready
+RCC->CR &= ~RCC_CR_MSIRANGE;
+RCC->CR |= RCC_CR_MSIRANGE_11;	// Select MSI 48MHz
+
+// The MSIRGSEL bit in RCC->CR selects which MSIRANGE is used
+// If MSIREGSEL is 0, the MSIRANGE in RCC->CSR is used to select the MSI clock
+// If MSIREGSEL is 1, the MSIRANGE in RCC->CR is used
+RCC->CR |= RCC_CR_MSIRGSEL;
+
+// Select MSI as CLK48
+RCC->CCIPR |= RCC_CCIPR_CLK48SEL_0 | RCC_CCIPR_CLK48SEL_1;
+// Wait until it's ready
+while ((RCC->CR & RCC_CR_MSIRDY) == 0);
 //@ TODO: Enable SAI1 clock
 
 #else

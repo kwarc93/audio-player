@@ -18,9 +18,9 @@ int is_in_handler_mode(void)
   return __get_IPSR() != 0;
 }
 
-void delay_ms(uint32_t t)
+void delay_ms(uint32_t ms)
 {
-	t = t * CPU_CLOCK / 1000;
+	volatile uint32_t t = ms * CPU_CLOCK / 1000;
 	while(t--)
 	{
 		__NOP();

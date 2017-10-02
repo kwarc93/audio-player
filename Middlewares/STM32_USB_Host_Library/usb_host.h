@@ -60,6 +60,7 @@ typedef enum {
 }USB_Host_State_t;
 		
 void USB_HOST_Init(void);
+void USB_HOST_Process(void);
 
 #ifdef __cplusplus
 }

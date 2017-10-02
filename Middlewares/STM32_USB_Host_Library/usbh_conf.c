@@ -81,7 +81,7 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef *hhcd)
   	  PA11     ------> USB_OTG_FS_DM
   	  PA12     ------> USB_OTG_FS_DP
 	 */
-	GPIO_PinConfig(GPIOA, 10, GPIO_AF10_OD_2MHz_PULL_UP);
+//	GPIO_PinConfig(GPIOA, 10, GPIO_AF10_OD_2MHz_PULL_UP);
 	GPIO_PinConfig(GPIOA, 11, GPIO_AF10_PP_100MHz);
 	GPIO_PinConfig(GPIOA, 12, GPIO_AF10_PP_100MHz);
 
@@ -139,21 +139,7 @@ void HAL_HCD_SOF_Callback(HCD_HandleTypeDef *hhcd)
   */
 void HAL_HCD_Connect_Callback(HCD_HandleTypeDef *hhcd)
 {
-
-//  uint32_t i = 0;
-//
-//  USBH_LL_Connect(hhcd->pData);
-//
-//  /* Register the file system object to the FatFs module */
-//  if(f_mount(&USBH_fatfs, "", 0) != FR_OK)
-//  {
-//    /* ERROR : Cannot Initialize FatFs! */
-//  }
-//
-//  for (i = 0; i< 200000; i ++)
-//  {
-//    __asm ("nop");
-//  }
+  USBH_LL_Connect(hhcd->pData);
 }
 
 /**
@@ -411,12 +397,12 @@ USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
   if(state == 0)
   {
     /* Configure Low Charge pump */
-    USBOTG_PPWR_GPIO_PORT->BRR = (1 << USBOTG_PPWR_GPIO_PIN);
+    USBOTG_PPWR_GPIO_PORT->BSRR = (1 << USBOTG_PPWR_GPIO_PIN);
   }
   else
   {
     /* Drive High Charge pump */
-    USBOTG_PPWR_GPIO_PORT->BSRR = (1 << USBOTG_PPWR_GPIO_PIN);
+    USBOTG_PPWR_GPIO_PORT->BRR = (1 << USBOTG_PPWR_GPIO_PIN);
   }
 
   delay_ms(200);
