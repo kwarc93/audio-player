@@ -101,6 +101,9 @@ void Display_StartTasks(unsigned portBASE_TYPE uxPriority)
 	 // Create queue for display bar level
 	qhDisplayBar = xQueueCreate(1, sizeof(uint8_t));
 
+	// Display init text
+	Display_SendText("MP3 PLAYER - KAMIL WOREK 2017");
+
 	// Creating task for LCD
 	xTaskCreate(vTaskDisplay, "LCD", LCD_STACK_SIZE, NULL, uxPriority, &xHandleTaskDisplay);
 

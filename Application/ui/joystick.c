@@ -44,7 +44,7 @@ static void vTaskJoystick(void *pvParameters)
 			{
 			case KEY_OK:
 				ClrKeyb( KBD_LOCK );
-				Display_SendText("MP3 PLAYER");
+				Display_SendText("PLAY");
 				DBG_MSG("Key OK");
 				break;
 			case KEY_UP:

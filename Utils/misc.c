@@ -12,17 +12,19 @@
 #include "FreeRTOS/task.h"
 #endif
 
+/* Determine whether we are in thread mode or handler mode. */
+int is_in_handler_mode(void)
+{
+  return __get_IPSR() != 0;
+}
+
 void delay_ms(uint32_t t)
 {
-#ifdef USE_FREERTOS
-	vTaskDelay(t);
-#else
 	t = t * CPU_CLOCK / 1000;
 	while(t--)
 	{
 		__NOP();
 	}
-#endif
 }
 
 char* mystrcat( char* dest, char* src )

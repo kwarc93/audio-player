@@ -12,6 +12,10 @@
 
 #define USE_HSI_CLOCK
 
+#define mainFLASH_TASK_PRIORITY ( tskIDLE_PRIORITY + 1 )
+
+#define assert_param(expr) ((void)0U)
+
 /* Macros for dummies ;) */
 
 #define SET_BIT(REG, BIT)     ((REG) |= (BIT))

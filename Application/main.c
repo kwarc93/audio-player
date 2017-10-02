@@ -19,8 +19,6 @@
 #define DBG_MSG(MSG)	do{}while(0);
 #endif
 
-#define mainFLASH_TASK_PRIORITY ( tskIDLE_PRIORITY + 1 )
-
 static void prvConfigureClock(void);
 
 int main(void)

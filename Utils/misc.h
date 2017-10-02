@@ -12,6 +12,7 @@
 
 #define ARRAY_LEN(a)	(sizeof(a)/sizeof(a[0]))
 
+int is_in_handler_mode(void);
 void delay_ms(uint32_t t);
 char* mystrcat( char* dest, char* src );
 
