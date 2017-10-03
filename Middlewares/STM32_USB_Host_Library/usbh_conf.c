@@ -67,11 +67,19 @@ HCD_HandleTypeDef hhcd;
   */
 void HAL_HCD_MspInit(HCD_HandleTypeDef *hhcd)
 {
-	/* Configure USB FS GPIOs */
+
+	/* OTG FS VDDUSB */
+	SET_BIT(RCC->APB1ENR1, RCC_APB1ENR1_PWREN);
+	__DSB();
+
+	/* Enable USB power on PWRCTRL CR2 register */
+	SET_BIT(PWR->CR2, PWR_CR2_USV);
+
+	/* Enable USB GPIOs clock */
 	SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_GPIOAEN);
 	__DSB();
 
-	/* Configure USBOTG_PPWR GPIO */
+	/* Enable USBOTG_PPWR GPIO clock */
 	USBOTG_PPWR_GPIO_CLK_ENABLE();
 	__DSB();
 
@@ -91,17 +99,12 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef *hhcd)
 	/* OTG FS OverCurrent */
 	//  GPIO_PinConfig(GPIOC, 10, GPIO_AF10_OD_100MHz_PULL_UP);
 
-	/* OTG FS VDDUSB */
-	SET_BIT(RCC->APB1ENR1, RCC_APB1ENR1_PWREN);
-	__DSB();
-	SET_BIT(PWR->CR2, PWR_CR2_USV);
-
 	/* Enable USB FS Clocks */
 	SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_OTGFSEN);
 	__DSB();
 
-	/* Set USBFS Interrupt to the lowest priority */
-	NVIC_SetPriority(OTG_FS_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 5, 0));
+	/* Set USBFS Interrupt priority (must be lower than FreeRTOS syscall interrupt) */
+	NVIC_SetPriority(OTG_FS_IRQn, 6);
 
 	/* Enable USBFS Interrupt */
 	NVIC_EnableIRQ(OTG_FS_IRQn);

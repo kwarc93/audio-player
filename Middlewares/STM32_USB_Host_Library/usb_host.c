@@ -69,12 +69,15 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id);
 /* init function */				        
 void USB_HOST_Init(void)
 {
+  USBH_StatusTypeDef result;
+
   /* Init Host Library,Add Supported Class and Start the library*/
-  USBH_Init(&hUsbHostFS, USBH_UserProcess, HOST_FS);
-
-  USBH_RegisterClass(&hUsbHostFS, USBH_MSC_CLASS);
-
-  USBH_Start(&hUsbHostFS);
+  result = USBH_Init(&hUsbHostFS, USBH_UserProcess, HOST_FS);
+  if(result == USBH_OK) DBG_MSG("USBH Init ok");
+  result = USBH_RegisterClass(&hUsbHostFS, USBH_MSC_CLASS);
+  if(result == USBH_OK) DBG_MSG("USBH Register class ok");
+  result = USBH_Start(&hUsbHostFS);
+  if(result == USBH_OK) DBG_MSG("USBH Start ok");
 }
 
 /*

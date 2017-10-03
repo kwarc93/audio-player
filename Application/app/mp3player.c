@@ -29,8 +29,8 @@ static void vTaskMp3Player(void * pvParameters)
 	// Task's infinite loop
 	for(;;)
 	{
-		// Delay 50ms
-		vTaskDelayUntil( &xLastFlashTime, 50/portTICK_PERIOD_MS );
+		// Delay
+		vTaskDelayUntil( &xLastFlashTime, 20/portTICK_PERIOD_MS );
 
 		USB_HOST_Process();
 	}
@@ -42,7 +42,7 @@ void Mp3Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
 	// Init
 	USB_HOST_Init();
-	// Creating task for LED blinking
+	// Creating task for PLAYER
 	xTaskCreate(vTaskMp3Player, "PLAYER", MP3PLAYER_STACK_SIZE, NULL, uxPriority, &xHandleTaskPlayer);
 
 	DBG_MSG("Task(s) started!");

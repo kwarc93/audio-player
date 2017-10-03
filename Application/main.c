@@ -12,7 +12,8 @@
 #include "ui/display.h"
 #include "ui/joystick.h"
 #include "app/mp3player.h"
-#include "debug.h"
+
+#include "misc.h"
 
 #ifdef DEBUG
 #include "debug.h"
@@ -43,25 +44,22 @@ int main(void)
 
 static void prvConfigureClock(void)
 {
+/* Config RCC */
 #if defined(USE_MSI_CLOCK)
-	/* Config RCC */
-	// Enable MSI
-	RCC->CR |= RCC_CR_MSION;
 
-	// Wait until MSI ready
-	while ((RCC->CR & RCC_CR_MSIRDY) == 0);
+// MSIRANGE can be modified when MSI is off (MSION=0) or when MSI is ready
+RCC->CR |= RCC_CR_MSIRANGE_9;	// Select MSI 24MHz
 
-	// MSIRANGE can be modified when MSI is off (MSION=0) or when MSI is ready
-	RCC->CR &= ~RCC_CR_MSIRANGE;
-	RCC->CR |= RCC_CR_MSIRANGE_9;	// Select MSI 24MHz
+// The MSIRGSEL bit in RCC->CR selects which MSIRANGE is used
+// If MSIREGSEL is 0, the MSIRANGE in RCC->CSR is used to select the MSI clock
+// If MSIREGSEL is 1, the MSIRANGE in RCC->CR is used
+RCC->CR |= RCC_CR_MSIRGSEL;
 
-	// The MSIRGSEL bit in RCC->CR selects which MSIRANGE is used
-	// If MSIREGSEL is 0, the MSIRANGE in RCC->CSR is used to select the MSI clock
-	// If MSIREGSEL is 1, the MSIRANGE in RCC->CR is used
-	RCC->CR |= RCC_CR_MSIRGSEL;
+// Select MSI as the clock source of System Clock
+RCC->CR |= RCC_CR_MSION;
 
-	// Wait until it's ready
-	while ((RCC->CR & RCC_CR_MSIRDY) == 0);
+// Wait until it's ready
+while ((RCC->CR & RCC_CR_MSIRDY) == 0);
 
 #elif defined(USE_HSI_CLOCK)
 
@@ -88,16 +86,14 @@ RCC->ICSCR |= hsi_trim << 24;
 RCC->CR &= ~RCC_CR_PLLON;
 while(RCC->CR & RCC_CR_PLLRDY);
 
-// Select clock source to PLL
-RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLSRC;
+// Select clock source to PLL - HSE
 RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSI;
 
 // Set PLL at 80MHz
 // f(VCO clock) = f(PLL clock input) * (PLLN/PLLM) = 16MHz * (20/2) = 160MHz
 // f(PLLR) = f(VCO clock) / PLLR = 160MHz / 2 = 80MHz
-RCC->PLLCFGR = (RCC->PLLCFGR & ~RCC_PLLCFGR_PLLN) | 20U << 8;
-RCC->PLLCFGR = (RCC->PLLCFGR & ~RCC_PLLCFGR_PLLM) | 1U << 4;
-RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLR;
+RCC->PLLCFGR |= RCC_PLLCFGR_PLLN_2 | RCC_PLLCFGR_PLLN_4;
+RCC->PLLCFGR |= RCC_PLLCFGR_PLLM_0;
 RCC->PLLCFGR |= RCC_PLLCFGR_PLLREN;
 
 // Enable PLL and wait until ready
@@ -105,35 +101,35 @@ RCC->CR |= RCC_CR_PLLON;
 while(!(RCC->CR & RCC_CR_PLLRDY));
 
 // Select PLL output as system clock
-RCC->CFGR &= ~RCC_CFGR_SW;
 RCC->CFGR |= RCC_CFGR_SW_PLL;
 
 // Wait until system clock will be selected (PCLK1 & PCLK2)
 while((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS);
 
-//@ TODO: Enable USB 48MHz clock
-// Enable MSI
-RCC->CR |= RCC_CR_MSION;
+// Enable USB 48MHz clock (PLLSAI1)
 
-// Wait until MSI ready
-while ((RCC->CR & RCC_CR_MSIRDY) == 0);
+// Disable PLLSAI1
+RCC->CR &= ~RCC_CR_PLLSAI1ON;
+while(RCC->CR & RCC_CR_PLLSAI1RDY);
 
-// MSIRANGE can be modified when MSI is off (MSION=0) or when MSI is ready
-RCC->CR &= ~RCC_CR_MSIRANGE;
-RCC->CR |= RCC_CR_MSIRANGE_11;	// Select MSI 48MHz
+// Set PLLSAI1 at 48MHz
+// f(VCO clock) = f(PLL clock input) * (PLLSAI1N/PLLSAI1M) = 16MHz * (24/2) = 192MHz
+// f(PLLSAI1Q) = f(VCO clock) / PLLQ = 192MHz / 4 = 48MHz
+RCC->PLLSAI1CFGR |= RCC_PLLSAI1CFGR_PLLSAI1N_3 | RCC_PLLSAI1CFGR_PLLSAI1N_4;
+RCC->PLLSAI1CFGR |= RCC_PLLSAI1CFGR_PLLSAI1Q_0;
 
-// The MSIRGSEL bit in RCC->CR selects which MSIRANGE is used
-// If MSIREGSEL is 0, the MSIRANGE in RCC->CSR is used to select the MSI clock
-// If MSIREGSEL is 1, the MSIRANGE in RCC->CR is used
-RCC->CR |= RCC_CR_MSIRGSEL;
+// Output clock enable
+RCC->PLLSAI1CFGR |= RCC_PLLSAI1CFGR_PLLSAI1QEN;
 
-// Select MSI as CLK48
-RCC->CCIPR |= RCC_CCIPR_CLK48SEL_0 | RCC_CCIPR_CLK48SEL_1;
-// Wait until it's ready
-while ((RCC->CR & RCC_CR_MSIRDY) == 0);
-//@ TODO: Enable SAI1 clock
+// 48MHz clock source selection - PLLSAI1Q
+RCC->CCIPR |= RCC_CCIPR_CLK48SEL_0;
+
+// Enable PLL and wait until ready
+RCC->CR |= RCC_CR_PLLSAI1ON;
+while(!(RCC->CR & RCC_CR_PLLSAI1RDY));
 
 #else
 #error Wrong system clock selection!
 #endif
+
 }
