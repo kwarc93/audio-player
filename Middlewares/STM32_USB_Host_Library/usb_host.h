@@ -52,6 +52,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+#define USB_STACK_SIZE 1024
+
 typedef enum {
   USB_HOST_IDLE = 0,  
   USB_HOST_START,   
@@ -59,8 +61,7 @@ typedef enum {
   USB_HOST_DISCONNECT,
 }USB_Host_State_t;
 		
-void USB_HOST_Init(void);
-void USB_HOST_Process(void);
+void USB_StartTasks(unsigned portBASE_TYPE uxPriority);
 
 #ifdef __cplusplus
 }

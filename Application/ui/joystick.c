@@ -15,9 +15,9 @@
 
 #ifdef DEBUG
 #include "debug.h"
-#define DBG_MSG(...)	(Debug_Msg("[Joystick] " __VA_ARGS__))
+#define DBG_PRINTF(...)	(Debug_Printf("[Joystick] " __VA_ARGS__))
 #else
-#define DBG_MSG(...)
+#define DBG_PRINTF(...)
 #endif
 
 static TaskHandle_t xHandleTaskJoystick;
@@ -45,29 +45,29 @@ static void vTaskJoystick(void *pvParameters)
 			case KEY_OK:
 				ClrKeyb( KBD_LOCK );
 				Display_SendText("PLAY");
-				DBG_MSG("Key OK");
+				DBG_PRINTF("Key OK");
 				break;
 			case KEY_UP:
 				ClrKeyb( KBD_LOCK );
 				if(bar_lvl < 4) Display_SendBarLevel(++bar_lvl);
 				Display_SendText("VOL+");
-				DBG_MSG("Key UP");
+				DBG_PRINTF("Key UP");
 				break;
 			case KEY_DOWN:
 				ClrKeyb( KBD_LOCK );
 				if(bar_lvl > 0) Display_SendBarLevel(--bar_lvl);
 				Display_SendText("VOL-");
-				DBG_MSG("Key DOWN");
+				DBG_PRINTF("Key DOWN");
 				break;
 			case KEY_LEFT:
 				ClrKeyb( KBD_LOCK );
 				Display_SendText("PREV");
-				DBG_MSG("Key LEFT");
+				DBG_PRINTF("Key LEFT");
 				break;
 			case KEY_RIGHT:
 				ClrKeyb( KBD_LOCK );
 				Display_SendText("NEXT");
-				DBG_MSG("Key RIGHT");
+				DBG_PRINTF("Key RIGHT");
 				break;
 			default: break;
 
@@ -94,5 +94,5 @@ void Joystick_StartTasks(unsigned portBASE_TYPE uxPriority)
 	// Create task for reading input button
 	xTaskCreate(vTaskJoystick, "JOYSTICK", JOYSTICK_STACK_SIZE, NULL, uxPriority, &xHandleTaskJoystick);
 
-	DBG_MSG("Task(s) started!");
+	DBG_PRINTF("Task(s) started!");
 }

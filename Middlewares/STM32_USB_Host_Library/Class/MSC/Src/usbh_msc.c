@@ -87,6 +87,10 @@
 /** @defgroup USBH_MSC_CORE_Private_Variables
   * @{
   */ 
+#if USBH_USE_OS == 1
+static USBH_OSEventTypeDef event;
+#endif
+static MSC_HandleTypeDef MSC_Class;
 /**
   * @}
   */ 
@@ -163,7 +167,7 @@ static USBH_StatusTypeDef USBH_MSC_InterfaceInit (USBH_HandleTypeDef *phost)
   {
     USBH_SelectInterface (phost, interface);
     
-    phost->pActiveClass->pData = (MSC_HandleTypeDef *)USBH_malloc (sizeof(MSC_HandleTypeDef));
+    phost->pActiveClass->pData = (MSC_HandleTypeDef *)&MSC_Class;
     MSC_Handle =  (MSC_HandleTypeDef *) phost->pActiveClass->pData;
     
     if(phost->device.CfgDesc.Itf_Desc[phost->device.current_interface].Ep_Desc[0].bEndpointAddress & 0x80)
@@ -252,7 +256,6 @@ USBH_StatusTypeDef USBH_MSC_InterfaceDeInit (USBH_HandleTypeDef *phost)
 
   if(phost->pActiveClass->pData)
   {
-    USBH_free (phost->pActiveClass->pData);
     phost->pActiveClass->pData = 0;
   }
   
@@ -477,7 +480,8 @@ static USBH_StatusTypeDef USBH_MSC_Process(USBH_HandleTypeDef *phost)
       }
       
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CLASS_EVENT, 0);
+	  event = USBH_CLASS_EVENT;
+	  xQueueSendFromISR(phost->os_event, &event, 0);
 #endif       
     }
     else
@@ -485,7 +489,8 @@ static USBH_StatusTypeDef USBH_MSC_Process(USBH_HandleTypeDef *phost)
       MSC_Handle->current_lun = 0;
     MSC_Handle->state = MSC_IDLE;
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CLASS_EVENT, 0);
+	  event = USBH_CLASS_EVENT;
+	  xQueueSendFromISR(phost->os_event, &event, 0);
 #endif 
     phost->pUser(phost, HOST_USER_CLASS_ACTIVE);     
     }
@@ -548,7 +553,8 @@ static USBH_StatusTypeDef USBH_MSC_RdWrProcess(USBH_HandleTypeDef *phost, uint8_
           error = USBH_FAIL;
     }
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CLASS_EVENT, 0);
+	  event = USBH_CLASS_EVENT;
+	  xQueueSendFromISR(phost->os_event, &event, 0);
 #endif   
     break;     
     
@@ -570,8 +576,9 @@ static USBH_StatusTypeDef USBH_MSC_RdWrProcess(USBH_HandleTypeDef *phost, uint8_
           error = USBH_FAIL;
     }
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CLASS_EVENT, 0);
-#endif       
+	  event = USBH_CLASS_EVENT;
+	  xQueueSendFromISR(phost->os_event, &event, 0);
+#endif
     break; 
   
   case MSC_REQUEST_SENSE:
@@ -597,7 +604,8 @@ static USBH_StatusTypeDef USBH_MSC_RdWrProcess(USBH_HandleTypeDef *phost, uint8_
           error = USBH_FAIL;
     }
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CLASS_EVENT, 0);
+	  event = USBH_CLASS_EVENT;
+	  xQueueSendFromISR(phost->os_event, &event, 0);
 #endif       
     break;  
     

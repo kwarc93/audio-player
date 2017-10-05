@@ -48,6 +48,10 @@
 */
 
 /* Includes ------------------------------------------------------------------*/
+#include "FreeRTOS/FreeRTOS.h"
+#include "FreeRTOS/task.h"
+#include "FreeRTOS/semphr.h"
+
 #include "usbh_conf.h"
 #include "usb_host.h"
 #include "usbh_core.h"
@@ -61,33 +65,28 @@
 USBH_HandleTypeDef hUsbHostFS;
 USB_Host_State_t USB_HostState = USB_HOST_IDLE;
 
-/*
-* user callback declaration
-*/ 
-static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id);
+static TaskHandle_t xHandleTaskUSB;
 
-/* init function */				        
-void USB_HOST_Init(void)
-{
-  USBH_StatusTypeDef result;
-
-  /* Init Host Library,Add Supported Class and Start the library*/
-  result = USBH_Init(&hUsbHostFS, USBH_UserProcess, HOST_FS);
-  if(result == USBH_OK) DBG_MSG("USBH Init ok");
-  result = USBH_RegisterClass(&hUsbHostFS, USBH_MSC_CLASS);
-  if(result == USBH_OK) DBG_MSG("USBH Register class ok");
-  result = USBH_Start(&hUsbHostFS);
-  if(result == USBH_OK) DBG_MSG("USBH Start ok");
-}
+static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
 
 /*
  * Background task
 */
-void USB_HOST_Process(void)
+static void USB_HOST_Process(void)
 {
   /* USB Host Background task */
     USBH_Process(&hUsbHostFS);
 }
+
+/* init function */				        
+static void USB_HOST_Init(void)
+{
+  /* Init Host Library,Add Supported Class and Start the library*/
+	USBH_Init(&hUsbHostFS, USBH_UserProcess, HOST_FS);
+	USBH_RegisterClass(&hUsbHostFS, USBH_MSC_CLASS);
+	USBH_Start(&hUsbHostFS);
+}
+
 /*
  * user callback definition
 */ 
@@ -101,22 +100,52 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
     
   case HOST_USER_DISCONNECTION:
   USB_HostState = USB_HOST_DISCONNECT;
-  DBG_MSG("USBH disconnection event");
+  DBG_SIMPLE("USBH disconnection event");
+
   break;
     
   case HOST_USER_CLASS_ACTIVE:
   USB_HostState = USB_HOST_READY;
-  DBG_MSG("USBH class active");
+  DBG_SIMPLE("USBH class active");
   break;
 
   case HOST_USER_CONNECTION:
   USB_HostState = USB_HOST_START;
-  DBG_MSG("USBH connection event");
+  DBG_SIMPLE("USBH connection event");
+  USB_HOST_Init();
   break;
 
   default:
   break; 
   }
+}
+
+static void vTaskUSB(void *pvParameters)
+{
+	// Init
+	USB_HOST_Init();
+
+	TickType_t xLastFlashTime;
+	// Read state of system counter
+	xLastFlashTime = xTaskGetTickCount();
+
+	// Task's infinite loop
+	for(;;)
+	{
+		USB_HOST_Process();
+		// Delay 10ms
+		vTaskDelayUntil( &xLastFlashTime, 10/portTICK_PERIOD_MS );
+	}
+	/* Should never go here */
+	vTaskDelete(xHandleTaskUSB);
+}
+
+void USB_StartTasks(unsigned portBASE_TYPE uxPriority)
+{
+	// Creating task for USB
+	xTaskCreate(vTaskUSB, "USB", USB_STACK_SIZE, NULL, uxPriority, &xHandleTaskUSB);
+
+	DBG_SIMPLE("Task(s) started!");
 }
 
 void OTG_FS_IRQHandler(void)

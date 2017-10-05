@@ -70,6 +70,9 @@
 /** @defgroup USBH_CTLREQ_Private_Variables
 * @{
 */
+#if (USBH_USE_OS == 1)
+static USBH_OSEventTypeDef event;
+#endif
 /**
 * @}
 */ 
@@ -545,7 +548,8 @@ USBH_StatusTypeDef USBH_CtlReq     (USBH_HandleTypeDef *phost,
     phost->RequestState = CMD_WAIT;
     status = USBH_BUSY;
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+	event = USBH_CONTROL_EVENT;
+    xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     break;
     
@@ -633,14 +637,16 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
         } 
       }          
 #if (USBH_USE_OS == 1)
-      osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+  	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif
     }
     else if(URB_Status == USBH_URB_ERROR)
     {
       phost->Control.state = CTRL_ERROR;
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+  	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }    
     break;
@@ -665,7 +671,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
     { 
       phost->Control.state = CTRL_STATUS_OUT;
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+  	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }
    
@@ -675,7 +682,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
       /* In stall case, return to previous machine state*/
       status = USBH_NOT_SUPPORTED;
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+  	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }   
     else if (URB_Status == USBH_URB_ERROR)
@@ -683,7 +691,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
       /* Device error */
       phost->Control.state = CTRL_ERROR;  
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+  	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }
     break;
@@ -707,7 +716,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
     { /* If the Setup Pkt is sent successful, then change the state */
       phost->Control.state = CTRL_STATUS_IN;
 #if (USBH_USE_OS == 1)
-      osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+  	event = USBH_CONTROL_EVENT;
+    xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }
     
@@ -718,7 +728,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
       phost->Control.state = CTRL_STALLED; 
       status = USBH_NOT_SUPPORTED;
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+    	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     } 
     else if  (URB_Status == USBH_URB_NOTREADY)
@@ -727,7 +738,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
       phost->Control.state = CTRL_DATA_OUT;
       
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+    	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }    
     else if (URB_Status == USBH_URB_ERROR)
@@ -737,7 +749,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
       status = USBH_FAIL;    
       
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+    	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     } 
     break;
@@ -763,7 +776,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
       phost->Control.state = CTRL_COMPLETE;
       status = USBH_OK;
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+    	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }
     
@@ -771,7 +785,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
     {
       phost->Control.state = CTRL_ERROR;
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+    	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }
      else if(URB_Status == USBH_URB_STALL)
@@ -780,7 +795,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
       status = USBH_NOT_SUPPORTED;
       
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+    	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }
     break;
@@ -804,7 +820,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
       phost->Control.state = CTRL_COMPLETE; 
       
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+    	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }
     else if  (URB_Status == USBH_URB_NOTREADY)
@@ -812,7 +829,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
       phost->Control.state = CTRL_STATUS_OUT;
       
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+    	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }      
     else if (URB_Status == USBH_URB_ERROR)
@@ -820,7 +838,8 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
       phost->Control.state = CTRL_ERROR; 
       
 #if (USBH_USE_OS == 1)
-    osMessagePut ( phost->os_event, USBH_CONTROL_EVENT, 0);
+    	event = USBH_CONTROL_EVENT;
+      xQueueSendFromISR(phost->os_event, &event, 0);
 #endif      
     }
     break;

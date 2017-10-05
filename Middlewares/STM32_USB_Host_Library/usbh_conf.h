@@ -65,48 +65,42 @@
 #define USBH_KEEP_CFG_DESCRIPTOR              0
 #define USBH_MAX_SIZE_CONFIGURATION           0x200
 #define USBH_MAX_DATA_BUFFER                  0x200
-#define USBH_DEBUG_LEVEL                      1
+#define USBH_DEBUG_LEVEL                      0
 #define USBH_USE_OS                           0
 
 /* Exported constants --------------------------------------------------------*/
 extern HCD_HandleTypeDef hhcd;
 /* Exported macro ------------------------------------------------------------*/
 /* CMSIS OS macros */
-#if (USBH_USE_OS == 1)
-  #include "FreeRTOS/FreeRTOS.h"
-  #include "FreeRTOS/task.h"
-  #include "FreeRTOS/queue.h"
-  #define   USBH_PROCESS_PRIO    mainFLASH_TASK_PRIORITY
+#ifdef USE_FREERTOS
+#include "FreeRTOS/FreeRTOS.h"
 #endif
 
-/* Memory management macros */
-#define USBH_malloc               malloc
-#define USBH_free                 free
 #define USBH_memset               memset
 #define USBH_memcpy               memcpy
     
 /* DEBUG macros */
 #ifdef DEBUG
 #include "debug.h"
-#define DBG_MSG(...)	(Debug_Msg("[USB HOST] " __VA_ARGS__))
+#define DBG_SIMPLE(_MSG)		(Debug_Simple("[USB HOST] " _MSG))
 #else
-#define DBG_MSG(...)
+#define DBG_SIMPLE(...)
 #endif
 
 #if (USBH_DEBUG_LEVEL > 0)
-#define USBH_UsrLog(...)   (Debug_Msg("[USB HOST] User: " __VA_ARGS__))
+#define USBH_UsrLog(...)   (Debug_Printf("[USB HOST] User: " __VA_ARGS__))
 #else
 #define USBH_UsrLog(...)   
 #endif 
 
 #if (USBH_DEBUG_LEVEL > 1)
-#define USBH_ErrLog(...)   (Debug_Msg("[USB HOST] Error: " __VA_ARGS__))
+#define USBH_ErrLog(...)   (Debug_Printf("[USB HOST] Error: " __VA_ARGS__))
 #else
 #define USBH_ErrLog(...)   
 #endif 
 
 #if (USBH_DEBUG_LEVEL > 2)                         
-#define USBH_DbgLog(...)   (Debug_Msg("[USB HOST] Debug: " __VA_ARGS__))
+#define USBH_DbgLog(...)   (Debug_Printf("[USB HOST] Debug: " __VA_ARGS__))
 #else
 #define USBH_DbgLog(...)                         
 #endif

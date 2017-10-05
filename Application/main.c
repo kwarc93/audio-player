@@ -11,15 +11,13 @@
 #include "ui/leds.h"
 #include "ui/display.h"
 #include "ui/joystick.h"
-#include "app/mp3player.h"
-
-#include "misc.h"
+#include "usb_host.h"
 
 #ifdef DEBUG
 #include "debug.h"
-#define DBG_MSG(...)	(Debug_Msg("[MAIN] " __VA_ARGS__))
+#define DBG_SIMPLE(_MSG)	(Debug_Simple("[MAIN] " _MSG))
 #else
-#define DBG_MSG(...)
+#define DBG_SIMPLE(...)
 #endif
 
 static void prvConfigureClock(void);
@@ -30,21 +28,30 @@ int main(void)
 	prvConfigureClock();
 	// Init debug module
 	Debug_Init();
-	DBG_MSG("-MP3 PLAYER-");
+
+	DBG_SIMPLE("-MP3 PLAYER-");
 	// Tasks startup
-	DBG_MSG("Starting tasks...");
+	DBG_SIMPLE("Starting tasks...");
 	Led_StartTasks(mainFLASH_TASK_PRIORITY);
-	Display_StartTasks(mainFLASH_TASK_PRIORITY);
-	Joystick_StartTasks(mainFLASH_TASK_PRIORITY + 1);
-	Mp3Player_StartTasks(mainFLASH_TASK_PRIORITY);
+	Display_StartTasks(mainFLASH_TASK_PRIORITY + 1);
+	Joystick_StartTasks(mainFLASH_TASK_PRIORITY + 2);
+	USB_StartTasks(mainFLASH_TASK_PRIORITY);
 	// Scheduler startup
-	DBG_MSG("Starting scheduler...");
+	DBG_SIMPLE("Starting scheduler...");
 	vTaskStartScheduler();
 }
 
 static void prvConfigureClock(void)
 {
 /* Config RCC */
+
+/* System config clock enable */
+RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+__DSB();
+/* Power clock enable */
+RCC->APB1ENR1 |= RCC_APB1ENR1_PWREN;
+__DSB();
+
 #if defined(USE_MSI_CLOCK)
 
 // MSIRANGE can be modified when MSI is off (MSION=0) or when MSI is ready

@@ -43,8 +43,11 @@ void USART_Init(void)
 	DMA1_Channel7->CNDTR = USART_TX_CB_SIZE; 			// Number of transactions
 	DMA1_Channel7->CCR = DMA_CCR_DIR | DMA_CCR_MINC;	// mem > periph; pDataSize: 8bit; mDataSize: 8bit(increment)
 	DMA1_Channel7->CCR|= DMA_CCR_TCIE;					// Enable transfer complete interrupt
-	NVIC_SetPriority(DMA1_Channel7_IRQn, 0);			// Priority level 0
-	NVIC_EnableIRQ(DMA1_Channel7_IRQn);					// Enable IRQ
+
+	// Priority level
+	NVIC_SetPriority(OTG_FS_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 5, 0));
+	// Enable IRQ
+	NVIC_EnableIRQ(DMA1_Channel7_IRQn);
 
 	DMA1C7_TC = true;
 }

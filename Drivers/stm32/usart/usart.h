@@ -17,14 +17,14 @@
 #define BAUD_RATE 115200UL
 
 /* Rx circular buffer */
-#define USART_RX_CB_SIZE 512					// Length of USART circular buffer
+#define USART_RX_CB_SIZE 256					// Length of USART circular buffer
 #define USART_RX_CB_MASK (USART_RX_CB_SIZE-1) 	// Mask for USART circular buffer
 char USART_RxCB[USART_RX_CB_SIZE];				// USART rx circular buffer
 uint8_t USART_RxHead;
 uint8_t USART_RxTail;
 
 /* Tx circular buffer */
-#define USART_TX_CB_SIZE 512					// Length of USART circular buffer
+#define USART_TX_CB_SIZE 256					// Length of USART circular buffer
 char USART_TxCB[USART_TX_CB_SIZE];				// USART tx circular buffer
 
 /* DMA 1 Channel 7 Transfer Complete Flag */

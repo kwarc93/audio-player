@@ -12,9 +12,9 @@
 
 #ifdef DEBUG
 #include "debug.h"
-#define DBG_MSG(...)	(Debug_Msg("[LED] " __VA_ARGS__))
+#define DBG_PRINTF(...)	(Debug_Printf("[LED] " __VA_ARGS__))
 #else
-#define DBG_MSG(...)
+#define DBG_PRINTF(...)
 #endif
 
 static TaskHandle_t xHandleTaskLEDG, xHandleTaskLEDR;
@@ -75,5 +75,5 @@ void Led_StartTasks(unsigned portBASE_TYPE uxPriority)
 	xTaskCreate(vTaskLEDG, "LEDG", LED_STACK_SIZE, NULL, uxPriority, &xHandleTaskLEDG);
 	xTaskCreate(vTaskLEDR, "LEDR", LED_STACK_SIZE, NULL, uxPriority, &xHandleTaskLEDR);
 
-	DBG_MSG("Task(s) started!");
+	DBG_PRINTF("Task(s) started!");
 }

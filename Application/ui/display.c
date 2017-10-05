@@ -15,9 +15,9 @@
 
 #ifdef DEBUG
 #include "debug.h"
-#define DBG_MSG(...)	(Debug_Msg("[DISPLAY] " __VA_ARGS__))
+#define DBG_PRINTF(...)	(Debug_Printf("[DISPLAY] " __VA_ARGS__))
 #else
-#define DBG_MSG(...)
+#define DBG_PRINTF(...)
 #endif
 
 static TaskHandle_t xHandleTaskDisplay;
@@ -102,12 +102,12 @@ void Display_StartTasks(unsigned portBASE_TYPE uxPriority)
 	qhDisplayBar = xQueueCreate(1, sizeof(uint8_t));
 
 	// Display init text
-	Display_SendText("MP3 PLAYER - KAMIL WOREK 2017");
+	Display_SendText("STM32L476 MP3 PLAYER");
 
 	// Creating task for LCD
 	xTaskCreate(vTaskDisplay, "LCD", LCD_STACK_SIZE, NULL, uxPriority, &xHandleTaskDisplay);
 
-	DBG_MSG("Task(s) started!");
+	DBG_PRINTF("Task(s) started!");
 }
 
 void Display_SendText(char* text)

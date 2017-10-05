@@ -67,7 +67,6 @@ HCD_HandleTypeDef hhcd;
   */
 void HAL_HCD_MspInit(HCD_HandleTypeDef *hhcd)
 {
-
 	/* OTG FS VDDUSB */
 	SET_BIT(RCC->APB1ENR1, RCC_APB1ENR1_PWREN);
 	__DSB();
@@ -104,7 +103,7 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef *hhcd)
 	__DSB();
 
 	/* Set USBFS Interrupt priority (must be lower than FreeRTOS syscall interrupt) */
-	NVIC_SetPriority(OTG_FS_IRQn, 6);
+	NVIC_SetPriority(OTG_FS_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 6, 0));
 
 	/* Enable USBFS Interrupt */
 	NVIC_EnableIRQ(OTG_FS_IRQn);
