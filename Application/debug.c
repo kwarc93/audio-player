@@ -36,15 +36,8 @@ void Debug_Simple(const char* msg)
 
 void Debug_Printf(const char* fmt, ...)
 {
+#ifdef USE_FREERTOS
 	va_list args;
-
-#ifndef USE_FREERTOS
-	if(is_in_handler_mode())
-	{
-		Debug_Simple(fmt);
-		return;
-	}
-#else
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	if(xSemaphoreTakeFromISR(shMutexUSART, &xHigherPriorityTaskWoken))
 	{
@@ -57,5 +50,7 @@ void Debug_Printf(const char* fmt, ...)
 	}
 
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+#else
+	Debug_Simple(fmt);
 #endif
 }

@@ -463,11 +463,6 @@ typedef struct _USBH_HandleTypeDef
   void*                 pData;                  
   void                 (* pUser )(struct _USBH_HandleTypeDef *pHandle, uint8_t id);
   
-#if (USBH_USE_OS == 1)
-  QueueHandle_t          os_event;
-  TaskHandle_t            thread;
-#endif  
-  
 } USBH_HandleTypeDef;
 
 

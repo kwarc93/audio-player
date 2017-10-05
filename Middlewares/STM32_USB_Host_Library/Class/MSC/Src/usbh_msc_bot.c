@@ -72,9 +72,6 @@
 /** @defgroup USBH_MSC_BOT_Private_Variables
 * @{
 */ 
-#if USBH_USE_OS == 1
-static USBH_OSEventTypeDef event;
-#endif
 /**
 * @}
 */ 
@@ -219,28 +216,16 @@ USBH_StatusTypeDef USBH_MSC_BOT_Process (USBH_HandleTypeDef *phost, uint8_t lun)
       {/* If there is NO Data Transfer Stage */
         MSC_Handle->hbot.state = BOT_RECEIVE_CSW;
       }
-#if (USBH_USE_OS == 1)
-	  event = USBH_URB_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif   
     
     }   
     else if(URB_Status == USBH_URB_NOTREADY)
     {
       /* Re-send CBW */
       MSC_Handle->hbot.state = BOT_SEND_CBW;
-#if (USBH_USE_OS == 1)
-	  event = USBH_URB_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif       
     }     
     else if(URB_Status == USBH_URB_STALL)
     {
       MSC_Handle->hbot.state  = BOT_ERROR_OUT;
-#if (USBH_USE_OS == 1)
-	  event = USBH_URB_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif       
     }
     break;
     
@@ -286,10 +271,6 @@ USBH_StatusTypeDef USBH_MSC_BOT_Process (USBH_HandleTypeDef *phost, uint8_t lun)
       {
         /* If value was 0, and successful transfer, then change the state */
         MSC_Handle->hbot.state  = BOT_RECEIVE_CSW;
-#if (USBH_USE_OS == 1)
-  	  event = USBH_URB_EVENT;
-  	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif 
       }
     }
     else if(URB_Status == USBH_URB_STALL)
@@ -303,11 +284,7 @@ USBH_StatusTypeDef USBH_MSC_BOT_Process (USBH_HandleTypeDef *phost, uint8_t lun)
       The host shall accept the data received.
       The host shall clear the Bulk-In pipe.
       4. The host shall attempt to receive a CSW.*/
-      
-#if (USBH_USE_OS == 1)
-	  event = USBH_URB_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif       
+
     }     
     break;  
     
@@ -352,21 +329,13 @@ USBH_StatusTypeDef USBH_MSC_BOT_Process (USBH_HandleTypeDef *phost, uint8_t lun)
       {
         /* If value was 0, and successful transfer, then change the state */
         MSC_Handle->hbot.state  = BOT_RECEIVE_CSW;
-      }  
-#if (USBH_USE_OS == 1)
-	  event = USBH_URB_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif       
+      }
     }
     
     else if(URB_Status == USBH_URB_NOTREADY)
     {
       /* Resend same data */      
       MSC_Handle->hbot.state  = BOT_DATA_OUT;
-#if (USBH_USE_OS == 1)
-	  event = USBH_URB_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif       
     }
     
     else if(URB_Status == USBH_URB_STALL)
@@ -378,11 +347,7 @@ USBH_StatusTypeDef USBH_MSC_BOT_Process (USBH_HandleTypeDef *phost, uint8_t lun)
       3. On a STALL condition sending data, then:
       " The host shall clear the Bulk-Out pipe.
       4. The host shall attempt to receive a CSW.
-      */      
-#if (USBH_USE_OS == 1)
-	  event = USBH_URB_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif       
+      */
     }
     break;
     
@@ -415,18 +380,10 @@ USBH_StatusTypeDef USBH_MSC_BOT_Process (USBH_HandleTypeDef *phost, uint8_t lun)
       {
         status = USBH_FAIL;
       }
-#if (USBH_USE_OS == 1)
-	  event = USBH_URB_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif       
     }
     else if(URB_Status == USBH_URB_STALL)     
     {
       MSC_Handle->hbot.state  = BOT_ERROR_IN;
-#if (USBH_USE_OS == 1)
-	  event = USBH_URB_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif       
     }
     break;
     

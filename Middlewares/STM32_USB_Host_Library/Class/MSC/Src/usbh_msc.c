@@ -87,9 +87,6 @@
 /** @defgroup USBH_MSC_CORE_Private_Variables
   * @{
   */ 
-#if USBH_USE_OS == 1
-static USBH_OSEventTypeDef event;
-#endif
 static MSC_HandleTypeDef MSC_Class;
 /**
   * @}
@@ -478,20 +475,11 @@ static USBH_StatusTypeDef USBH_MSC_Process(USBH_HandleTypeDef *phost)
       default:
         break;
       }
-      
-#if (USBH_USE_OS == 1)
-	  event = USBH_CLASS_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif       
     }
     else
     {
       MSC_Handle->current_lun = 0;
     MSC_Handle->state = MSC_IDLE;
-#if (USBH_USE_OS == 1)
-	  event = USBH_CLASS_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif 
     phost->pUser(phost, HOST_USER_CLASS_ACTIVE);     
     }
     break;
@@ -552,10 +540,6 @@ static USBH_StatusTypeDef USBH_MSC_RdWrProcess(USBH_HandleTypeDef *phost, uint8_
       MSC_Handle->unit[lun].state = MSC_UNRECOVERED_ERROR;
           error = USBH_FAIL;
     }
-#if (USBH_USE_OS == 1)
-	  event = USBH_CLASS_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif   
     break;     
     
   case MSC_WRITE: 
@@ -575,10 +559,6 @@ static USBH_StatusTypeDef USBH_MSC_RdWrProcess(USBH_HandleTypeDef *phost, uint8_
       MSC_Handle->unit[lun].state = MSC_UNRECOVERED_ERROR;
           error = USBH_FAIL;
     }
-#if (USBH_USE_OS == 1)
-	  event = USBH_CLASS_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif
     break; 
   
   case MSC_REQUEST_SENSE:
@@ -603,10 +583,6 @@ static USBH_StatusTypeDef USBH_MSC_RdWrProcess(USBH_HandleTypeDef *phost, uint8_
       MSC_Handle->unit[lun].state = MSC_UNRECOVERED_ERROR;  
           error = USBH_FAIL;
     }
-#if (USBH_USE_OS == 1)
-	  event = USBH_CLASS_EVENT;
-	  xQueueSendFromISR(phost->os_event, &event, 0);
-#endif       
     break;  
     
   default:

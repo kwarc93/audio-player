@@ -57,16 +57,20 @@
 #include "usbh_core.h"
 #include "usbh_msc.h"
 
+#include "ui/display.h"
+#include <stdbool.h>
+
 /* for FS and HS identification */
 #define HOST_HS 		0
 #define HOST_FS 		1
 
 /* USB Host Core handle declaration */
-USBH_HandleTypeDef hUsbHostFS;
-USB_Host_State_t USB_HostState = USB_HOST_IDLE;
+static USBH_HandleTypeDef hUsbHostFS;
+static USB_Host_State_t USB_HostState = USB_HOST_IDLE;
 
 static TaskHandle_t xHandleTaskUSB;
 
+static _Bool USBEvent = false;
 static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
 
 /*
@@ -92,32 +96,31 @@ static void USB_HOST_Init(void)
 */ 
 static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
 {
+	switch(id)
+	{
+	case HOST_USER_SELECT_CONFIGURATION:
+		USBEvent = true;
+		break;
 
-  switch(id)
-  { 
-  case HOST_USER_SELECT_CONFIGURATION:
-  break;
-    
-  case HOST_USER_DISCONNECTION:
-  USB_HostState = USB_HOST_DISCONNECT;
-  DBG_SIMPLE("USBH disconnection event");
+	case HOST_USER_DISCONNECTION:
+		USB_HostState = USB_HOST_DISCONNECT;
+		USBEvent = true;
+		break;
 
-  break;
-    
-  case HOST_USER_CLASS_ACTIVE:
-  USB_HostState = USB_HOST_READY;
-  DBG_SIMPLE("USBH class active");
-  break;
+	case HOST_USER_CLASS_ACTIVE:
+		USB_HostState = USB_HOST_READY;
+		USBEvent = true;
+		break;
 
-  case HOST_USER_CONNECTION:
-  USB_HostState = USB_HOST_START;
-  DBG_SIMPLE("USBH connection event");
-  USB_HOST_Init();
-  break;
+	case HOST_USER_CONNECTION:
+		USB_HostState = USB_HOST_START;
+		USBEvent = true;
+		USB_HOST_Init();
+		break;
 
-  default:
-  break; 
-  }
+	default:
+		break;
+	}
 }
 
 static void vTaskUSB(void *pvParameters)
@@ -133,6 +136,34 @@ static void vTaskUSB(void *pvParameters)
 	for(;;)
 	{
 		USB_HOST_Process();
+
+		if(USBEvent)
+		{
+			USBEvent = false;
+			switch(USB_HostState)
+			{
+			case USB_HOST_IDLE:
+				break;
+
+			case USB_HOST_DISCONNECT:
+				DBG_SIMPLE("USBH disconnection event");
+				Display_SendText("USB DISCONNECTED");
+				break;
+
+			case USB_HOST_READY:
+				DBG_SIMPLE("USBH host ready");
+				Display_SendText("USB READY");
+				break;
+
+			case USB_HOST_START:
+				DBG_SIMPLE("USBH connection event");
+				Display_SendText("USB CONNECTED");
+				break;
+
+			default:
+				break;
+			}
+		}
 		// Delay 10ms
 		vTaskDelayUntil( &xLastFlashTime, 10/portTICK_PERIOD_MS );
 	}
