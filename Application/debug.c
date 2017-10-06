@@ -15,6 +15,7 @@
 #include <stdio.h>
 
 static char debug_buffer[USART_TX_CB_SIZE];
+
 // USART Mutex handle
 static SemaphoreHandle_t shMutexUSART;
 

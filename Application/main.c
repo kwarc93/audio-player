@@ -11,7 +11,7 @@
 #include "ui/leds.h"
 #include "ui/display.h"
 #include "ui/joystick.h"
-#include "usb_host.h"
+#include "app/usb_host.h"
 
 #ifdef DEBUG
 #include "debug.h"

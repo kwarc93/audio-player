@@ -51,8 +51,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 #include "usb/stm32l4xx_ll_usb.h"
 #include "usb/stm32l4xx_hal_hcd.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
