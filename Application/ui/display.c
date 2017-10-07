@@ -81,7 +81,7 @@ static void vTaskDisplay(void * pvParameters)
 
 		task_tick += delay_ms;
 
-		// Delay 50ms
+		// Delay
 		vTaskDelayUntil( &xLastFlashTime, delay_ms/portTICK_PERIOD_MS );
 	}
 	/* Should never go there */

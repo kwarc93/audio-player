@@ -74,7 +74,7 @@ uint8_t GYRO_Init(void)
   * @param  WriteAddr: Gyroscope's internal address to write to.
   * @param  NumByteToWrite: Number of bytes to write.
   */
-void L3GD20_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite)
+void L3GD20_IO_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite)
 {
   /* Configure the MS bit:
        - When 0, the address will remain unchanged in multiple read/write commands.
@@ -112,7 +112,7 @@ void L3GD20_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite)
   * @param  ReadAddr: Gyroscope's internal address to read from.
   * @param  NumByteToRead: Number of bytes to read from the Gyroscope.
   */
-void L3GD20_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
+void L3GD20_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
 {
   if(NumByteToRead > 0x01)
   {
@@ -155,11 +155,11 @@ void L3GD20_Init(uint16_t InitStruct)
   
   /* Write value to MEMS CTRL_REG1 register */
   ctrl = (uint8_t) InitStruct;
-  L3GD20_Write(&ctrl, L3GD20_CTRL_REG1_ADDR, 1);
+  L3GD20_IO_Write(&ctrl, L3GD20_CTRL_REG1_ADDR, 1);
   
   /* Write value to MEMS CTRL_REG4 register */  
   ctrl = (uint8_t) (InitStruct >> 8);
-  L3GD20_Write(&ctrl, L3GD20_CTRL_REG4_ADDR, 1);
+  L3GD20_IO_Write(&ctrl, L3GD20_CTRL_REG4_ADDR, 1);
 }
 
 
@@ -183,7 +183,7 @@ uint8_t L3GD20_ReadID(void)
   uint8_t tmp;
   
   /* Read WHO I AM register */
-  L3GD20_Read(&tmp, L3GD20_WHO_AM_I_ADDR, 1);
+  L3GD20_IO_Read(&tmp, L3GD20_WHO_AM_I_ADDR, 1);
   
   /* Return the ID */
   return (uint8_t)tmp;
@@ -199,13 +199,13 @@ void L3GD20_RebootCmd(void)
   uint8_t tmpreg;
   
   /* Read CTRL_REG5 register */
-  L3GD20_Read(&tmpreg, L3GD20_CTRL_REG5_ADDR, 1);
+  L3GD20_IO_Read(&tmpreg, L3GD20_CTRL_REG5_ADDR, 1);
   
   /* Enable or Disable the reboot memory */
   tmpreg |= L3GD20_BOOT_REBOOTMEMORY;
   
   /* Write value to MEMS CTRL_REG5 register */
-  L3GD20_Write(&tmpreg, L3GD20_CTRL_REG5_ADDR, 1);
+  L3GD20_IO_Write(&tmpreg, L3GD20_CTRL_REG5_ADDR, 1);
 }
 
 /**
@@ -219,7 +219,7 @@ void L3GD20_LowPower(uint16_t InitStruct)
 
   /* Write value to MEMS CTRL_REG1 register */
   ctrl = (uint8_t) InitStruct;
-  L3GD20_Write(&ctrl, L3GD20_CTRL_REG1_ADDR, 1);
+  L3GD20_IO_Write(&ctrl, L3GD20_CTRL_REG1_ADDR, 1);
 }
 
 /**
@@ -232,10 +232,10 @@ void L3GD20_INT1InterruptConfig(uint16_t Int1Config)
   uint8_t ctrl_cfr = 0x00, ctrl3 = 0x00;
   
   /* Read INT1_CFG register */
-  L3GD20_Read(&ctrl_cfr, L3GD20_INT1_CFG_ADDR, 1);
+  L3GD20_IO_Read(&ctrl_cfr, L3GD20_INT1_CFG_ADDR, 1);
   
   /* Read CTRL_REG3 register */
-  L3GD20_Read(&ctrl3, L3GD20_CTRL_REG3_ADDR, 1);
+  L3GD20_IO_Read(&ctrl3, L3GD20_CTRL_REG3_ADDR, 1);
   
   ctrl_cfr &= 0x80;
   ctrl_cfr |= ((uint8_t) Int1Config >> 8);
@@ -244,10 +244,10 @@ void L3GD20_INT1InterruptConfig(uint16_t Int1Config)
   ctrl3 |= ((uint8_t) Int1Config);   
   
   /* Write value to MEMS INT1_CFG register */
-  L3GD20_Write(&ctrl_cfr, L3GD20_INT1_CFG_ADDR, 1);
+  L3GD20_IO_Write(&ctrl_cfr, L3GD20_INT1_CFG_ADDR, 1);
   
   /* Write value to MEMS CTRL_REG3 register */
-  L3GD20_Write(&ctrl3, L3GD20_CTRL_REG3_ADDR, 1);
+  L3GD20_IO_Write(&ctrl3, L3GD20_CTRL_REG3_ADDR, 1);
 }
 
 /**
@@ -263,7 +263,7 @@ void L3GD20_EnableIT(uint8_t IntSel)
   uint8_t tmpreg;
   
   /* Read CTRL_REG3 register */
-  L3GD20_Read(&tmpreg, L3GD20_CTRL_REG3_ADDR, 1);
+  L3GD20_IO_Read(&tmpreg, L3GD20_CTRL_REG3_ADDR, 1);
   
   if(IntSel == L3GD20_INT1)
   {
@@ -277,7 +277,7 @@ void L3GD20_EnableIT(uint8_t IntSel)
   }
   
   /* Write value to MEMS CTRL_REG3 register */
-  L3GD20_Write(&tmpreg, L3GD20_CTRL_REG3_ADDR, 1);
+  L3GD20_IO_Write(&tmpreg, L3GD20_CTRL_REG3_ADDR, 1);
 }
 
 /**
@@ -293,7 +293,7 @@ void L3GD20_DisableIT(uint8_t IntSel)
   uint8_t tmpreg;
   
   /* Read CTRL_REG3 register */
-  L3GD20_Read(&tmpreg, L3GD20_CTRL_REG3_ADDR, 1);
+  L3GD20_IO_Read(&tmpreg, L3GD20_CTRL_REG3_ADDR, 1);
   
   if(IntSel == L3GD20_INT1)
   {
@@ -307,7 +307,7 @@ void L3GD20_DisableIT(uint8_t IntSel)
   }
   
   /* Write value to MEMS CTRL_REG3 register */
-  L3GD20_Write(&tmpreg, L3GD20_CTRL_REG3_ADDR, 1);
+  L3GD20_IO_Write(&tmpreg, L3GD20_CTRL_REG3_ADDR, 1);
 }
 
 /**
@@ -320,7 +320,7 @@ void L3GD20_FilterConfig(uint8_t FilterStruct)
   uint8_t tmpreg;
   
   /* Read CTRL_REG2 register */
-  L3GD20_Read(&tmpreg, L3GD20_CTRL_REG2_ADDR, 1);
+  L3GD20_IO_Read(&tmpreg, L3GD20_CTRL_REG2_ADDR, 1);
   
   tmpreg &= 0xC0;
   
@@ -328,7 +328,7 @@ void L3GD20_FilterConfig(uint8_t FilterStruct)
   tmpreg |= FilterStruct;
   
   /* Write value to MEMS CTRL_REG2 register */
-  L3GD20_Write(&tmpreg, L3GD20_CTRL_REG2_ADDR, 1);
+  L3GD20_IO_Write(&tmpreg, L3GD20_CTRL_REG2_ADDR, 1);
 }
 
 /**
@@ -344,14 +344,14 @@ void L3GD20_FilterCmd(uint8_t HighPassFilterState)
   uint8_t tmpreg;
   
   /* Read CTRL_REG5 register */
-  L3GD20_Read(&tmpreg, L3GD20_CTRL_REG5_ADDR, 1);
+  L3GD20_IO_Read(&tmpreg, L3GD20_CTRL_REG5_ADDR, 1);
   
   tmpreg &= 0xEF;
   
   tmpreg |= HighPassFilterState;
   
   /* Write value to MEMS CTRL_REG5 register */
-  L3GD20_Write(&tmpreg, L3GD20_CTRL_REG5_ADDR, 1);
+  L3GD20_IO_Write(&tmpreg, L3GD20_CTRL_REG5_ADDR, 1);
 }
 
 /**
@@ -364,7 +364,7 @@ uint8_t L3GD20_GetDataStatus(void)
   uint8_t tmpreg;
   
   /* Read STATUS_REG register */
-  L3GD20_Read(&tmpreg, L3GD20_STATUS_REG_ADDR, 1);
+  L3GD20_IO_Read(&tmpreg, L3GD20_STATUS_REG_ADDR, 1);
   
   return tmpreg;
 }
@@ -380,9 +380,9 @@ void L3GD20_ReadXYZRawData(int16_t *data)
   uint8_t tmpreg = 0;
   uint8_t i;
   
-  L3GD20_Read(&tmpreg,L3GD20_CTRL_REG4_ADDR,1);
+  L3GD20_IO_Read(&tmpreg,L3GD20_CTRL_REG4_ADDR,1);
   
-  L3GD20_Read(tmpbuffer,L3GD20_OUT_X_L_ADDR,6);
+  L3GD20_IO_Read(tmpbuffer,L3GD20_OUT_X_L_ADDR,6);
   
   /* check in the control register 4 the data alignment (Big Endian or Little Endian)*/
   if(!(tmpreg & L3GD20_BLE_MSB))

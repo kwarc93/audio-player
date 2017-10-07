@@ -282,8 +282,8 @@ _Bool   L3GD20_CalcOffset(int32_t *pOffset, const uint8_t avg_n);
 uint8_t L3GD20_GetDataStatus(void);
 
 /* Gyroscope IO functions */
-void     L3GD20_Write(uint8_t *pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite);
-void     L3GD20_Read(uint8_t *pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead);
+void     L3GD20_IO_Write(uint8_t *pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite);
+void     L3GD20_IO_Read(uint8_t *pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead);
 
 /**
   * @}
