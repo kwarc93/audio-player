@@ -15,14 +15,15 @@
 #include "FatFs/ff.h"
 #include <stdbool.h>
 
+#define TEST_FATFS		1
+
 /* for FS and HS identification */
 #define HOST_HS 		0
 #define HOST_FS 		1
-#define TEST_FATFS		1
 
 /* USB Host Core handle declaration */
 USBH_HandleTypeDef hUsbHostFS;
-static USB_Host_State_t USB_HostState = USB_HOST_IDLE;
+static USB_Host_State_t USB_HostState;
 
 static TaskHandle_t xHandleTaskUSB;
 
@@ -43,6 +44,7 @@ static void USB_HOST_Process(void)
 static void USB_HOST_Init(void)
 {
   /* Init Host Library,Add Supported Class and Start the library*/
+	USB_HostState = USB_HOST_IDLE;
 	USBH_Init(&hUsbHostFS, USBH_UserProcess, HOST_FS);
 	USBH_RegisterClass(&hUsbHostFS, USBH_MSC_CLASS);
 	USBH_Start(&hUsbHostFS);
@@ -86,6 +88,8 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
 */
 static void USBH_TaskProcess(void)
 {
+	USB_HOST_Process();
+
 	if(USBEvent)
 	{
 		USBEvent = false;
@@ -120,9 +124,6 @@ static void USBH_TaskProcess(void)
 
 static void vTaskUSB(void *pvParameters)
 {
-	// Init
-	USB_HOST_Init();
-
 	TickType_t xLastFlashTime;
 	// Read state of system counter
 	xLastFlashTime = xTaskGetTickCount();
@@ -130,7 +131,6 @@ static void vTaskUSB(void *pvParameters)
 	// Task's infinite loop
 	for(;;)
 	{
-		USB_HOST_Process();
 
 		USBH_TaskProcess();
 
@@ -143,6 +143,9 @@ static void vTaskUSB(void *pvParameters)
 
 void USB_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
+	// Init
+	USB_HOST_Init();
+
 	// Creating task for USB
 	xTaskCreate(vTaskUSB, "USB", USB_STACK_SIZE, NULL, uxPriority, &xHandleTaskUSB);
 
@@ -157,18 +160,18 @@ void OTG_FS_IRQHandler(void)
 /**
   * @}
   */
+
 #if TEST_FATFS == 1
 static void FatFS_TestApplication(void)
 {
 	FATFS fs0;
-	const char *drv0 = "0:";
 	FIL MyFile;                   								/* File object */
 	volatile FRESULT res;                                	 	/* FatFs function common result code */
 	uint32_t byteswritten, bytesread;                    	 	/* File write/read counts */
 	uint8_t wtext[] = "This is STM32 working with FatFs"; 		/* File write buffer */
-	uint8_t rtext[100];                                   		/* File read buffer */
+	uint8_t rtext[64];                                   		/* File read buffer */
 
-	res = f_mount(&fs0, drv0, 1);
+	res = f_mount(&fs0, "0:", 1);
 
 	/* Create and Open a new text file object with write access */
 	if(f_open(&MyFile, "0:STM32.TXT", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)

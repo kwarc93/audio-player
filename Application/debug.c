@@ -31,27 +31,38 @@ void Debug_Init(void)
 
 void Debug_Simple(const char* msg)
 {
-	USART_TxDMA((void*)msg, strlen(msg));
-	USART_TxDMA("\n", 1);
+#ifdef USE_FREERTOS
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+	if(xSemaphoreTakeFromISR(shMutexUSART, &xHigherPriorityTaskWoken))
+	{
+#endif
+		USART_TxDMA((void*)msg, strlen(msg));
+		USART_TxDMA("\n", 1);
+#ifdef USE_FREERTOS
+		xSemaphoreGiveFromISR(shMutexUSART, &xHigherPriorityTaskWoken);
+	}
+	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+#endif
 }
 
 void Debug_Printf(const char* fmt, ...)
 {
-#ifdef USE_FREERTOS
 	va_list args;
+#ifdef USE_FREERTOS
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
 	if(xSemaphoreTakeFromISR(shMutexUSART, &xHigherPriorityTaskWoken))
 	{
+#endif
 		va_start(args, fmt);
 		vsnprintf(debug_buffer, sizeof(debug_buffer), fmt, args);
 		va_end(args);
 		USART_TxDMA(debug_buffer, strlen(debug_buffer));
 		USART_TxDMA("\n", 1);
+#ifdef USE_FREERTOS
 		xSemaphoreGiveFromISR(shMutexUSART, &xHigherPriorityTaskWoken);
 	}
-
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
-#else
-	Debug_Simple(fmt);
 #endif
 }
