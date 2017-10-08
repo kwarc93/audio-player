@@ -39,9 +39,12 @@ static void vTaskPlayer(void * pvParameters)
 void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
 	// Init
-	if(!CS43L22_Init(CS43L22_I2C_ADDRESS, OUTPUT_DEVICE_HEADPHONE, 50, AUDIO_FREQUENCY_44K))
+	if(!CS43L22_Init(CS43L22_I2C_ADDRESS, CS43L22_OUTPUT_HEADPHONE, 50, AUDIO_FREQUENCY_44K))
 	{
 		DBG_PRINTF("CS43L22 initialized, chip ID: %d", CS43L22_ReadID(CS43L22_I2C_ADDRESS));
+
+		CS43L22_Beep(CS43L22_I2C_ADDRESS);
+		CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
 	}
 
 	hMP3Decoder = MP3InitDecoder();

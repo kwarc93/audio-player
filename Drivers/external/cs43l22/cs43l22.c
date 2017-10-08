@@ -6,6 +6,7 @@
  */
 #include "cs43l22.h"
 #include "i2c/i2c.h"
+#include "i2s/i2s.h"
 #include "gpio/gpio.h"
 #include "misc.h"
 
@@ -14,7 +15,7 @@
 /* Uncomment this line to enable verifying data sent to codec after each write
    operation (for debug purpose) */
 #if !defined (VERIFY_WRITTENDATA)
-#define VERIFY_WRITTENDATA
+//#define VERIFY_WRITTENDATA
 #endif /* VERIFY_WRITTENDATA */
 
 /* Codec audio Standards */
@@ -55,8 +56,8 @@ static void 	 CS43L22_IO_Delay(uint32_t Delay);
 /**
   * @brief Initializes the audio codec and the control interface.
   * @param DeviceAddr: Device address on communication Bus.
-  * @param OutputDevice: can be OUTPUT_DEVICE_SPEAKER, OUTPUT_DEVICE_HEADPHONE,
-  *                       OUTPUT_DEVICE_BOTH or OUTPUT_DEVICE_AUTO .
+  * @param OutputDevice: can be CS43L22_OUTPUT_SPEAKER, CS43L22_OUTPUT_HEADPHONE,
+  *                       CS43L22_OUTPUT_BOTH or CS43L22_OUTPUT_AUTO .
   * @param Volume: Initial volume level (from 0 (Mute) to 100 (Max))
   * @retval 0 if correct communication, else wrong communication
   */
@@ -73,19 +74,19 @@ uint32_t CS43L22_Init(uint16_t DeviceAddr, uint16_t OutputDevice, uint8_t Volume
   /*Save Output device for mute ON/OFF procedure*/
   switch (OutputDevice)
   {
-  case OUTPUT_DEVICE_SPEAKER:
+  case CS43L22_OUTPUT_SPEAKER:
     OutputDev = 0xFA;
     break;
 
-  case OUTPUT_DEVICE_HEADPHONE:
+  case CS43L22_OUTPUT_HEADPHONE:
     OutputDev = 0xAF;
     break;
 
-  case OUTPUT_DEVICE_BOTH:
+  case CS43L22_OUTPUT_BOTH:
     OutputDev = 0xAA;
     break;
 
-  case OUTPUT_DEVICE_AUTO:
+  case CS43L22_OUTPUT_AUTO:
     OutputDev = 0x05;
     break;
 
@@ -106,7 +107,7 @@ uint32_t CS43L22_Init(uint16_t DeviceAddr, uint16_t OutputDevice, uint8_t Volume
   counter += CS43L22_SetVolume(DeviceAddr, Volume);
 
   /* If the Speaker is enabled, set the Mono mode and volume attenuation level */
-  if(OutputDevice != OUTPUT_DEVICE_HEADPHONE)
+  if(OutputDevice != CS43L22_OUTPUT_HEADPHONE)
   {
     /* Set the Speaker Mono mode */
     counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_PLAYBACK_CTL2, 0x06);
@@ -165,20 +166,26 @@ uint32_t CS43L22_ReadID(uint16_t DeviceAddr)
   return((uint32_t) Value);
 }
 
-///**
-//  * @brief  Get the CS43L22 ID.
-//  * @param DeviceAddr: Device address on communication Bus.
-//  * @retval The CS43L22 ID
-//  */
-//uint32_t CS43L22_Beep(uint16_t DeviceAddr)
-//{
-//  uint8_t Value;
-//
-//  Value = CS43L22_IO_Read(DeviceAddr, CS43L22_CHIPID_ADDR);
-//  Value = (Value & CS43L22_ID_MASK);
-//
-//  return((uint32_t) Value);
-//}
+/**
+  * @brief  Plays beep signal once.
+  * @param DeviceAddr: Device address on communication Bus.
+  * @retval 0 if correct communication, else wrong communication
+  */
+uint32_t CS43L22_Beep(uint16_t DeviceAddr)
+{
+	uint32_t counter = 0;
+
+	/* Disable beep */
+	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_TONE_CFG, 0x00);
+	/* Beep frequency: ~888Hz (A5) and on-time: 1,2s */
+	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_FREQ_ON_TIME, 0x63);
+	/* Beep off-time duration: ~1,23s and volume: -6dB */
+	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_VOL_OFF_TIME, 0x00);
+	/* Enable single beep tone */
+	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_TONE_CFG, 0xC0);
+
+	return counter;
+}
 
 /**
   * @brief Start the audio Codec play feature.
@@ -347,8 +354,8 @@ uint32_t CS43L22_SetMute(uint16_t DeviceAddr, uint32_t Cmd)
   *         (speaker or headphone).
   * @note This function modifies a global variable of the audio codec driver: OutputDev.
   * @param DeviceAddr: Device address on communication Bus.
-  * @param Output: specifies the audio output target: OUTPUT_DEVICE_SPEAKER,
-  *         OUTPUT_DEVICE_HEADPHONE, OUTPUT_DEVICE_BOTH or OUTPUT_DEVICE_AUTO
+  * @param Output: specifies the audio output target: CS43L22_OUTPUT_SPEAKER,
+  *         CS43L22_OUTPUT_HEADPHONE, CS43L22_OUTPUT_BOTH or CS43L22_OUTPUT_AUTO
   * @retval 0 if correct communication, else wrong communication
   */
 uint32_t CS43L22_SetOutputMode(uint16_t DeviceAddr, uint8_t Output)
@@ -357,22 +364,22 @@ uint32_t CS43L22_SetOutputMode(uint16_t DeviceAddr, uint8_t Output)
 
   switch (Output)
   {
-    case OUTPUT_DEVICE_SPEAKER:
+    case CS43L22_OUTPUT_SPEAKER:
       counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, 0xFA); /* SPK always ON & HP always OFF */
       OutputDev = 0xFA;
       break;
 
-    case OUTPUT_DEVICE_HEADPHONE:
+    case CS43L22_OUTPUT_HEADPHONE:
       counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, 0xAF); /* SPK always OFF & HP always ON */
       OutputDev = 0xAF;
       break;
 
-    case OUTPUT_DEVICE_BOTH:
+    case CS43L22_OUTPUT_BOTH:
       counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, 0xAA); /* SPK always ON & HP always ON */
       OutputDev = 0xAA;
       break;
 
-    case OUTPUT_DEVICE_AUTO:
+    case CS43L22_OUTPUT_AUTO:
       counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, 0x05); /* Detect the HP or the SPK automatically */
       OutputDev = 0x05;
       break;
@@ -412,6 +419,9 @@ static void CS43L22_IO_Init(void)
 
   /* I2C bus init */
   I2C_Init();
+
+  /* I2S bus init */
+  I2S_Init();
 
   /* Power Down the codec */
   AUDIO_IO_POWER_OFF();

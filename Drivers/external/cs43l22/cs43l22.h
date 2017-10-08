@@ -18,11 +18,11 @@
 /******************************************************************************/
 /***************************  Codec User defines ******************************/
 /******************************************************************************/
-/* Codec output DEVICE */
-#define OUTPUT_DEVICE_SPEAKER         1
-#define OUTPUT_DEVICE_HEADPHONE       2
-#define OUTPUT_DEVICE_BOTH            3
-#define OUTPUT_DEVICE_AUTO            4
+/* CS43L22 output */
+#define CS43L22_OUTPUT_SPEAKER        1
+#define CS43L22_OUTPUT_HEADPHONE      2
+#define CS43L22_OUTPUT_BOTH    	      3
+#define CS43L22_OUTPUT_AUTO           4
 
 /* Volume Levels values */
 #define DEFAULT_VOLMIN                0x00
@@ -40,18 +40,8 @@
 #define AUDIO_MUTE_ON                 1
 #define AUDIO_MUTE_OFF                0
 
-/* AUDIO FREQUENCY */
-#define AUDIO_FREQUENCY_192K          ((uint32_t)192000)
-#define AUDIO_FREQUENCY_96K           ((uint32_t)96000)
-#define AUDIO_FREQUENCY_48K           ((uint32_t)48000)
-#define AUDIO_FREQUENCY_44K           ((uint32_t)44100)
-#define AUDIO_FREQUENCY_32K           ((uint32_t)32000)
-#define AUDIO_FREQUENCY_22K           ((uint32_t)22050)
-#define AUDIO_FREQUENCY_16K           ((uint32_t)16000)
-#define AUDIO_FREQUENCY_11K           ((uint32_t)11025)
-#define AUDIO_FREQUENCY_8K            ((uint32_t)8000)
 
-/** CS43l22 Registers  ***/
+/** CS43L22 Registers  ***/
 #define   CS43L22_REG_ID                  0x01
 #define   CS43L22_REG_POWER_CTL1          0x02
 #define   CS43L22_REG_POWER_CTL2          0x04
@@ -138,6 +128,7 @@
 uint32_t CS43L22_Init(uint16_t DeviceAddr, uint16_t OutputDevice, uint8_t Volume, uint32_t AudioFreq);
 void     CS43L22_DeInit(void);
 uint32_t CS43L22_ReadID(uint16_t DeviceAddr);
+uint32_t CS43L22_Beep(uint16_t DeviceAddr);
 uint32_t CS43L22_Play(uint16_t DeviceAddr, uint16_t* pBuffer, uint16_t Size);
 uint32_t CS43L22_Pause(uint16_t DeviceAddr);
 uint32_t CS43L22_Resume(uint16_t DeviceAddr);

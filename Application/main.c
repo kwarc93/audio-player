@@ -12,6 +12,8 @@
 #include "ui/display.h"
 #include "ui/joystick.h"
 #include "app/usb_host.h"
+#include "app/player.h"
+
 
 #ifdef DEBUG
 #include "debug.h"
@@ -44,8 +46,6 @@ int main(void)
 
 static void prvConfigureClock(void)
 {
-/* Config RCC */
-
 /* System config clock enable */
 RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 __DSB();
@@ -53,6 +53,7 @@ __DSB();
 RCC->APB1ENR1 |= RCC_APB1ENR1_PWREN;
 __DSB();
 
+// Enable system clock (SYSCLK) ****************************************************/
 #if defined(USE_MSI_CLOCK)
 
 // MSIRANGE can be modified when MSI is off (MSION=0) or when MSI is ready
@@ -114,7 +115,7 @@ RCC->CFGR |= RCC_CFGR_SW_PLL;
 // Wait until system clock will be selected (PCLK1 & PCLK2)
 while((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS);
 
-// Enable USB 48MHz clock (PLLSAI1)
+// Enable USB 48MHz clock (PLLSAI1) *************************************************/
 
 // Disable PLLSAI1
 RCC->CR &= ~RCC_CR_PLLSAI1ON;
@@ -135,6 +136,28 @@ RCC->CCIPR |= RCC_CCIPR_CLK48SEL_0;
 // Enable PLL and wait until ready
 RCC->CR |= RCC_CR_PLLSAI1ON;
 while(!(RCC->CR & RCC_CR_PLLSAI1RDY));
+
+// Enable SAI1 11.294118MHz clock (PLLSAI2) *************************************************/
+
+// Disable PLLSAI1
+RCC->CR &= ~RCC_CR_PLLSAI2ON;
+while(RCC->CR & RCC_CR_PLLSAI2RDY);
+
+// Set PLLSAI2 at 11.294118MHz (for 44.1kHz audio)
+// f(VCO clock) = f(PLL clock input) * (PLLSAI1N/PLLSAI1M) = 16MHz * (24/2) = 192MHz
+// f(PLLSAI2P) = f(VCO clock) / PLLP = 168MHz / 17 = 24MHz
+RCC->PLLSAI2CFGR |= RCC_PLLSAI2CFGR_PLLSAI2N_3 | RCC_PLLSAI2CFGR_PLLSAI2N_4;
+RCC->PLLSAI2CFGR |= RCC_PLLSAI2CFGR_PLLSAI2P;
+
+// Output clock enable
+RCC->PLLSAI2CFGR |= RCC_PLLSAI2CFGR_PLLSAI2PEN;
+
+// 11.294118MHz clock source selection for SAI1 - PLLSAI2P
+RCC->CCIPR |= RCC_CCIPR_SAI1SEL_0;
+
+// Enable PLL and wait until ready
+RCC->CR |= RCC_CR_PLLSAI2ON;
+while(!(RCC->CR & RCC_CR_PLLSAI2RDY));
 
 #else
 #error Wrong system clock selection!
