@@ -6,6 +6,7 @@
  */
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
+#include "cs43l22/cs43l22.h"
 #include "player.h"
 
 #include "mp3dec.h"
@@ -38,11 +39,17 @@ static void vTaskPlayer(void * pvParameters)
 void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
 	// Init
+	if(!CS43L22_Init(CS43L22_I2C_ADDRESS, OUTPUT_DEVICE_HEADPHONE, 50, AUDIO_FREQUENCY_44K))
+	{
+		DBG_PRINTF("CS43L22 initialized, chip ID: %d", CS43L22_ReadID(CS43L22_I2C_ADDRESS));
+	}
+
 	hMP3Decoder = MP3InitDecoder();
 	if(hMP3Decoder != NULL)
 	{
 		DBG_PRINTF("Helix MP3 decoder initialized");
 	}
+
 
 	// Creating tasks
 	xTaskCreate(vTaskPlayer, "PLAYER", PLAYER_STACK_SIZE, NULL, uxPriority, &xHandleTaskPlayer);

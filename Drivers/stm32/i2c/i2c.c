@@ -9,11 +9,11 @@
 
 void I2C_Init(void)
 {
-	/* Enable I2C1 and gpio clocks */
+	/* Enable I2Cx and gpio clocks */
 	RCC->APB1ENR1|= RCC_APB1ENR1_I2C1EN;
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
 	__DSB();
-	// Source clock selection for I2C1 - SYSCLK
+	// Source clock selection for I2Cx - SYSCLK
 	RCC->CCIPR |= RCC_CCIPR_I2C1SEL_0;
 
 	GPIO_PinConfig(GPIOB, 6, GPIO_AF4_OD_2MHz_PULL_UP);	// SCL
@@ -33,14 +33,17 @@ void I2C_Init(void)
 
 void I2C_Write(uint8_t address, uint8_t* data, uint32_t length)
 {
+	/* Wait until I2C bus is free */
+	while(READ_BIT(I2Cx->ISR, I2C_ISR_BUSY));
+
 	/* (1) Initiate a Start condition to the Slave device ***********************/
 
 	/* Master Generate Start condition for a write request :              */
 	/*    - to the Slave with a 7-Bit SLAVE_OWN_ADDRESS                   */
 	/*    - with a auto stop condition generation when transmit all bytes */
-	MODIFY_REG(I2Cx->CR2, I2C_CR2_SADD | I2C_CR2_ADD10 | I2C_CR2_RD_WRN | I2C_CR2_START | I2C_CR2_STOP | I2C_CR2_RELOAD |
-			I2C_CR2_NBYTES | I2C_CR2_AUTOEND | I2C_CR2_HEAD10R,
-			address | 0 | length << I2C_CR2_NBYTES_Pos | I2C_CR2_AUTOEND | I2C_CR2_START);
+	MODIFY_REG(I2Cx->CR2, I2C_CR2_SADD | I2C_CR2_ADD10 | I2C_CR2_RD_WRN | I2C_CR2_START |
+						  I2C_CR2_STOP | I2C_CR2_RELOAD | I2C_CR2_NBYTES | I2C_CR2_AUTOEND | I2C_CR2_HEAD10R,
+						  address | 0 | length << I2C_CR2_NBYTES_Pos | I2C_CR2_AUTOEND | I2C_CR2_START);
 
 	/* (2) Loop until end of transfer received (STOP flag raised) ***************/
 	/* Loop until STOP flag is raised  */
@@ -61,23 +64,26 @@ void I2C_Write(uint8_t address, uint8_t* data, uint32_t length)
 	SET_BIT(I2Cx->ICR, I2C_ICR_STOPCF);
 }
 
-void I2C_WriteToAddr(uint8_t address, uint8_t mem_address, uint8_t* data, uint32_t length)
+void I2C_WriteReg(uint8_t address, uint8_t reg_addr, uint8_t* data, uint8_t length)
 {
+	/* Wait until I2C bus is free */
+	while(READ_BIT(I2Cx->ISR, I2C_ISR_BUSY));
+
 	/* (1) Initiate a Start condition to the Slave device ***********************/
 
 	/* Master Generate Start condition for a write request :              */
 	/*    - to the Slave with a 7-Bit SLAVE_OWN_ADDRESS                   */
 	/*    - with a reload mode condition generation 					  */
 	/*    - transmit one byte (memory address)    	 					  */
-	MODIFY_REG(I2Cx->CR2, I2C_CR2_SADD | I2C_CR2_ADD10 | I2C_CR2_RD_WRN | I2C_CR2_START | I2C_CR2_STOP | I2C_CR2_RELOAD |
-			I2C_CR2_NBYTES | I2C_CR2_AUTOEND | I2C_CR2_HEAD10R,
-			address | 0 | 1 << I2C_CR2_NBYTES_Pos | I2C_CR2_RELOAD | I2C_CR2_START);
+	MODIFY_REG(I2Cx->CR2, I2C_CR2_SADD | I2C_CR2_ADD10 | I2C_CR2_RD_WRN |I2C_CR2_START |
+						  I2C_CR2_STOP | I2C_CR2_RELOAD |I2C_CR2_NBYTES | I2C_CR2_AUTOEND | I2C_CR2_HEAD10R,
+						  address | 1 << I2C_CR2_NBYTES_Pos | I2C_CR2_RELOAD | I2C_CR2_START);
 
 	/* (2) Request memory write */
 	/* Wait until TXIS flag is set */
 	while(!(READ_BIT(I2Cx->ISR, I2C_ISR_TXIS) == (I2C_ISR_TXIS)));
 	/* Send memory address */
-	WRITE_REG(I2Cx->TXDR, mem_address);
+	WRITE_REG(I2Cx->TXDR, reg_addr);
 	/* Wait until TCR flag is set */
 	while(!(READ_BIT(I2Cx->ISR, I2C_ISR_TCR) == (I2C_ISR_TCR)));
 
@@ -86,9 +92,9 @@ void I2C_WriteToAddr(uint8_t address, uint8_t mem_address, uint8_t* data, uint32
 	/* Master Generate Start condition for a write request :              */
 	/*    - to the Slave with a 7-Bit SLAVE_OWN_ADDRESS                   */
 	/*    - with a auto stop condition generation when transmit all bytes */
-	MODIFY_REG(I2Cx->CR2, I2C_CR2_SADD | I2C_CR2_ADD10 | I2C_CR2_RD_WRN | I2C_CR2_START | I2C_CR2_STOP | I2C_CR2_RELOAD |
-			I2C_CR2_NBYTES | I2C_CR2_AUTOEND | I2C_CR2_HEAD10R,
-			address | 0 | length << I2C_CR2_NBYTES_Pos | I2C_CR2_AUTOEND | I2C_CR2_START);
+	MODIFY_REG(I2Cx->CR2, I2C_CR2_SADD | I2C_CR2_ADD10 | I2C_CR2_RD_WRN | I2C_CR2_START |
+						  I2C_CR2_STOP | I2C_CR2_RELOAD |I2C_CR2_NBYTES | I2C_CR2_AUTOEND | I2C_CR2_HEAD10R,
+						  address | 0 | length << I2C_CR2_NBYTES_Pos | I2C_CR2_AUTOEND | I2C_CR2_START);
 
 	/* (4) Loop until end of transfer received (STOP flag raised) ***************/
 	/* Loop until STOP flag is raised  */
@@ -109,3 +115,53 @@ void I2C_WriteToAddr(uint8_t address, uint8_t mem_address, uint8_t* data, uint32
 	SET_BIT(I2Cx->ICR, I2C_ICR_STOPCF);
 }
 
+void I2C_ReadReg(uint8_t address, uint8_t reg_addr, uint8_t* data, uint8_t length)
+{
+	/* Wait until I2C bus is free */
+	while(READ_BIT(I2Cx->ISR, I2C_ISR_BUSY));
+
+	/* (1) Initiate a Start condition to the Slave device ***********************/
+
+	/* Master Generate Start condition for a write request :              */
+	/*    - to the Slave with a 7-Bit SLAVE_OWN_ADDRESS                   */
+	/*    - with a reload mode condition generation 					  */
+	/*    - read one byte (memory address)      	 					  */
+	MODIFY_REG(I2Cx->CR2, I2C_CR2_SADD | I2C_CR2_ADD10 | I2C_CR2_RD_WRN | I2C_CR2_START | I2C_CR2_STOP | I2C_CR2_RELOAD |
+			I2C_CR2_NBYTES | I2C_CR2_AUTOEND | I2C_CR2_HEAD10R,
+			address | 0 | 1 << I2C_CR2_NBYTES_Pos | 0 | I2C_CR2_START);
+
+	/* (2) Request memory write */
+	/* Wait until TXIS flag is set */
+	while(!(READ_BIT(I2Cx->ISR, I2C_ISR_TXIS) == (I2C_ISR_TXIS)));
+	/* Send memory address */
+	WRITE_REG(I2Cx->TXDR, reg_addr);
+	/* Wait until TC flag is set */
+	while(!(READ_BIT(I2Cx->ISR, I2C_ISR_TC) == (I2C_ISR_TC)));
+
+	/* (3) Initiate a Start condition to the Slave device ***********************/
+
+	/* Master Generate Start condition for a read request :              */
+	/*    - to the Slave with a 7-Bit SLAVE_OWN_ADDRESS                   */
+	/*    - with a auto stop condition generation when read all bytes */
+	MODIFY_REG(I2Cx->CR2, I2C_CR2_SADD | I2C_CR2_ADD10 | I2C_CR2_RD_WRN | I2C_CR2_START | I2C_CR2_STOP | I2C_CR2_RELOAD |
+			I2C_CR2_NBYTES | I2C_CR2_AUTOEND | I2C_CR2_HEAD10R,
+			address | 0 | length << I2C_CR2_NBYTES_Pos | I2C_CR2_AUTOEND | (uint32_t)(I2C_CR2_START | I2C_CR2_RD_WRN));
+
+	/* Read all bytes */
+	do
+	{
+		/* Wait until RXNE flag is set */
+		while(!READ_BIT(I2Cx->ISR, I2C_ISR_RXNE));
+		/* Read data from RXDR */
+		*data++ = I2Cx->RXDR;
+		length--;
+
+	}while(length > 0);
+
+	/* No need to Check TC flag, with AUTOEND mode the stop is automatically generated */
+	/* Wait until STOPF flag is set */
+	while(!READ_BIT(I2Cx->ISR, I2C_ISR_STOPF));
+
+	/* Clear STOP Flag */
+	SET_BIT(I2Cx->ICR, I2C_ICR_STOPCF);
+}

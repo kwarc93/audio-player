@@ -12,6 +12,9 @@
 #include <stdint.h>
 #include "i2s/i2s.h"
 
+/* Audio codec I2C address */
+#define CS43L22_I2C_ADDRESS           0x94
+
 /******************************************************************************/
 /***************************  Codec User defines ******************************/
 /******************************************************************************/
@@ -118,7 +121,8 @@
 /** @defgroup CS43L22_Exported_Macros
   * @{
   */
-
+#define AUDIO_RESET_PORT		GPIOE
+#define AUDIO_RESET_PIN			3
 /**
   * @}
   */
@@ -131,17 +135,17 @@
                            Audio Codec functions
 ------------------------------------------------------------------------------*/
 /* High Layer codec functions */
-uint32_t cs43l22_Init(uint16_t DeviceAddr, uint16_t OutputDevice, uint8_t Volume, uint32_t AudioFreq);
-void     cs43l22_DeInit(void);
-uint32_t cs43l22_ReadID(uint16_t DeviceAddr);
-uint32_t cs43l22_Play(uint16_t DeviceAddr, uint16_t* pBuffer, uint16_t Size);
-uint32_t cs43l22_Pause(uint16_t DeviceAddr);
-uint32_t cs43l22_Resume(uint16_t DeviceAddr);
-uint32_t cs43l22_Stop(uint16_t DeviceAddr, uint32_t Cmd);
-uint32_t cs43l22_SetVolume(uint16_t DeviceAddr, uint8_t Volume);
-uint32_t cs43l22_SetFrequency(uint16_t DeviceAddr, uint32_t AudioFreq);
-uint32_t cs43l22_SetMute(uint16_t DeviceAddr, uint32_t Cmd);
-uint32_t cs43l22_SetOutputMode(uint16_t DeviceAddr, uint8_t Output);
-uint32_t cs43l22_Reset(uint16_t DeviceAddr);
+uint32_t CS43L22_Init(uint16_t DeviceAddr, uint16_t OutputDevice, uint8_t Volume, uint32_t AudioFreq);
+void     CS43L22_DeInit(void);
+uint32_t CS43L22_ReadID(uint16_t DeviceAddr);
+uint32_t CS43L22_Play(uint16_t DeviceAddr, uint16_t* pBuffer, uint16_t Size);
+uint32_t CS43L22_Pause(uint16_t DeviceAddr);
+uint32_t CS43L22_Resume(uint16_t DeviceAddr);
+uint32_t CS43L22_Stop(uint16_t DeviceAddr, uint32_t Cmd);
+uint32_t CS43L22_SetVolume(uint16_t DeviceAddr, uint8_t Volume);
+uint32_t CS43L22_SetFrequency(uint16_t DeviceAddr, uint32_t AudioFreq);
+uint32_t CS43L22_SetMute(uint16_t DeviceAddr, uint32_t Cmd);
+uint32_t CS43L22_SetOutputMode(uint16_t DeviceAddr, uint8_t Output);
+uint32_t CS43L22_Reset(uint16_t DeviceAddr);
 
 #endif /* EXTERNAL_CS43L22_CS43L22_H_ */
