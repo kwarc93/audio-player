@@ -177,12 +177,12 @@ uint32_t CS43L22_Beep(uint16_t DeviceAddr)
 
 	/* Disable beep */
 	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_TONE_CFG, 0x00);
-	/* Beep frequency: ~888Hz (A5) and on-time: 1,2s */
-	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_FREQ_ON_TIME, 0x63);
+	/* Beep frequency: ~888Hz (A5) and on-time: ~0.5s */
+	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_FREQ_ON_TIME, 0x61);
 	/* Beep off-time duration: ~1,23s and volume: -6dB */
 	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_VOL_OFF_TIME, 0x00);
 	/* Enable single beep tone */
-	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_TONE_CFG, 0xC0);
+	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_TONE_CFG, 0x40);
 
 	return counter;
 }

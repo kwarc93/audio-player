@@ -8,6 +8,8 @@
 #ifndef STM32_I2S_I2S_H_
 #define STM32_I2S_I2S_H_
 
+#include "main.h"
+
 /* AUDIO FREQUENCY */
 #define AUDIO_FREQUENCY_192K          ((uint32_t)192000)
 #define AUDIO_FREQUENCY_96K           ((uint32_t)96000)
@@ -20,5 +22,6 @@
 #define AUDIO_FREQUENCY_8K            ((uint32_t)8000)
 
 void I2S_Init(void);
+void SAI1_TxDMA(void *src, uint32_t length);
 
 #endif /* STM32_I2S_I2S_H_ */

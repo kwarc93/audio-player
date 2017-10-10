@@ -12,7 +12,7 @@
 #include "FreeRTOS/task.h"
 #endif
 
-#define DELAY_US(us) do {\
+#define DELAY_US_ASM(us) do {\
 		asm volatile (	"MOV R0,%[loops]\n\t"\
 						"1: \n\t"\
 						"SUB R0, #1\n\t"\
@@ -21,9 +21,19 @@
 		);\
 } while(0)
 
+#pragma GCC push_options
+#pragma GCC optimize ("O3")
+static inline void delayUS_DWT(uint32_t us) {
+	volatile uint32_t cycles = (CPU_CLOCK/1000000L)*us;
+	volatile uint32_t start = DWT->CYCCNT;
+	do  {
+	} while(DWT->CYCCNT - start < cycles);
+}
+#pragma GCC pop_options
+
 void delay_ms(uint32_t t)
 {
-	DELAY_US(t*1000UL);
+	DELAY_US_ASM(t*1000UL);
 }
 
 /* Determine whether we are in thread mode or handler mode. */

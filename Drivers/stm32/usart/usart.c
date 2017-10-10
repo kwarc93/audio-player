@@ -45,7 +45,7 @@ void USART_Init(void)
 	DMA1_Channel7->CCR|= DMA_CCR_TCIE;					// Enable transfer complete interrupt
 
 	// Priority level
-	NVIC_SetPriority(OTG_FS_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 5, 0));
+	NVIC_SetPriority(DMA1_Channel7_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 5, 0));
 	// Enable IRQ
 	NVIC_EnableIRQ(DMA1_Channel7_IRQn);
 
@@ -88,7 +88,7 @@ void USART_TxDMA(void *src, uint8_t length)
 	DMA1_Channel7->CCR|= DMA_CCR_EN;
 }
 
-// --- USART INTERRUPT HANDLERS --- //
+// --- USART & DMA INTERRUPT HANDLERS --- //
 
 void USART2_IRQHandler(void)
 {
