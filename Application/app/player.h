@@ -8,7 +8,7 @@
 #ifndef APP_PLAYER_H_
 #define APP_PLAYER_H_
 
-#define PLAYER_STACK_SIZE	1024
+#define PLAYER_STACK_SIZE	(4*1024)
 
 void Player_StartTasks(unsigned portBASE_TYPE uxPriority);
 

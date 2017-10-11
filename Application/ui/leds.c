@@ -65,6 +65,7 @@ static void vTaskLEDR(void * pvParameters)
 
 void Led_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
+	BaseType_t result;
 	// Init
 	RCC->AHB2ENR |=  RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOEEN;
 	__DSB();
@@ -72,8 +73,11 @@ void Led_StartTasks(unsigned portBASE_TYPE uxPriority)
 	GPIO_PinConfig(GPIOE,8,GPIO_OUT_PP_2MHz);
 
 	// Creating task for LED blinking
-	xTaskCreate(vTaskLEDG, "LEDG", LED_STACK_SIZE, NULL, uxPriority, &xHandleTaskLEDG);
-	xTaskCreate(vTaskLEDR, "LEDR", LED_STACK_SIZE, NULL, uxPriority, &xHandleTaskLEDR);
+	result = xTaskCreate(vTaskLEDG, "LEDG", LED_STACK_SIZE, NULL, uxPriority, &xHandleTaskLEDG);
+	result |= xTaskCreate(vTaskLEDR, "LEDR", LED_STACK_SIZE, NULL, uxPriority, &xHandleTaskLEDR);
 
-	DBG_PRINTF("Task(s) started!");
+	if(result == pdPASS)
+	{
+		DBG_PRINTF("Task(s) started!");
+	}
 }

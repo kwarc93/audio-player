@@ -22,6 +22,9 @@
 #define AUDIO_FREQUENCY_8K            ((uint32_t)8000)
 
 void I2S_Init(void);
-void SAI1_TxDMA(void *src, uint32_t length);
+void I2S_TxDMA(void *src, uint32_t length);
+
+void I2S_HalfTransferCallback(void);
+void I2S_TransferCompleteCallback(void);
 
 #endif /* STM32_I2S_I2S_H_ */

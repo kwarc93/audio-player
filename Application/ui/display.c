@@ -105,9 +105,10 @@ void Display_StartTasks(unsigned portBASE_TYPE uxPriority)
 	Display_SendText("STM32L476 MP3 PLAYER");
 
 	// Creating task for LCD
-	xTaskCreate(vTaskDisplay, "LCD", LCD_STACK_SIZE, NULL, uxPriority, &xHandleTaskDisplay);
-
-	DBG_PRINTF("Task(s) started!");
+	if(xTaskCreate(vTaskDisplay, "LCD", LCD_STACK_SIZE, NULL, uxPriority, &xHandleTaskDisplay) == pdPASS)
+	{
+		DBG_PRINTF("Task(s) started!");
+	}
 }
 
 void Display_SendText(char* text)

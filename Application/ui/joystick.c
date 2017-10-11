@@ -92,7 +92,8 @@ void Joystick_StartTasks(unsigned portBASE_TYPE uxPriority)
 	xTimerStart(thJoystickTim, 0);
 
 	// Create task for reading input button
-	xTaskCreate(vTaskJoystick, "JOYSTICK", JOYSTICK_STACK_SIZE, NULL, uxPriority, &xHandleTaskJoystick);
-
-	DBG_PRINTF("Task(s) started!");
+	if(xTaskCreate(vTaskJoystick, "JOYSTICK", JOYSTICK_STACK_SIZE, NULL, uxPriority, &xHandleTaskJoystick) == pdPASS)
+	{
+		DBG_PRINTF("Task(s) started!");
+	}
 }

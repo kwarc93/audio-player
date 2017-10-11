@@ -15,7 +15,7 @@
 #include "FatFs/ff.h"
 #include <stdbool.h>
 
-#define TEST_FATFS		1
+#define TEST_FATFS		0
 
 /* for FS and HS identification */
 #define HOST_HS 		0
@@ -23,6 +23,7 @@
 
 /* USB Host Core handle declaration */
 USBH_HandleTypeDef hUsbHostFS;
+static _Bool usb_class_active = false;
 static USB_Host_State_t USB_HostState;
 
 static TaskHandle_t xHandleTaskUSB;
@@ -99,11 +100,13 @@ static void USBH_TaskProcess(void)
 			break;
 
 		case USB_HOST_DISCONNECT:
+			usb_class_active = false;
 			DBG_SIMPLE("USBH disconnection event");
 			Display_SendText("USB DISCONNECTED");
 			break;
 
 		case USB_HOST_READY:
+			usb_class_active = true;
 			DBG_SIMPLE("USBH host ready");
 			Display_SendText("USB READY");
 #if TEST_FATFS == 1
@@ -147,9 +150,15 @@ void USB_StartTasks(unsigned portBASE_TYPE uxPriority)
 	USB_HOST_Init();
 
 	// Creating task for USB
-	xTaskCreate(vTaskUSB, "USB", USB_STACK_SIZE, NULL, uxPriority, &xHandleTaskUSB);
+	if(xTaskCreate(vTaskUSB, "USB", USB_STACK_SIZE, NULL, uxPriority, &xHandleTaskUSB) == pdPASS)
+	{
+		DBG_SIMPLE("Task(s) started!");
+	}
+}
 
-	DBG_SIMPLE("Task(s) started!");
+_Bool USB_IsClassActive(void)
+{
+	return usb_class_active;
 }
 
 void OTG_FS_IRQHandler(void)

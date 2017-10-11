@@ -57,12 +57,12 @@ void I2S_Init(void)
 
 	/* Configure SAI Block_x Slot */
 	SAI1_Block_A->SLOTR = 0;
-	SAI1_Block_A->SLOTR |= SAI_xSLOTR_NBSLOT_1;	// Slot number: 2
-	SAI1_Block_A->SLOTR |= (3 << SAI_xSLOTR_SLOTEN_Pos);				// Enable slot 0,1,2,3
-	SAI1_Block_A->CR1 |= SAI_xCR1_SAIEN;								// SAI enable
+	SAI1_Block_A->SLOTR |= SAI_xSLOTR_NBSLOT_1;					// Slot number: 2
+	SAI1_Block_A->SLOTR |= (3 << SAI_xSLOTR_SLOTEN_Pos);		// Enable slot 0,1
+	SAI1_Block_A->CR1 |= SAI_xCR1_SAIEN;						// SAI enable
 
 	/* DMA2 Channel6 configuration - SAI1 TX */
-	DMA2_CSELR->CSELR |= (1 << 20);						// Channel 6 mapped on SAI1_A
+	DMA2_CSELR->CSELR |= (1 << 20);								// Channel 6 mapped on SAI1_A
 
 	// Data flow: mem > periph; pDataSize: 16bit; mDataSize: 16bit(increment), circular mode
 	DMA2_Channel6->CCR = DMA_CCR_DIR | DMA_CCR_MINC | DMA_CCR_PSIZE_0 | DMA_CCR_MSIZE_0 |
@@ -79,7 +79,7 @@ void I2S_Init(void)
 
 }
 
-void SAI1_TxDMA(void *src, uint32_t length)
+void I2S_TxDMA(void *src, uint32_t length)
 {
 	// Wait for DMA Transfer Complete
 	while(!DMA2C6_TC);
@@ -93,6 +93,16 @@ void SAI1_TxDMA(void *src, uint32_t length)
 	DMA2_Channel6->CNDTR = length;
 	/* Start transmission */
 	DMA2_Channel6->CCR |= DMA_CCR_EN;
+}
+
+__attribute__((weak)) void I2S_HalfTransferCallback(void)
+{
+	/* NOTE : This function Should not be modified, when the callback is needed */
+}
+
+__attribute__((weak)) void I2S_TransferCompleteCallback(void)
+{
+	/* NOTE : This function Should not be modified, when the callback is needed */
 }
 
 // --- SAI & DMA INTERRUPT HANDLERS --- //
@@ -111,6 +121,8 @@ void DMA2_Channel6_IRQHandler(void)
 
 		// Interrupt service code:
 		DMA2C6_TC = true;
+		I2S_TransferCompleteCallback();
+
 	}
 
 	/* Half-Transfer Complete */
@@ -120,6 +132,7 @@ void DMA2_Channel6_IRQHandler(void)
 
 		// Interrupt service code:
 		DMA2C6_HT = true;
+		I2S_HalfTransferCallback();
 	}
 }
 

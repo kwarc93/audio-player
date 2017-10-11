@@ -52,7 +52,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#define USB_STACK_SIZE 1024
+#define USB_STACK_SIZE (1024)
 
 typedef enum {
   USB_HOST_IDLE = 0,  
@@ -62,6 +62,7 @@ typedef enum {
 }USB_Host_State_t;
 		
 void USB_StartTasks(unsigned portBASE_TYPE uxPriority);
+_Bool USB_IsClassActive(void);
 
 #ifdef __cplusplus
 }
