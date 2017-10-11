@@ -31,6 +31,7 @@ void I2S_Init(void)
 	__DSB();
 	/* Enable DMA1 clock */
 	RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
+	__DSB();
 
 	SAI1_Block_A->CR1 &= ~SAI_xCR1_SAIEN;			// SAI disable
 
@@ -40,20 +41,24 @@ void I2S_Init(void)
 	GPIO_PinConfig(GPIOE, 2, GPIO_AF13_PP_100MHz);	// MCLK
 
 	/* Configure SAI_Block_x */
+	SAI1_Block_A->CR1 = 0;
 	SAI1_Block_A->CR1 |= SAI_xCR1_OUTDRIV | SAI_xCR1_DMAEN; 	// Output drive enable, DMA enable
-	SAI1_Block_A->CR2 |= SAI_xCR2_FTH_1;	// FIFO threshold
 	SAI1_Block_A->CR1 |= (SAIClockDivider(AUDIO_FREQUENCY_44K) << SAI_xCR1_MCKDIV_Pos);	// MCLK divider
-	SAI1_Block_A->CR1 |= SAI_xCR1_DS_2;	// 16Bit data size, falling clockstrobing edge
+	SAI1_Block_A->CR1 |= SAI_xCR1_DS_2 | SAI_xCR1_CKSTR;		// 16Bit data size, falling clockstrobing edge
+	SAI1_Block_A->CR2 = 0;
+	SAI1_Block_A->CR2 |= SAI_xCR2_FTH_1;						// FIFO threshold 1/2
 
 	/* Configure SAI_Block_x Frame */
-	SAI1_Block_A->FRCR |= ((32 - 1) << SAI_xFRCR_FRL_Pos);		// Frame length: 32
+	SAI1_Block_A->FRCR = 0;
+	SAI1_Block_A->FRCR |= ((64 - 1) << SAI_xFRCR_FRL_Pos);		// Frame length: 64
 	SAI1_Block_A->FRCR |= ((16 - 1) << SAI_xFRCR_FSALL_Pos);	// Frame active Length: 16
 	SAI1_Block_A->FRCR |= SAI_xFRCR_FSDEF;	// FS Definition: Start frame + Channel Side identification
 	SAI1_Block_A->FRCR |= SAI_xFRCR_FSOFF;	// FS Offset: FS asserted one bit before the first bit of slot 0
 
 	/* Configure SAI Block_x Slot */
-	SAI1_Block_A->SLOTR |= SAI_xSLOTR_NBSLOT_0 | SAI_xSLOTR_NBSLOT_1;	// Slot number: 2
-	SAI1_Block_A->SLOTR |= (3 << SAI_xSLOTR_SLOTEN_Pos);				// Enable slot 0 & 1
+	SAI1_Block_A->SLOTR = 0;
+	SAI1_Block_A->SLOTR |= SAI_xSLOTR_NBSLOT_1;	// Slot number: 2
+	SAI1_Block_A->SLOTR |= (3 << SAI_xSLOTR_SLOTEN_Pos);				// Enable slot 0,1,2,3
 	SAI1_Block_A->CR1 |= SAI_xCR1_SAIEN;								// SAI enable
 
 	/* DMA2 Channel6 configuration - SAI1 TX */
