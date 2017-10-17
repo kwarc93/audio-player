@@ -24,7 +24,7 @@ void Debug_Init(void)
 	USART_Init();
 #ifdef USE_FREERTOS
 	// Create Mutex for USART interface
-	shMutexUSART = xSemaphoreCreateMutex();
+	shMutexUSART = xSemaphoreCreateRecursiveMutex();
 	xSemaphoreGive(shMutexUSART);
 #endif
 }
@@ -32,17 +32,14 @@ void Debug_Init(void)
 void Debug_Simple(const char* msg)
 {
 #ifdef USE_FREERTOS
-	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-	if(xSemaphoreTakeFromISR(shMutexUSART, &xHigherPriorityTaskWoken))
+	if(xSemaphoreTake(shMutexUSART, 0))
 	{
 #endif
 		USART_TxDMA((void*)msg, strlen(msg));
 		USART_TxDMA("\n", 1);
 #ifdef USE_FREERTOS
-		xSemaphoreGiveFromISR(shMutexUSART, &xHigherPriorityTaskWoken);
+		xSemaphoreGive(shMutexUSART);
 	}
-	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 #endif
 }
 
@@ -50,19 +47,22 @@ void Debug_Printf(const char* fmt, ...)
 {
 	va_list args;
 #ifdef USE_FREERTOS
-	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-	if(xSemaphoreTakeFromISR(shMutexUSART, &xHigherPriorityTaskWoken))
+	if(xSemaphoreTake(shMutexUSART, 0))
 	{
 #endif
+		enter_critical();
+
 		va_start(args, fmt);
 		vsnprintf(debug_buffer, sizeof(debug_buffer), fmt, args);
 		va_end(args);
+
+		exit_critical();
+
 		USART_TxDMA(debug_buffer, strlen(debug_buffer));
 		USART_TxDMA("\n", 1);
+
 #ifdef USE_FREERTOS
-		xSemaphoreGiveFromISR(shMutexUSART, &xHigherPriorityTaskWoken);
+		xSemaphoreGive(shMutexUSART);
 	}
-	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 #endif
 }

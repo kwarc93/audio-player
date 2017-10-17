@@ -12,13 +12,15 @@
 #include "FreeRTOS/task.h"
 #endif
 
+#include <stdbool.h>
+
 #define DELAY_US_ASM(us) do {\
 		asm volatile (	"MOV R0,%[loops]\n\t"\
 						"1: \n\t"\
 						"SUB R0, #1\n\t"\
 						"CMP R0, #0\n\t"\
 						"BNE 1b \n\t" : : [loops] "r" (16*us) : "memory"\
-		);\
+					 );\
 } while(0)
 
 #pragma GCC push_options
@@ -31,15 +33,51 @@ static inline void delayUS_DWT(uint32_t us) {
 }
 #pragma GCC pop_options
 
+static uint32_t primask;
+
+void delay_us(uint32_t t)
+{
+	DELAY_US_ASM(t);
+}
+
 void delay_ms(uint32_t t)
 {
 	DELAY_US_ASM(t*1000UL);
 }
 
-/* Determine whether we are in thread mode or handler mode. */
-int is_in_handler_mode(void)
+_Bool is_in_handler_mode(void)
 {
   return __get_IPSR() != 0;
+}
+
+void disable_interrupts(void)
+{
+	__disable_irq();
+}
+
+void enable_interrupts(void)
+{
+	__enable_irq();
+}
+
+void enter_critical(void)
+{
+#ifdef USE_FREERTOS
+	portENTER_CRITICAL();
+#else
+	primask = __get_PRIMASK();
+	disable_interrupts();
+#endif
+}
+
+void exit_critical(void)
+{
+#ifdef USE_FREERTOS
+	portEXIT_CRITICAL();
+#else
+	if(!primask)
+		enable_interrupts();
+#endif
 }
 
 char* mystrcat( char* dest, char* src )
