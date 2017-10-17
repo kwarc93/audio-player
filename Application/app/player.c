@@ -17,6 +17,7 @@
 #include "misc.h"
 
 #include <stdbool.h>
+#include <string.h>
 
 #ifdef DEBUG
 #include "debug.h"
@@ -26,20 +27,29 @@
 #endif
 
 #define AUDIO_BUFFER_LENGTH			(4096)
-#define AUDIO_HALF_BUFFER_LENGTH	(AUDIO_BUFFER_LENGTH/2)
 
 static SemaphoreHandle_t shI2SEvent;
 static TaskHandle_t xHandleTaskPlayer;
+static QueueHandle_t qhPlayerState;
 static HMP3Decoder hMP3Decoder;
+static enum player_states player_state;
 
-static int16_t audio_buffer[AUDIO_BUFFER_LENGTH];
-static int16_t* audio_buffer_ready_part;
+static struct audio_file
+{
+	FIL file;
+	FILINFO info;
+	FRESULT res;
+	UINT bytes_read;
+
+	int16_t buffer[AUDIO_BUFFER_LENGTH];
+	int16_t* buffer_ready_part;
+} audio;
 
 void I2S_HalfTransferCallback(void)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-	audio_buffer_ready_part = &audio_buffer[0];
+	audio.buffer_ready_part = &audio.buffer[0];
 	xSemaphoreGiveFromISR(shI2SEvent, &xHigherPriorityTaskWoken);
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 
@@ -49,47 +59,74 @@ void I2S_TransferCompleteCallback(void)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-	audio_buffer_ready_part = &audio_buffer[AUDIO_HALF_BUFFER_LENGTH];
+	audio.buffer_ready_part = &audio.buffer[AUDIO_BUFFER_LENGTH/2];
 	xSemaphoreGiveFromISR(shI2SEvent, &xHigherPriorityTaskWoken);
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 }
 
+static void player_process(enum player_states state)
+{
+	switch(state)
+	{
+	case PLAYER_IDLE:
+		vTaskDelay(100);
+		break;
+	case PLAYER_WAIT_FOR_DISK:
+		if(USB_IsDiskReady())
+		{
+			player_state = PLAYER_INIT;
+		}
+		vTaskDelay(100);
+		break;
+	case PLAYER_INIT:
+		memset(audio.buffer, 0, sizeof(audio.buffer));
+		if(f_open(&audio.file, "hs_wav.wav", FA_READ) == FR_OK)
+		{
+			DBG_PRINTF("File: hs_wav.wav");
+			Display_SendText("HAPPYSAD - BEZ ZNIECZULENIA");
+
+			I2S_TxDMA(audio.buffer, AUDIO_BUFFER_LENGTH);
+			CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
+
+			player_state = PLAYER_PLAY;
+		}
+		break;
+	case PLAYER_PLAY:
+		if(xSemaphoreTake(shI2SEvent, portMAX_DELAY) == pdTRUE)
+		{
+			audio.res = f_read(&audio.file, audio.buffer_ready_part,
+									sizeof(audio.buffer)/2, &audio.bytes_read);
+
+			if(audio.bytes_read != sizeof(audio.buffer)/2 || audio.res != FR_OK)
+			{
+				player_state = PLAYER_STOP;
+			}
+		}
+		break;
+	case PLAYER_PAUSE:
+		I2S_StopDMA();
+		CS43L22_Pause(CS43L22_I2C_ADDRESS);
+		Display_SendText("STOP");
+		player_state = PLAYER_IDLE;
+		break;
+	case PLAYER_STOP:
+		I2S_StopDMA();
+		CS43L22_Stop(CS43L22_I2C_ADDRESS, CODEC_PDWN_SW);
+		Display_SendText("STOP");
+		f_close(&audio.file);
+		player_state = PLAYER_IDLE;
+		break;
+	default:
+		vTaskDelay(100);
+		break;
+	}
+}
 static void vTaskPlayer(void * pvParameters)
 {
-	FIL audio_file;
-	FATFS fs0;
-	FRESULT res;
-	UINT bytes_read;
-	TickType_t xLastFlashTime;
-
-	// Read state of system counter
-	xLastFlashTime = xTaskGetTickCount();
 	// Task's infinite loop
 	for(;;)
 	{
-		if(!USB_IsClassActive())
-		{
-			while(!USB_IsClassActive()) {vTaskDelay(100);};
-
-			f_mount(&fs0, "0:", 1);
-			if(f_open(&audio_file, "0:hs_wav.wav", FA_READ) == FR_OK)
-			{
-				DBG_PRINTF("Playing audio file: hs_wav.wav");
-				Display_SendText("HAPPYSAD - BEZ ZNIECZULENIA");
-			}
-			I2S_TxDMA(audio_buffer, AUDIO_BUFFER_LENGTH);
-			CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
-		}
-
-		if(xSemaphoreTake(shI2SEvent, portMAX_DELAY) == pdTRUE)
-		{
-			res = f_read(&audio_file, audio_buffer_ready_part, AUDIO_BUFFER_LENGTH, &bytes_read);
-			if(bytes_read == 0 || res != FR_OK)
-			{
-				CS43L22_Stop(CS43L22_I2C_ADDRESS, CODEC_PDWN_SW);
-				Display_SendText("STOP");
-			}
-		}
+		player_process(player_state);
 	}
 	/* Should never go there */
 	vTaskDelete(xHandleTaskPlayer);
@@ -97,6 +134,12 @@ static void vTaskPlayer(void * pvParameters)
 
 void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
+	player_state = PLAYER_WAIT_FOR_DISK;
+	audio.buffer_ready_part = &audio.buffer[0];
+
+	 // Create queue for player states
+	qhPlayerState = xQueueCreate(4, sizeof(enum player_states));
+
 	// Create and take binary semaphore
 	vSemaphoreCreateBinary(shI2SEvent);
 	xSemaphoreTake(shI2SEvent, 0);
@@ -120,3 +163,7 @@ void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 	}
 }
 
+void Player_SetState(enum player_states state)
+{
+	player_state = state;
+}

@@ -62,7 +62,7 @@ typedef enum {
 }USB_Host_State_t;
 		
 void USB_StartTasks(unsigned portBASE_TYPE uxPriority);
-_Bool USB_IsClassActive(void);
+_Bool USB_IsDiskReady(void);
 
 #ifdef __cplusplus
 }

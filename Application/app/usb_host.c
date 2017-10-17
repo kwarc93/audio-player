@@ -1,6 +1,6 @@
-
-
-/* Includes ------------------------------------------------------------------*/
+// +--------------------------------------------------------------------------
+// | @ Includes
+// +--------------------------------------------------------------------------
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "FreeRTOS/semphr.h"
@@ -15,67 +15,78 @@
 #include "FatFs/ff.h"
 #include <stdbool.h>
 
+// +--------------------------------------------------------------------------
+// | @ Defines
+// +--------------------------------------------------------------------------
 #define TEST_FATFS		0
-
 /* for FS and HS identification */
 #define HOST_HS 		0
 #define HOST_FS 		1
 
-/* USB Host Core handle declaration */
+// +--------------------------------------------------------------------------
+// | @ Public variables
+// +--------------------------------------------------------------------------
+/* USB Host Core handle */
 USBH_HandleTypeDef hUsbHostFS;
-static _Bool usb_class_active = false;
-static USB_Host_State_t USB_HostState;
 
-static TaskHandle_t xHandleTaskUSB;
+// +--------------------------------------------------------------------------
+// | @ Private variables
+// +--------------------------------------------------------------------------
+static struct context
+{
+	FATFS fs;
+	USB_Host_State_t host_state;
+	TaskHandle_t task_handle;
 
-static _Bool USBEvent = false;
+	_Bool event;
+	_Bool disk_ready;
+}ctx;
+
+// +--------------------------------------------------------------------------
+// | @ Private functions
+// +--------------------------------------------------------------------------
 static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
-static void FatFS_TestApplication(void);
+static _Bool FatFS_Test(void);
 
-/*
- * Background task
-*/
+/* USB Host Background task */
 static void USB_HOST_Process(void)
 {
-  /* USB Host Background task */
     USBH_Process(&hUsbHostFS);
 }
 
-/* init function */				        
+/* Init function */
 static void USB_HOST_Init(void)
 {
   /* Init Host Library,Add Supported Class and Start the library*/
-	USB_HostState = USB_HOST_IDLE;
+	ctx.host_state = USB_HOST_IDLE;
 	USBH_Init(&hUsbHostFS, USBH_UserProcess, HOST_FS);
 	USBH_RegisterClass(&hUsbHostFS, USBH_MSC_CLASS);
 	USBH_Start(&hUsbHostFS);
 }
 
-/*
- * user callback definition
-*/ 
+/* User USB callback */
 static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
 {
 	switch(id)
 	{
 	case HOST_USER_SELECT_CONFIGURATION:
-		USBEvent = true;
+		ctx.event = true;
 		break;
 
 	case HOST_USER_DISCONNECTION:
-		USB_HostState = USB_HOST_DISCONNECT;
+		ctx.host_state = USB_HOST_DISCONNECT;
 		USBH_DeInit(&hUsbHostFS);
-		USBEvent = true;
+		ctx.event = true;
 		break;
 
 	case HOST_USER_CLASS_ACTIVE:
-		USB_HostState = USB_HOST_READY;
-		USBEvent = true;
+		ctx.host_state = USB_HOST_READY;
+		ctx.event = true;
 		break;
 
 	case HOST_USER_CONNECTION:
-		USB_HostState = USB_HOST_START;
-		USBEvent = true;
+		ctx.host_state = USB_HOST_START;
+		ctx.event = true;
 		USB_HOST_Init();
 		break;
 
@@ -84,34 +95,36 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
 	}
 }
 
-/*
- * internal process
-*/
+/* Internal process */
 static void USBH_TaskProcess(void)
 {
 	USB_HOST_Process();
 
-	if(USBEvent)
+	if(ctx.event)
 	{
-		USBEvent = false;
-		switch(USB_HostState)
+		ctx.event = false;
+		switch(ctx.host_state)
 		{
 		case USB_HOST_IDLE:
 			break;
 
 		case USB_HOST_DISCONNECT:
-			usb_class_active = false;
+			ctx.disk_ready = false;
 			DBG_SIMPLE("USBH disconnection event");
 			Display_SendText("USB DISCONNECTED");
 			break;
 
 		case USB_HOST_READY:
-			usb_class_active = true;
 			DBG_SIMPLE("USBH host ready");
 			Display_SendText("USB READY");
-#if TEST_FATFS == 1
-			FatFS_TestApplication();
-#endif
+
+			if(f_mount(&ctx.fs, "", 1) == FR_OK)
+			{
+			#if TEST_FATFS == 1
+				FatFS_Test();
+			#endif
+				ctx.disk_ready = true;
+			}
 			break;
 
 		case USB_HOST_START:
@@ -125,6 +138,7 @@ static void USBH_TaskProcess(void)
 	}
 }
 
+/* USB task */
 static void vTaskUSB(void *pvParameters)
 {
 	TickType_t xLastFlashTime;
@@ -141,26 +155,34 @@ static void vTaskUSB(void *pvParameters)
 		vTaskDelayUntil( &xLastFlashTime, 10/portTICK_PERIOD_MS );
 	}
 	/* Should never go here */
-	vTaskDelete(xHandleTaskUSB);
+	vTaskDelete(ctx.task_handle);
 }
 
+// +--------------------------------------------------------------------------
+// | @ Public functions
+// +--------------------------------------------------------------------------
 void USB_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
 	// Init
+	ctx.disk_ready = false;
+	ctx.event = false;
 	USB_HOST_Init();
 
 	// Creating task for USB
-	if(xTaskCreate(vTaskUSB, "USB", USB_STACK_SIZE, NULL, uxPriority, &xHandleTaskUSB) == pdPASS)
+	if(xTaskCreate(vTaskUSB, "USB", USB_STACK_SIZE, NULL, uxPriority, &ctx.task_handle) == pdPASS)
 	{
 		DBG_SIMPLE("Task(s) started!");
 	}
 }
 
-_Bool USB_IsClassActive(void)
+_Bool USB_IsDiskReady(void)
 {
-	return usb_class_active;
+	return ctx.disk_ready;
 }
 
+// +--------------------------------------------------------------------------
+// | @ Interrupt handlers
+// +--------------------------------------------------------------------------
 void OTG_FS_IRQHandler(void)
 {
 	HAL_HCD_IRQHandler(&hhcd);
@@ -171,22 +193,21 @@ void OTG_FS_IRQHandler(void)
   */
 
 #if TEST_FATFS == 1
-static void FatFS_TestApplication(void)
+static _Bool FatFS_Test(void)
 {
-	FATFS fs0;
 	FIL MyFile;                   								/* File object */
-	volatile FRESULT res;                                	 	/* FatFs function common result code */
+	FRESULT res;        		                        	 	/* FatFs function common result code */
 	uint32_t byteswritten, bytesread;                    	 	/* File write/read counts */
 	uint8_t wtext[] = "This is STM32 working with FatFs"; 		/* File write buffer */
 	uint8_t rtext[64];                                   		/* File read buffer */
-
-	res = f_mount(&fs0, "0:", 1);
+	const char* fname = "STM32.TXT";							/* File name */
 
 	/* Create and Open a new text file object with write access */
-	if(f_open(&MyFile, "0:STM32.TXT", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
+	if(f_open(&MyFile, fname, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
 	{
 		/* 'STM32.TXT' file Open for write Error */
-		DBG_SIMPLE("FATFS ERROR - file open error");
+		DBG_SIMPLE("FATFS ERROR - f_open error");
+		return false;
 	}
 	else
 	{
@@ -196,7 +217,8 @@ static void FatFS_TestApplication(void)
 		if((byteswritten == 0) || (res != FR_OK))
 		{
 			/* 'STM32.TXT' file Write or EOF Error */
-			DBG_SIMPLE("FATFS ERROR - file write error");
+			DBG_SIMPLE("FATFS ERROR - f_write error");
+			return false;
 		}
 		else
 		{
@@ -204,10 +226,11 @@ static void FatFS_TestApplication(void)
 			f_close(&MyFile);
 
 			/* Open the text file object with read access */
-			if(f_open(&MyFile, "0:STM32.TXT", FA_READ) != FR_OK)
+			if(f_open(&MyFile, fname, FA_READ) != FR_OK)
 			{
 				/* 'STM32.TXT' file Open for read Error */
-				DBG_SIMPLE("FATFS ERROR - file open error");
+				DBG_SIMPLE("FATFS ERROR - f_open error");
+				return false;
 			}
 			else
 			{
@@ -217,7 +240,8 @@ static void FatFS_TestApplication(void)
 				if((bytesread == 0) || (res != FR_OK))
 				{
 					/* 'STM32.TXT' file Read or EOF Error */
-					DBG_SIMPLE("FATFS ERROR - file read error");
+					DBG_SIMPLE("FATFS ERROR - f_read error");
+					return false;
 				}
 				else
 				{
@@ -229,11 +253,22 @@ static void FatFS_TestApplication(void)
 					{
 						/* Read data is different from the expected data */
 						DBG_SIMPLE("FATFS ERROR");
+						return false;
 					}
 					else
 					{
-						/* Success of the demo: no error occurrence */
-						DBG_SIMPLE("FATFS OK");
+						/* Delete file */
+						if(f_unlink(fname) == FR_OK)
+						{
+							/* Success of the demo: no error occurrence */
+							DBG_SIMPLE("FATFS OK");
+							return true;
+						}
+						else
+						{
+							DBG_SIMPLE("FATFS ERROR - f_unlink error");
+							return false;
+						}
 
 					}
 				}

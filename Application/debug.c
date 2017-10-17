@@ -6,9 +6,11 @@
  */
 
 #include "usart/usart.h"
+#include "misc.h"
+#ifdef USE_FREERTOS
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/semphr.h"
-#include "misc.h"
+#endif
 
 #include <string.h>
 #include <stdarg.h>

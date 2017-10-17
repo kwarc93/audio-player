@@ -95,6 +95,14 @@ void I2S_TxDMA(void *src, uint32_t length)
 	DMA2_Channel6->CCR |= DMA_CCR_EN;
 }
 
+void I2S_StopDMA(void)
+{
+	// Wait for DMA Transfer Complete of Half transfer
+	while(!DMA2C6_TC && !DMA2C6_HT);
+	/* Stop transmission */
+	DMA2_Channel6->CCR &= ~DMA_CCR_EN;
+}
+
 __attribute__((weak)) void I2S_HalfTransferCallback(void)
 {
 	/* NOTE : This function Should not be modified, when the callback is needed */

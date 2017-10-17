@@ -23,6 +23,7 @@
 
 void I2S_Init(void);
 void I2S_TxDMA(void *src, uint32_t length);
+void I2S_StopDMA(void);
 
 void I2S_HalfTransferCallback(void);
 void I2S_TransferCompleteCallback(void);
