@@ -46,7 +46,9 @@ static struct context
 // | @ Private functions
 // +--------------------------------------------------------------------------
 static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
+#if TEST_FATFS
 static _Bool FatFS_Test(void);
+#endif
 
 /* USB Host Background task */
 static void USB_HOST_Process(void)
@@ -112,6 +114,7 @@ static void USBH_TaskProcess(void)
 			ctx.disk_ready = false;
 			DBG_SIMPLE("USBH disconnection event");
 			Display_SendText("USB DISCONNECTED");
+			f_mount(0, "", 0);
 			break;
 
 		case USB_HOST_READY:

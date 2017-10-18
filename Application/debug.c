@@ -18,8 +18,9 @@
 
 static char debug_buffer[USART_TX_CB_SIZE];
 
-// USART Mutex handle
+#ifdef USE_FREERTOS
 static SemaphoreHandle_t shMutexUSART;
+#endif
 
 void Debug_Init(void)
 {
