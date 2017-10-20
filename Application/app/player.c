@@ -28,31 +28,36 @@
 
 #define AUDIO_BUFFER_LENGTH			(4096)
 
-static SemaphoreHandle_t shI2SEvent;
-static TaskHandle_t xHandleTaskPlayer;
-static QueueHandle_t qhPlayerState;
-static enum player_states player_state;
-
-static struct audio_file
+struct audio_file
 {
 	FIL file;
 	FILINFO info;
-	FRESULT res;
+	FRESULT result;
 	UINT bytes_read;
 
 	int16_t buffer[AUDIO_BUFFER_LENGTH];
 	int16_t* buffer_ready_part;
 
-	void (*decode)(void* enc_buf, void* dec_buf);
+	struct decoder_if decoder;
+};
 
-} audio;
+static struct player_context
+{
+	enum player_states player_state;
+
+	SemaphoreHandle_t shI2SEvent;
+	TaskHandle_t xHandleTaskPlayer;
+	QueueHandle_t qhPlayerState;
+
+	struct audio_file song;
+} ctx;
 
 void I2S_HalfTransferCallback(void)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-	audio.buffer_ready_part = &audio.buffer[0];
-	xSemaphoreGiveFromISR(shI2SEvent, &xHigherPriorityTaskWoken);
+	ctx.song.buffer_ready_part = &ctx.song.buffer[0];
+	xSemaphoreGiveFromISR(ctx.shI2SEvent, &xHigherPriorityTaskWoken);
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 
 }
@@ -61,8 +66,8 @@ void I2S_TransferCompleteCallback(void)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-	audio.buffer_ready_part = &audio.buffer[AUDIO_BUFFER_LENGTH/2];
-	xSemaphoreGiveFromISR(shI2SEvent, &xHigherPriorityTaskWoken);
+	ctx.song.buffer_ready_part = &ctx.song.buffer[AUDIO_BUFFER_LENGTH/2];
+	xSemaphoreGiveFromISR(ctx.shI2SEvent, &xHigherPriorityTaskWoken);
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 }
 
@@ -76,34 +81,36 @@ static void Player_TaskProcess(enum player_states state)
 	case PLAYER_WAIT_FOR_DISK:
 		if(USB_IsDiskReady())
 		{
-			player_state = PLAYER_INIT;
+			ctx.player_state = PLAYER_INIT;
 		}
 		vTaskDelay(100);
 		break;
 	case PLAYER_INIT:
-		memset(audio.buffer, 0, sizeof(audio.buffer));
-		if(f_open(&audio.file, "hs_wav.wav", FA_READ) == FR_OK)
+		memset(ctx.song.buffer, 0, sizeof(ctx.song.buffer));
+		ctx.song.decoder.init(WAVE);
+		if(f_open(&ctx.song.file, "hss_wav.wav", FA_READ) == FR_OK)
 		{
 			DBG_PRINTF("File: hs_wav.wav");
 			Display_SendText("HAPPYSAD - BEZ ZNIECZULENIA");
 
-			I2S_TxDMA(audio.buffer, AUDIO_BUFFER_LENGTH);
+			I2S_TxDMA(ctx.song.buffer, AUDIO_BUFFER_LENGTH);
 			CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
+			CS43L22_SetVolume(CS43L22_I2C_ADDRESS, 60);
 
-			player_state = PLAYER_PLAY;
+			ctx.player_state = PLAYER_PLAY;
 		}
 		break;
 	case PLAYER_PLAY:
-		if(xSemaphoreTake(shI2SEvent, portMAX_DELAY) == pdTRUE)
+		if(xSemaphoreTake(ctx.shI2SEvent, portMAX_DELAY) == pdTRUE)
 		{
-			audio.res = f_read(&audio.file, audio.buffer_ready_part,
-						sizeof(audio.buffer)/2, &audio.bytes_read);
+			ctx.song.result = f_read(&ctx.song.file, ctx.song.buffer_ready_part,
+						sizeof(ctx.song.buffer)/2, &ctx.song.bytes_read);
 
-			audio.decode(audio.buffer_ready_part, audio.buffer_ready_part);
+			ctx.song.decoder.decode(ctx.song.buffer_ready_part, ctx.song.buffer_ready_part);
 
-			if(audio.bytes_read != sizeof(audio.buffer)/2 || audio.res != FR_OK)
+			if(ctx.song.bytes_read != sizeof(ctx.song.buffer)/2 || ctx.song.result != FR_OK)
 			{
-				player_state = PLAYER_STOP;
+				ctx.player_state = PLAYER_STOP;
 			}
 		}
 		break;
@@ -111,17 +118,17 @@ static void Player_TaskProcess(enum player_states state)
 		I2S_StopDMA();
 		CS43L22_Pause(CS43L22_I2C_ADDRESS);
 		Display_SendText("STOP");
-		player_state = PLAYER_IDLE;
+		ctx.player_state = PLAYER_IDLE;
 		break;
 	case PLAYER_STOP:
 		I2S_StopDMA();
 		CS43L22_Stop(CS43L22_I2C_ADDRESS, CODEC_PDWN_SW);
 		Display_SendText("STOP");
-		f_close(&audio.file);
-		player_state = PLAYER_IDLE;
+		f_close(&ctx.song.file);
+		ctx.player_state = PLAYER_IDLE;
 		break;
 	default:
-		player_state = PLAYER_IDLE;
+		ctx.player_state = PLAYER_IDLE;
 		break;
 	}
 }
@@ -130,34 +137,34 @@ static void vTaskPlayer(void * pvParameters)
 	// Task's infinite loop
 	for(;;)
 	{
-		Player_TaskProcess(player_state);
+		Player_TaskProcess(ctx.player_state);
 	}
 	/* Should never go there */
-	vTaskDelete(xHandleTaskPlayer);
+	vTaskDelete(ctx.xHandleTaskPlayer);
 }
 
 void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
-	player_state = PLAYER_WAIT_FOR_DISK;
+	// Init
+	ctx.player_state = PLAYER_WAIT_FOR_DISK;
 
-	audio.buffer_ready_part = &audio.buffer[0];
-	audio.decode = Decoder_DecodeAudio;
+	ctx.song.buffer_ready_part = &ctx.song.buffer[0];
+	Decoder_InitInterface(&ctx.song.decoder);
 
 	 // Create queue for player states
-	qhPlayerState = xQueueCreate(4, sizeof(enum player_states));
+	ctx.qhPlayerState = xQueueCreate(4, sizeof(enum player_states));
 
 	// Create and take binary semaphore
-	vSemaphoreCreateBinary(shI2SEvent);
-	xSemaphoreTake(shI2SEvent, 0);
+	vSemaphoreCreateBinary(ctx.shI2SEvent);
+	xSemaphoreTake(ctx.shI2SEvent, 0);
 
-	// Init
 	if(!CS43L22_Init(CS43L22_I2C_ADDRESS, CS43L22_OUTPUT_HEADPHONE, 60, AUDIO_FREQUENCY_44K))
 	{
 		DBG_PRINTF("CS43L22 initialized, chip ID: %d", CS43L22_ReadID(CS43L22_I2C_ADDRESS));
 	}
 
 	// Creating tasks
-	if(xTaskCreate(vTaskPlayer, "PLAYER", PLAYER_STACK_SIZE, NULL, uxPriority, &xHandleTaskPlayer) == pdPASS)
+	if(xTaskCreate(vTaskPlayer, "PLAYER", PLAYER_STACK_SIZE, NULL, uxPriority, &ctx.xHandleTaskPlayer) == pdPASS)
 	{
 		DBG_PRINTF("Task(s) started!");
 	}
@@ -165,5 +172,5 @@ void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 
 void Player_SetState(enum player_states state)
 {
-	player_state = state;
+	ctx.player_state = state;
 }

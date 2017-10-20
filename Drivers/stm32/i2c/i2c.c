@@ -27,12 +27,13 @@ void I2C_Init(void)
 	WRITE_REG(I2Cx->TIMINGR, I2Cx_SPEED_100KHZ);
 	// Enable auto-end mode
 	SET_BIT(I2Cx->CR2, I2C_CR2_AUTOEND);
-	// Enable peripheral
-	SET_BIT(I2Cx->CR1, I2C_CR1_PE);
 }
 
 void I2C_Write(uint8_t address, uint8_t* data, uint32_t length)
 {
+	// Enable peripheral
+	SET_BIT(I2Cx->CR1, I2C_CR1_PE);
+
 	/* Wait until I2C bus is free */
 	while(READ_BIT(I2Cx->ISR, I2C_ISR_BUSY));
 
@@ -62,10 +63,17 @@ void I2C_Write(uint8_t address, uint8_t* data, uint32_t length)
 	/* (3) Clear pending flags, Data consistency are checking into Slave process */
 	/* End of I2C_SlaveReceiver_MasterTransmitter Process */
 	SET_BIT(I2Cx->ICR, I2C_ICR_STOPCF);
+
+	// Disable peripheral
+	CLEAR_BIT(I2Cx->CR1, I2C_CR1_PE);
+	__NOP();__NOP();__NOP();
 }
 
 void I2C_WriteReg(uint8_t address, uint8_t reg_addr, uint8_t* data, uint8_t length)
 {
+	// Enable peripheral
+	SET_BIT(I2Cx->CR1, I2C_CR1_PE);
+
 	/* Wait until I2C bus is free */
 	while(READ_BIT(I2Cx->ISR, I2C_ISR_BUSY));
 
@@ -113,10 +121,17 @@ void I2C_WriteReg(uint8_t address, uint8_t reg_addr, uint8_t* data, uint8_t leng
 	/* (5) Clear pending flags, Data consistency are checking into Slave process */
 	/* End of I2C_SlaveReceiver_MasterTransmitter Process */
 	SET_BIT(I2Cx->ICR, I2C_ICR_STOPCF);
+
+	// Disable peripheral
+	CLEAR_BIT(I2Cx->CR1, I2C_CR1_PE);
+	__NOP();__NOP();__NOP();
 }
 
 void I2C_ReadReg(uint8_t address, uint8_t reg_addr, uint8_t* data, uint8_t length)
 {
+	// Enable peripheral
+	SET_BIT(I2Cx->CR1, I2C_CR1_PE);
+
 	/* Wait until I2C bus is free */
 	while(READ_BIT(I2Cx->ISR, I2C_ISR_BUSY));
 
@@ -164,4 +179,8 @@ void I2C_ReadReg(uint8_t address, uint8_t reg_addr, uint8_t* data, uint8_t lengt
 
 	/* Clear STOP Flag */
 	SET_BIT(I2Cx->ICR, I2C_ICR_STOPCF);
+
+	// Disable peripheral
+	CLEAR_BIT(I2Cx->CR1, I2C_CR1_PE);
+	__NOP();__NOP();__NOP();
 }

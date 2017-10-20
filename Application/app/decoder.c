@@ -37,9 +37,12 @@ static struct decoder_context
 // +--------------------------------------------------------------------------
 // | @ Private functions
 // +--------------------------------------------------------------------------
+static void init(enum audio_format format);
+static void deinit(void);
+
 static void decode_wave(void* enc_buf, void* dec_buf)
 {
-	enc_buf = dec_buf;
+	dec_buf = enc_buf;
 }
 
 static void decode_mp3(void* enc_buf, void* dec_buf)
@@ -52,14 +55,11 @@ static void decode_flac(void* enc_buf, void* dec_buf)
 
 }
 
-// +--------------------------------------------------------------------------
-// | @ Public functions
-// +--------------------------------------------------------------------------
-void Decoder_Init(enum audio_format format)
+static void init(enum audio_format format)
 {
 	if(ctx.initialized)
 	{
-		Decoder_Deinit();
+		deinit();
 	}
 
 	memset(&ctx, 0, sizeof(ctx));
@@ -73,10 +73,6 @@ void Decoder_Init(enum audio_format format)
 	case MP3:
 		ctx.format = format;
 		ctx.MP3Decoder = MP3InitDecoder();
-		if(ctx.MP3Decoder == NULL)
-		{
-			// @ TODO: handle error
-		}
 		break;
 
 	case FLAC:
@@ -91,7 +87,7 @@ void Decoder_Init(enum audio_format format)
 	ctx.initialized = true;
 }
 
-void Decoder_Deinit(void)
+static void deinit(void)
 {
 	if(!ctx.initialized)
 		return;
@@ -115,7 +111,8 @@ void Decoder_Deinit(void)
 	memset(&ctx, 0, sizeof(ctx));
 	ctx.initialized = false;
 }
-void Decoder_DecodeAudio(void* enc_buf, void* dec_buf)
+
+static void decode(void* enc_buf, void* dec_buf)
 {
 	if(!ctx.initialized)
 		return;
@@ -139,6 +136,20 @@ void Decoder_DecodeAudio(void* enc_buf, void* dec_buf)
 	default:
 		break;
 	}
+}
+// +--------------------------------------------------------------------------
+// | @ Public functions
+// +--------------------------------------------------------------------------
+_Bool Decoder_InitInterface(struct decoder_if* interface)
+{
+	if(!interface)
+		return false;
+
+	interface->init = init;
+	interface->deinit = deinit;
+	interface->decode = decode;
+
+	return true;
 }
 // +--------------------------------------------------------------------------
 // | @ Interrupt handlers
