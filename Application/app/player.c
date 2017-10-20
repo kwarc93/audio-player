@@ -10,10 +10,10 @@
 #include "cs43l22/cs43l22.h"
 #include "player.h"
 
-#include "mp3dec.h"
 #include "FatFs/ff.h"
 #include "usb_host.h"
 #include "ui/display.h"
+#include "decoder.h"
 #include "misc.h"
 
 #include <stdbool.h>
@@ -31,7 +31,6 @@
 static SemaphoreHandle_t shI2SEvent;
 static TaskHandle_t xHandleTaskPlayer;
 static QueueHandle_t qhPlayerState;
-static HMP3Decoder hMP3Decoder;
 static enum player_states player_state;
 
 static struct audio_file
@@ -43,6 +42,9 @@ static struct audio_file
 
 	int16_t buffer[AUDIO_BUFFER_LENGTH];
 	int16_t* buffer_ready_part;
+
+	void (*decode)(void* enc_buf, void* dec_buf);
+
 } audio;
 
 void I2S_HalfTransferCallback(void)
@@ -64,7 +66,7 @@ void I2S_TransferCompleteCallback(void)
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 }
 
-static void player_process(enum player_states state)
+static void Player_TaskProcess(enum player_states state)
 {
 	switch(state)
 	{
@@ -95,7 +97,9 @@ static void player_process(enum player_states state)
 		if(xSemaphoreTake(shI2SEvent, portMAX_DELAY) == pdTRUE)
 		{
 			audio.res = f_read(&audio.file, audio.buffer_ready_part,
-									sizeof(audio.buffer)/2, &audio.bytes_read);
+						sizeof(audio.buffer)/2, &audio.bytes_read);
+
+			audio.decode(audio.buffer_ready_part, audio.buffer_ready_part);
 
 			if(audio.bytes_read != sizeof(audio.buffer)/2 || audio.res != FR_OK)
 			{
@@ -117,7 +121,7 @@ static void player_process(enum player_states state)
 		player_state = PLAYER_IDLE;
 		break;
 	default:
-		vTaskDelay(100);
+		player_state = PLAYER_IDLE;
 		break;
 	}
 }
@@ -126,7 +130,7 @@ static void vTaskPlayer(void * pvParameters)
 	// Task's infinite loop
 	for(;;)
 	{
-		player_process(player_state);
+		Player_TaskProcess(player_state);
 	}
 	/* Should never go there */
 	vTaskDelete(xHandleTaskPlayer);
@@ -135,7 +139,9 @@ static void vTaskPlayer(void * pvParameters)
 void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
 	player_state = PLAYER_WAIT_FOR_DISK;
+
 	audio.buffer_ready_part = &audio.buffer[0];
+	audio.decode = Decoder_DecodeAudio;
 
 	 // Create queue for player states
 	qhPlayerState = xQueueCreate(4, sizeof(enum player_states));
@@ -148,12 +154,6 @@ void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 	if(!CS43L22_Init(CS43L22_I2C_ADDRESS, CS43L22_OUTPUT_HEADPHONE, 60, AUDIO_FREQUENCY_44K))
 	{
 		DBG_PRINTF("CS43L22 initialized, chip ID: %d", CS43L22_ReadID(CS43L22_I2C_ADDRESS));
-	}
-
-	hMP3Decoder = MP3InitDecoder();
-	if(hMP3Decoder != NULL)
-	{
-		DBG_PRINTF("Helix MP3 decoder initialized");
 	}
 
 	// Creating tasks
