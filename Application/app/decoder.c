@@ -55,8 +55,8 @@ static struct decoder_context
 	_Bool initialized;
 	enum audio_format format;
 
-	uint8_t in_buffer[DECODER_IN_BUFFER_LEN];
-	int16_t out_buffer[DECODER_OUT_BUFFER_LEN];
+	uint8_t in_buffer[DECODER_IN_BUFFER_LEN] __attribute__((aligned(4)));
+	int16_t out_buffer[DECODER_OUT_BUFFER_LEN] __attribute__((aligned(4)));
 	int16_t* out_buffer_ready_part;
 	uint32_t bytes_read;
 
