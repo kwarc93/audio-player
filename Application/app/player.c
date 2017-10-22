@@ -39,6 +39,10 @@ static void Player_TaskProcess(enum player_states state)
 	switch(state)
 	{
 	case PLAYER_IDLE:
+		if(!player.decoder.status())
+		{
+			player.state = PLAYER_STOP;
+		}
 		break;
 	case PLAYER_WAIT_FOR_DISK:
 		if(USB_IsDiskReady())
@@ -47,19 +51,17 @@ static void Player_TaskProcess(enum player_states state)
 		}
 		break;
 	case PLAYER_PLAY:
-		player.decoder.start("hs_wav.wav");
+		player.decoder.start("fd_wav.wav");
 		CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
 		Display_SendText("PLAYING");
 		player.state = PLAYER_IDLE;
 		break;
 	case PLAYER_PAUSE:
-		I2S_StopDMA();
 		CS43L22_Pause(CS43L22_I2C_ADDRESS);
-		Display_SendText("STOP");
+		Display_SendText("PAUSE");
 		player.state = PLAYER_IDLE;
 		break;
 	case PLAYER_STOP:
-		I2S_StopDMA();
 		CS43L22_Stop(CS43L22_I2C_ADDRESS, CODEC_PDWN_SW);
 		player.decoder.stop();
 		Display_SendText("STOP");

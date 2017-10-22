@@ -12,6 +12,7 @@
 #include "FreeRTOS/semphr.h"
 #include "joystick.h"
 #include "ui/display.h"
+#include "app/player.h"
 
 #ifdef DEBUG
 #include "debug.h"
@@ -44,7 +45,8 @@ static void vTaskJoystick(void *pvParameters)
 			{
 			case KEY_OK:
 				ClrKeyb( KBD_LOCK );
-				Display_SendText("PLAY");
+				Display_SendText("PLAYING");
+				Player_SetState(PLAYER_PLAY);
 				DBG_PRINTF("Key OK");
 				break;
 			case KEY_UP:

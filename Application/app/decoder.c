@@ -53,10 +53,11 @@ struct audio_file
 static struct decoder_context
 {
 	_Bool initialized;
+	_Bool working;
 	enum audio_format format;
 
-	uint8_t in_buffer[DECODER_IN_BUFFER_LEN];
-	int16_t out_buffer[DECODER_OUT_BUFFER_LEN];
+	uint8_t in_buffer[DECODER_IN_BUFFER_LEN] __attribute__((aligned(4)));
+	int16_t out_buffer[DECODER_OUT_BUFFER_LEN] __attribute__((aligned(4)));
 	int16_t* out_buffer_ready_part;
 	uint32_t bytes_read;
 
@@ -129,10 +130,9 @@ static _Bool decode(void)
 static void vTaskDecoder(void * pvParameters)
 {
 	f_open(&decoder.song.ffile, (const TCHAR*)&decoder.song.finfo.fname, FA_READ);
-
 	I2S_TxDMA(decoder.out_buffer, DECODER_OUT_BUFFER_LEN);
+	decoder.working = true;
 
-	// Task's infinite loop
 	for(;;)
 	{
 		if(xSemaphoreTake(decoder.shI2SEvent, portMAX_DELAY) == pdTRUE)
@@ -142,8 +142,9 @@ static void vTaskDecoder(void * pvParameters)
 		}
 	}
 
-	f_close(&decoder.song.ffile);
+	decoder.working = false;
 	I2S_StopDMA();
+	f_close(&decoder.song.ffile);
 	vTaskDelete(decoder.xHandleTaskDecoder);
 }
 
@@ -225,6 +226,10 @@ static void deinit(void)
 	decoder.initialized = false;
 }
 
+_Bool status(void)
+{
+	return decoder.working;
+}
 // +--------------------------------------------------------------------------
 // | @ Public functions
 // +--------------------------------------------------------------------------
@@ -235,6 +240,7 @@ _Bool Decoder_InitInterface(struct decoder_if* interface)
 
 	interface->start = init;
 	interface->stop = deinit;
+	interface->status = status;
 
 	return true;
 }
