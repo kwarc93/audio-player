@@ -8,13 +8,14 @@
 #ifndef APP_DECODER_H_
 #define APP_DECODER_H_
 
-enum audio_format { WAVE = 0, MP3, FLAC };
+#define DECODER_STACK_SIZE	(4*1024)
+
+enum audio_format { UNSUPPORTED = 0, WAVE, MP3, FLAC };
 
 struct decoder_if
 {
-	void (*init)(enum audio_format format);
-	void (*deinit)(void);
-	void (*decode)(void* enc_buf, void* dec_buf);
+	void (*start)(char* filename);
+	void (*stop)(void);
 };
 
 _Bool Decoder_InitInterface(struct decoder_if* interface);

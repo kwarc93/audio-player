@@ -38,7 +38,7 @@ int main(void)
 	Display_StartTasks(mainFLASH_TASK_PRIORITY + 1);
 	Joystick_StartTasks(mainFLASH_TASK_PRIORITY + 2);
 	USB_StartTasks(mainFLASH_TASK_PRIORITY);
-	Player_StartTasks(mainFLASH_TASK_PRIORITY + 2);
+	Player_StartTasks(mainFLASH_TASK_PRIORITY + 1);
 	// Scheduler startup
 	DBG_SIMPLE("Starting scheduler...");
 	vTaskStartScheduler();

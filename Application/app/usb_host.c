@@ -18,7 +18,7 @@
 // +--------------------------------------------------------------------------
 // | @ Defines
 // +--------------------------------------------------------------------------
-#define TEST_FATFS		0
+#define TEST_FATFS		1
 /* for FS and HS identification */
 #define HOST_HS 		0
 #define HOST_FS 		1
