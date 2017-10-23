@@ -4,6 +4,10 @@
  *  Created on: 07.10.2017
  *      Author: Kwarc
  */
+
+// +--------------------------------------------------------------------------
+// | @ Includes
+// +------------------------------------------------------------------------
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "FreeRTOS/semphr.h"
@@ -18,6 +22,9 @@
 #include <stdbool.h>
 #include <string.h>
 
+// +--------------------------------------------------------------------------
+// | @ Defines
+// +--------------------------------------------------------------------------
 #ifdef DEBUG
 #include "debug.h"
 #define DBG_PRINTF(...)	(Debug_Printf("[PLAYER] " __VA_ARGS__))
@@ -25,78 +32,127 @@
 #define DBG_PRINTF(...)
 #endif
 
+#define PLAYER_MAX_VOLUME			100
+#define PLAYER_MIN_VOLUME			0
+
+// +--------------------------------------------------------------------------
+// | @ Public variables
+// +--------------------------------------------------------------------------
+
+// +--------------------------------------------------------------------------
+// | @ Private variables
+// +--------------------------------------------------------------------------
 static struct player_context
 {
-	enum player_states state;
+	enum player_commands command;
+	enum player_state state;
+
 	struct decoder_if decoder;
+	uint8_t volume;
+	_Bool mute;
 
 	TaskHandle_t xHandleTaskPlayer;
 	QueueHandle_t qhPlayerState;
 }player;
 
-static void Player_TaskProcess(enum player_states state)
+// +--------------------------------------------------------------------------
+// | @ Private functions
+// +--------------------------------------------------------------------------
+static void Player_TaskProcess(void)
 {
-	switch(state)
+	if(!player.decoder.is_working() && player.state == PLAYER_PLAYING)
 	{
-	case PLAYER_IDLE:
-		if(!player.decoder.status())
+		Player_SendCommand(PLAYER_STOP);
+		// @ TODO: Play next song in folder
+	}
+
+	if(xQueueReceive(player.qhPlayerState, &player.command, 0))
+	{
+		switch(player.command)
 		{
-			player.state = PLAYER_STOP;
+		case PLAYER_INIT:
+			player.state = PLAYER_IDLE;
+			break;
+		case PLAYER_PLAY:
+			if(USB_IsDiskReady())
+			{
+				player.decoder.start("test.wav");
+				CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
+				Display_SendText("PLAYING");
+				player.state = PLAYER_PLAYING;
+			}
+			else
+			{
+				player.state = PLAYER_IDLE;
+			}
+			break;
+		case PLAYER_PAUSE:
+			CS43L22_Pause(CS43L22_I2C_ADDRESS);
+			player.decoder.pause();
+			Display_SendText("PAUSE");
+			player.state = PLAYER_PAUSED;
+			break;
+		case PLAYER_RESUME:
+			CS43L22_Resume(CS43L22_I2C_ADDRESS);
+			player.decoder.resume();
+			Display_SendText("PLAYING");
+			player.state = PLAYER_PLAYING;
+			break;
+		case PLAYER_STOP:
+			CS43L22_Stop(CS43L22_I2C_ADDRESS, CODEC_PDWN_SW);
+			player.decoder.stop();
+			Display_SendText("STOP");
+			player.state = PLAYER_STOPPED;
+			break;
+		case PLAYER_NEXT:
+			break;
+		case PLAYER_PREV:
+			break;
+		case PLAYER_VOLUME:
+			CS43L22_SetVolume(CS43L22_I2C_ADDRESS, player.volume);
+			break;
+		case PLAYER_MUTE:
+			CS43L22_SetMute(CS43L22_I2C_ADDRESS, player.mute);
+			break;
+		default:
+			break;
 		}
-		break;
-	case PLAYER_WAIT_FOR_DISK:
-		if(USB_IsDiskReady())
-		{
-			player.state = PLAYER_PLAY;
-		}
-		break;
-	case PLAYER_PLAY:
-		player.decoder.start("fd_wav.wav");
-		CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
-		Display_SendText("PLAYING");
-		player.state = PLAYER_IDLE;
-		break;
-	case PLAYER_PAUSE:
-		CS43L22_Pause(CS43L22_I2C_ADDRESS);
-		Display_SendText("PAUSE");
-		player.state = PLAYER_IDLE;
-		break;
-	case PLAYER_STOP:
-		CS43L22_Stop(CS43L22_I2C_ADDRESS, CODEC_PDWN_SW);
-		player.decoder.stop();
-		Display_SendText("STOP");
-		player.state = PLAYER_IDLE;
-		break;
-	default:
-		player.state = PLAYER_IDLE;
-		break;
 	}
 
 }
+
 static void vTaskPlayer(void * pvParameters)
 {
 	// Task's infinite loop
 	for(;;)
 	{
-		Player_TaskProcess(player.state);
+		Player_TaskProcess();
 		vTaskDelay(100);
 	}
 	/* Should never go there */
 	vTaskDelete(player.xHandleTaskPlayer);
 }
 
+// +--------------------------------------------------------------------------
+// | @ Public functions
+// +--------------------------------------------------------------------------
 void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
 	// Init
-	player.state = PLAYER_WAIT_FOR_DISK;
+	memset(&player, 0, sizeof(player));
+	player.volume = 50;
+
 	Decoder_InitInterface(&player.decoder);
-	if(!CS43L22_Init(CS43L22_I2C_ADDRESS, CS43L22_OUTPUT_HEADPHONE, 40, AUDIO_FREQUENCY_44K))
+
+	if(!CS43L22_Init(CS43L22_I2C_ADDRESS, CS43L22_OUTPUT_HEADPHONE, player.volume, AUDIO_FREQUENCY_44K))
 	{
 		DBG_PRINTF("CS43L22 initialized, chip ID: %d", CS43L22_ReadID(CS43L22_I2C_ADDRESS));
 	}
 
 	 // Create queue for player states
-	player.qhPlayerState = xQueueCreate(4, sizeof(enum player_states));
+	player.qhPlayerState = xQueueCreate(8, sizeof(enum player_commands));
+	Player_SendCommand(PLAYER_INIT);
+
 	// Creating tasks
 	if(xTaskCreate(vTaskPlayer, "PLAYER", PLAYER_STACK_SIZE, NULL, uxPriority, &player.xHandleTaskPlayer) == pdPASS)
 	{
@@ -104,7 +160,36 @@ void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 	}
 }
 
-void Player_SetState(enum player_states state)
+void Player_SendCommand(enum player_commands command)
 {
-	player.state = state;
+	if(!xQueueSend(player.qhPlayerState, &command, 0))
+	{
+		// Error!
+		// Failed to send item to queue
+	}
+}
+
+enum player_state Player_GetState(void)
+{
+	return player.state;
+}
+
+void Player_VolumeUp(void)
+{
+	if(player.volume < PLAYER_MAX_VOLUME)
+		player.volume += 5;
+	Player_SendCommand(PLAYER_VOLUME);
+}
+
+void Player_VolumeDown(void)
+{
+	if(player.volume > PLAYER_MIN_VOLUME)
+		player.volume -= 5;
+	Player_SendCommand(PLAYER_VOLUME);
+}
+
+void Player_Mute(_Bool state)
+{
+	player.mute = state;
+	Player_SendCommand(PLAYER_MUTE);
 }

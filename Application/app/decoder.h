@@ -16,7 +16,9 @@ struct decoder_if
 {
 	void (*start)(char* filename);
 	void (*stop)(void);
-	_Bool (*status)(void);
+	void (*pause)(void);
+	void (*resume)(void);
+	_Bool (*is_working)(void);
 };
 
 _Bool Decoder_InitInterface(struct decoder_if* interface);

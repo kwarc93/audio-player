@@ -14,12 +14,6 @@
 #include <keyboard/keyb.h>
 #include "gpio/gpio.h"
 
-#define PERIOD_1S      (1000/KEY_CHECK_PERIOD_MS)
-#define PERIOD_750MS   (750/KEY_CHECK_PERIOD_MS)
-#define PERIOD_500MS   (500/KEY_CHECK_PERIOD_MS)
-#define PERIOD_100MS   (100/KEY_CHECK_PERIOD_MS)
-#define PERIOD_30MS    (30/KEY_CHECK_PERIOD_MS)
-
 // ***********************************************************************
 static unsigned int keys;
 // Wewnętrzna zmienna w której przechowywany jest stan klawiszy
@@ -77,9 +71,9 @@ static unsigned char keyblock;
 // ostatnia pozycja musi być równa 0;
 static const unsigned short DefaultAutoRepeatTab[] =
 {
-   PERIOD_30MS,
-   PERIOD_1S,
-   PERIOD_100MS,
+   KEY_PERIOD_30MS,
+   KEY_PERIOD_1S,
+   KEY_PERIOD_100MS,
    0
 };
 

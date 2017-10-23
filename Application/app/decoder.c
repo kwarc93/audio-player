@@ -68,12 +68,16 @@ static struct decoder_context
 	SemaphoreHandle_t shI2SEvent;
 	TaskHandle_t xHandleTaskDecoder;
 } decoder;
+
 // +--------------------------------------------------------------------------
 // | @ Private functions
 // +--------------------------------------------------------------------------
 static void init(char* filename);
 static void deinit(void);
+static void vTaskDecoder(void * pvParameters);
 
+// Decoding functions
+// ---------------------------------------------------------------------------
 static _Bool decode_wave(void)
 {
 	decoder.song.fresult = f_read(&decoder.song.ffile, decoder.out_buffer_ready_part,
@@ -125,12 +129,65 @@ static _Bool decode(void)
 
 	return result;
 }
+// Init functions
+// ---------------------------------------------------------------------------
+static _Bool init_wave(void)
+{
+	return true;
+}
 
+static _Bool init_mp3(void)
+{
+	decoder.MP3Decoder = MP3InitDecoder();
+	if(!decoder.MP3Decoder)
+	{
+		DBG_PRINTF("MP3 decoder init ERROR");
+		return false;
+	}
 
+	return true;
+}
+
+static _Bool init_flac(void)
+{
+	return true;
+}
+
+static _Bool init_task(void)
+{
+	// Create and take binary semaphore
+	vSemaphoreCreateBinary(decoder.shI2SEvent);
+	xSemaphoreTake(decoder.shI2SEvent, 0);
+
+	// Creating tasks
+	if(xTaskCreate(vTaskDecoder, "DECODER", DECODER_STACK_SIZE, NULL, mainFLASH_TASK_PRIORITY + 2, &decoder.xHandleTaskDecoder) == pdPASS)
+	{
+		DBG_PRINTF("Task(s) started!");
+		return true;
+	}
+
+	return false;
+}
+
+// Other functions
+// ---------------------------------------------------------------------------
+void set_audio_format(const char* file_ext)
+{
+	if(!strcmp(file_ext, "wav"))
+		decoder.format = WAVE;
+	else if(!strcmp(file_ext, "mp3"))
+		decoder.format = MP3;
+	else if(!strcmp(file_ext, "flac"))
+		decoder.format = FLAC;
+	else
+		decoder.format = UNSUPPORTED;
+}
+// Decoder task
+// ---------------------------------------------------------------------------
 static void vTaskDecoder(void * pvParameters)
 {
 	f_open(&decoder.song.ffile, (const TCHAR*)&decoder.song.finfo.fname, FA_READ);
-	I2S_TxDMA(decoder.out_buffer, DECODER_OUT_BUFFER_LEN);
+	I2S_StartDMA(decoder.out_buffer, DECODER_OUT_BUFFER_LEN);
 	decoder.working = true;
 
 	for(;;)
@@ -145,9 +202,12 @@ static void vTaskDecoder(void * pvParameters)
 	decoder.working = false;
 	I2S_StopDMA();
 	f_close(&decoder.song.ffile);
+	vSemaphoreDelete(decoder.shI2SEvent);
 	vTaskDelete(decoder.xHandleTaskDecoder);
 }
 
+// Interface functions
+// ---------------------------------------------------------------------------
 static void init(char* filename)
 {
 	if(decoder.initialized)
@@ -155,49 +215,38 @@ static void init(char* filename)
 		deinit();
 	}
 
+	// Clear structure
 	memset(&decoder, 0, sizeof(decoder));
-	decoder.initialized = false;
-
-	const char* file_ext = FB_GetFileExtension(filename);
-
-	if(!strcmp(file_ext, "wav"))
-	{
-		decoder.format = WAVE;
-	}
-	else if(!strcmp(file_ext, "mp3"))
-	{
-		decoder.format = MP3;
-		decoder.MP3Decoder = MP3InitDecoder();
-
-		if(decoder.MP3Decoder)
-		{
-			DBG_PRINTF("MP3 decoder initialized");
-		}
-	}
-	else if(!strcmp(file_ext, "flac"))
-	{
-		decoder.format = FLAC;
-	}
-	else
-	{
-		decoder.format = UNSUPPORTED;
-		DBG_PRINTF("Unsupported format!");
-		return;
-	}
 
 	// Get file information to structure
 	decoder.song.fresult = f_stat(filename, &decoder.song.finfo);
 
-	// Create and take binary semaphore
-	vSemaphoreCreateBinary(decoder.shI2SEvent);
-	xSemaphoreTake(decoder.shI2SEvent, 0);
+	// Set audio format based on file extension
+	set_audio_format(FB_GetFileExtension(filename));
 
-	// Creating tasks
-	if(xTaskCreate(vTaskDecoder, "DECODER", DECODER_STACK_SIZE, NULL, mainFLASH_TASK_PRIORITY + 2, &decoder.xHandleTaskDecoder) == pdPASS)
+	// Init proper decoder based on audio format
+	switch(decoder.format)
 	{
-		DBG_PRINTF("Task(s) started!");
-		decoder.initialized = true;
+	case WAVE:
+		init_wave();
+		break;
+	case MP3:
+		init_mp3();
+		break;
+	case FLAC:
+		init_flac();
+		break;
+	default:
+		DBG_PRINTF("Unsupported format!");
+		return;
 	}
+
+	// Init decoder task
+	if(!init_task())
+		return;
+
+	// Decoder initialized
+	decoder.initialized = true;
 
 }
 
@@ -206,6 +255,16 @@ static void deinit(void)
 	if(!decoder.initialized)
 		return;
 
+	// Cleanup
+	if(decoder.working)
+	{
+		I2S_StopDMA();
+		f_close(&decoder.song.ffile);
+		vSemaphoreDelete(decoder.shI2SEvent);
+		vTaskDelete(decoder.xHandleTaskDecoder);
+	}
+
+	// Deinit actual decoder
 	switch(decoder.format)
 	{
 	case WAVE:
@@ -222,11 +281,32 @@ static void deinit(void)
 		return;
 	}
 
+	// Clear structure
 	memset(&decoder, 0, sizeof(decoder));
+
+	// Decoder deinitialized
 	decoder.initialized = false;
 }
 
-_Bool status(void)
+static void pause(void)
+{
+	if(!decoder.initialized)
+		return;
+
+	I2S_StopDMA();
+
+}
+
+static void resume(void)
+{
+	if(!decoder.initialized)
+		return;
+
+	I2S_StartDMA(decoder.out_buffer, DECODER_OUT_BUFFER_LEN);
+
+}
+
+static _Bool is_working(void)
 {
 	return decoder.working;
 }
@@ -240,7 +320,9 @@ _Bool Decoder_InitInterface(struct decoder_if* interface)
 
 	interface->start = init;
 	interface->stop = deinit;
-	interface->status = status;
+	interface->pause = pause;
+	interface->resume = resume;
+	interface->is_working = is_working;
 
 	return true;
 }

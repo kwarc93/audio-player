@@ -44,20 +44,47 @@ static void vTaskJoystick(void *pvParameters)
 			switch(GetKeys())
 			{
 			case KEY_OK:
-				ClrKeyb( KBD_LOCK );
-				Display_SendText("PLAYING");
-				Player_SetState(PLAYER_PLAY);
+				if( KeysTime( ) >= KEY_PERIOD_1S )
+				{
+					ClrKeyb( KBD_LOCK );
+					// Tutaj kod reakcji na naciœniecie klawisza KEY_ENTER
+					// Kod wykona siê tylko wtedy gdy czas trzymania
+					// klawisza przekroczy 1s
+					Player_SendCommand(PLAYER_STOP);
+
+				}
+				else
+				{
+					ClrKeyb( KBD_LOCK );
+					switch(Player_GetState())
+					{
+					case PLAYER_IDLE:
+					case PLAYER_STOPPED:
+						Player_SendCommand(PLAYER_PLAY);
+						break;
+					case PLAYER_PAUSED:
+						Player_SendCommand(PLAYER_RESUME);
+						break;
+					case PLAYER_PLAYING:
+						Player_SendCommand(PLAYER_PAUSE);
+						break;
+					default:
+						break;
+					}
+				}
 				DBG_PRINTF("Key OK");
 				break;
 			case KEY_UP:
 				ClrKeyb( KBD_LOCK );
 				if(bar_lvl < 4) Display_SendBarLevel(++bar_lvl);
+				Player_VolumeUp();
 				Display_SendText("VOL+");
 				DBG_PRINTF("Key UP");
 				break;
 			case KEY_DOWN:
 				ClrKeyb( KBD_LOCK );
 				if(bar_lvl > 0) Display_SendBarLevel(--bar_lvl);
+				Player_VolumeDown();
 				Display_SendText("VOL-");
 				DBG_PRINTF("Key DOWN");
 				break;
@@ -71,7 +98,8 @@ static void vTaskJoystick(void *pvParameters)
 				Display_SendText("NEXT");
 				DBG_PRINTF("Key RIGHT");
 				break;
-			default: break;
+			default:
+				break;
 
 			}
 		}

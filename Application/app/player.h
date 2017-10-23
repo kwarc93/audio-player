@@ -10,20 +10,35 @@
 
 #define PLAYER_STACK_SIZE	(2*1024)
 
-enum player_states
+enum player_commands
 {
-	PLAYER_IDLE = 0,
-	PLAYER_WAIT_FOR_DISK,
+	PLAYER_INIT = 0,
 	PLAYER_PLAY,
 	PLAYER_STOP,
 	PLAYER_PAUSE,
+	PLAYER_RESUME,
 	PLAYER_NEXT,
 	PLAYER_PREV,
+	PLAYER_VOLUME,
+	PLAYER_MUTE,
 
 	PLAYER_TOP
 };
 
+enum player_state
+{
+	PLAYER_IDLE = 0,
+	PLAYER_PLAYING,
+	PLAYER_PAUSED,
+	PLAYER_STOPPED
+};
+
 void Player_StartTasks(unsigned portBASE_TYPE uxPriority);
-void Player_SetState(enum player_states state);
+void Player_SendCommand(enum player_commands command);
+enum player_state Player_GetState(void);
+
+void Player_VolumeUp(void);
+void Player_VolumeDown(void);
+void Player_Mute(_Bool state);
 
 #endif /* APP_PLAYER_H_ */

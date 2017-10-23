@@ -79,7 +79,7 @@ void I2S_Init(void)
 
 }
 
-void I2S_TxDMA(void *src, uint32_t length)
+void I2S_StartDMA(void *src, uint32_t length)
 {
 	// Wait for DMA Transfer Complete
 	while(!DMA2C6_TC);
