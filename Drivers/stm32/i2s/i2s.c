@@ -9,8 +9,6 @@
 
 #include <stdbool.h>
 
-static _Bool DMA2C6_TC, DMA2C6_HT;
-
 /* SCK(kHz) = SAI_CK_x/(SAIClockDivider*2*256) */
 #define SAIClockDivider(__FREQUENCY__) \
         (__FREQUENCY__ == AUDIO_FREQUENCY_8K)  ? 12 \
@@ -29,11 +27,9 @@ void I2S_Init(void)
 	/* Enable GPIOE clock */
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
 	__DSB();
-	/* Enable DMA1 clock */
+	/* Enable DMA2 clock */
 	RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
 	__DSB();
-
-	SAI1_Block_A->CR1 &= ~SAI_xCR1_SAIEN;			// SAI disable
 
 	GPIO_PinConfig(GPIOE, 6, GPIO_AF13_PP_100MHz);	// SD
 	GPIO_PinConfig(GPIOE, 5, GPIO_AF13_PP_100MHz);	// SCK
@@ -41,12 +37,14 @@ void I2S_Init(void)
 	GPIO_PinConfig(GPIOE, 2, GPIO_AF13_PP_100MHz);	// MCLK
 
 	/* Configure SAI_Block_x */
+	SAI1_Block_A->CR1 &= ~SAI_xCR1_SAIEN;			// SAI disable
+
 	SAI1_Block_A->CR1 = 0;
 	SAI1_Block_A->CR1 |= SAI_xCR1_OUTDRIV | SAI_xCR1_DMAEN; 	// Output drive enable, DMA enable
 	SAI1_Block_A->CR1 |= (SAIClockDivider(AUDIO_FREQUENCY_44K) << SAI_xCR1_MCKDIV_Pos);	// MCLK divider
 	SAI1_Block_A->CR1 |= SAI_xCR1_DS_2 | SAI_xCR1_CKSTR;		// 16Bit data size, falling clockstrobing edge
 	SAI1_Block_A->CR2 = 0;
-	SAI1_Block_A->CR2 |= SAI_xCR2_FTH_1;						// FIFO threshold 1/2
+	SAI1_Block_A->CR2 |= SAI_xCR2_FFLUSH | SAI_xCR2_FTH_1;		// Flush FIFO, FIFO threshold 1/2
 
 	/* Configure SAI_Block_x Frame */
 	SAI1_Block_A->FRCR = 0;
@@ -75,32 +73,60 @@ void I2S_Init(void)
 	// Enable IRQ
 	NVIC_EnableIRQ(DMA2_Channel6_IRQn);
 
-	DMA2C6_TC = DMA2C6_HT = true;
+}
 
+void I2S_Deinit(void)
+{
+	/* Disable SAI1 clock */
+	RCC->APB2ENR &= ~RCC_APB2ENR_SAI1EN;
+	__DSB();
+	/* Disable DMA2 clock */
+	RCC->AHB1ENR &= ~RCC_AHB1ENR_DMA2EN;
+	__DSB();
+
+	/* Clear DMA control register and status flags */
+	DMA2_Channel6->CCR = 0;
+	DMA2->IFCR = DMA_ISR_GIF6;
+
+	/* Disable DMA2 interrupts */
+	NVIC_DisableIRQ(DMA2_Channel6_IRQn);
 }
 
 void I2S_StartDMA(void *src, uint32_t length)
 {
-	// Wait for DMA Transfer Complete
-	while(!DMA2C6_TC);
-
 	/* Disable DMA */
 	DMA2_Channel6->CCR &= ~DMA_CCR_EN;
+
+	/* Enable the SAI DMA requests */
+	SAI1_Block_A->CR1 |= SAI_xCR1_DMAEN;
 
 	/* DMA2 Channel 6 configuration - SAI TX */
 	DMA2_Channel6->CPAR = (uint32_t)&(SAI1_Block_A->DR);
 	DMA2_Channel6->CMAR = (uint32_t)src;
 	DMA2_Channel6->CNDTR = length;
+
 	/* Start transmission */
 	DMA2_Channel6->CCR |= DMA_CCR_EN;
 }
 
 void I2S_StopDMA(void)
 {
-	// Wait for DMA Transfer Complete of Half transfer
-	while(!DMA2C6_TC && !DMA2C6_HT);
-	/* Stop transmission */
+	// Pause the audio file playing by disabling the SAI DMA requests
+	SAI1_Block_A->CR1 &= ~SAI_xCR1_DMAEN;
+	// Disable DMA
 	DMA2_Channel6->CCR &= ~DMA_CCR_EN;
+}
+
+void I2S_PauseDMA(void)
+{
+	// Pause the audio file playing by disabling the SAI DMA requests
+	SAI1_Block_A->CR1 &= ~SAI_xCR1_DMAEN;
+}
+
+void I2S_ResumeDMA(void)
+{
+	// Resume the audio file playing by enabling the SAI DMA requests
+	SAI1_Block_A->CR1 |= SAI_xCR1_DMAEN;
 }
 
 __attribute__((weak)) void I2S_HalfTransferCallback(void)
@@ -128,7 +154,6 @@ void DMA2_Channel6_IRQHandler(void)
 		DMA2->IFCR |= DMA_IFCR_CTCIF6;
 
 		// Interrupt service code:
-		DMA2C6_TC = true;
 		I2S_TransferCompleteCallback();
 
 	}
@@ -139,7 +164,6 @@ void DMA2_Channel6_IRQHandler(void)
 		DMA2->IFCR |= DMA_IFCR_CHTIF6;
 
 		// Interrupt service code:
-		DMA2C6_HT = true;
 		I2S_HalfTransferCallback();
 	}
 }

@@ -22,8 +22,11 @@
 #define AUDIO_FREQUENCY_8K            ((uint32_t)8000)
 
 void I2S_Init(void);
+void I2S_Deinit(void);
 void I2S_StartDMA(void *src, uint32_t length);
 void I2S_StopDMA(void);
+void I2S_PauseDMA(void);
+void I2S_ResumeDMA(void);
 
 void I2S_HalfTransferCallback(void);
 void I2S_TransferCompleteCallback(void);

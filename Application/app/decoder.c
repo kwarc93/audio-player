@@ -190,12 +190,15 @@ static void vTaskDecoder(void * pvParameters)
 	I2S_StartDMA(decoder.out_buffer, DECODER_OUT_BUFFER_LEN);
 	decoder.working = true;
 
+	_Bool result = true;
+
 	for(;;)
 	{
 		if(xSemaphoreTake(decoder.shI2SEvent, portMAX_DELAY) == pdTRUE)
 		{
-			if(!decode())
+			if(!result)
 				break;
+			result = decode();
 		}
 	}
 
@@ -293,8 +296,7 @@ static void pause(void)
 	if(!decoder.initialized)
 		return;
 
-	I2S_StopDMA();
-
+	I2S_PauseDMA();
 }
 
 static void resume(void)
@@ -302,8 +304,7 @@ static void resume(void)
 	if(!decoder.initialized)
 		return;
 
-	I2S_StartDMA(decoder.out_buffer, DECODER_OUT_BUFFER_LEN);
-
+	I2S_ResumeDMA();
 }
 
 static _Bool is_working(void)

@@ -10,7 +10,7 @@
 #include "gpio/gpio.h"
 #include "misc.h"
 
-#define VOLUME_CONVERT(Volume)    (((Volume) > 100)? 100:((uint8_t)(((Volume) * 255) / 100)))
+#define VOLUME_CONVERT(Volume)    (((Volume) > 100) ? 100:((uint8_t)(((Volume) * 255) / 100)))
 
 /* Uncomment this line to enable verifying data sent to codec after each write
    operation (for debug purpose) */
@@ -117,24 +117,24 @@ uint32_t CS43L22_Init(uint16_t DeviceAddr, uint16_t OutputDevice, uint8_t Volume
     counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_SPEAKER_B_VOL, 0x00);
   }
 
-  /* Additional configuration for the CODEC. These configurations are done to reduce
+  /* NOTE: Additional configuration for the CODEC. These configurations are done to reduce
   the time needed for the Codec to power off. If these configurations are removed,
   then a long delay should be added between powering off the Codec and switching
   off the I2S peripheral MCLK clock (which is the operating clock for Codec).
   If this delay is not inserted, then the codec will not shut down properly and
   it results in high noise after shut down. */
 
-  /* Disable the analog soft ramp */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_ANALOG_ZC_SR_SETT, 0x00);
-  /* Disable the digital soft ramp */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MISC_CTL, 0x04);
+  /* Enable the analog soft ramp */
+  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_ANALOG_ZC_SR_SETT, 0x0F);
+  /* Enable the digital soft ramp and digital zero crossing */
+  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MISC_CTL, 0x07);
   /* Disable the limiter attack level */
   counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_LIMIT_CTL1, 0x00);
-  /* Adjust Bass and Treble levels */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_TONE_CTL, 0x0F);
-  /* Adjust PCM volume level */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_PCMA_VOL, 0x0A);
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_PCMB_VOL, 0x0A);
+  /* Adjust Bass and Treble levels to 0dB */
+  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_TONE_CTL, 0x88);
+  /* Adjust PCM volume level to 0dB */
+  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_PCMA_VOL, 0x00);
+  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_PCMB_VOL, 0x00);
 
   /* Return communication control value */
   return counter;
