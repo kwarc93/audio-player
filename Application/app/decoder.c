@@ -34,7 +34,7 @@
 #define DECODER_MP3_FRAME_LEN			(MAX_NGRAN * MAX_NCHAN * MAX_NSAMP)
 
 #define DECODER_OUT_BUFFER_LEN			(2 * DECODER_MP3_FRAME_LEN)
-#define DECODER_IN_BUFFER_LEN			(4 * MAINBUF_SIZE + 432)
+#define DECODER_IN_BUFFER_LEN			(2 * MAINBUF_SIZE)
 // +--------------------------------------------------------------------------
 // | @ Public variables
 // +--------------------------------------------------------------------------
@@ -102,7 +102,7 @@ static _Bool decode_mp3(void)
 
 	do
 	{
-	if(bytes_left < 2 * MAINBUF_SIZE)
+	if(bytes_left < DECODER_IN_BUFFER_LEN)
 	{
 		// Copy left bytes to beginning of input buffer
 		memmove(decoder.in_buffer, in_buffer_ptr, bytes_left);
@@ -124,7 +124,7 @@ static _Bool decode_mp3(void)
 		if (decoder.song.fbr < sizeof(decoder.in_buffer) - bytes_left)
 			memset(in_buffer_ptr+bytes_left+decoder.song.fbr, 0, sizeof(decoder.in_buffer)-bytes_left-decoder.song.fbr);
 		// Update bytes left value
-		bytes_left = sizeof(decoder.in_buffer);
+		bytes_left += decoder.song.fbr;
 	}
 
 	offset = MP3FindSyncWord(in_buffer_ptr, bytes_left);
@@ -137,10 +137,8 @@ static _Bool decode_mp3(void)
 	in_buffer_ptr += offset;
 	bytes_left -= offset;
 
-	//simple check for valid header
-	if(((*(in_buffer_ptr+1) & 24) == 8) || ((*(in_buffer_ptr+1) & 6) != 2) ||
-	  ((*(in_buffer_ptr+2) & 240) == 240) || ((*(in_buffer_ptr+2) & 12) == 12) ||
-	  ((*(in_buffer_ptr+3) & 3) == 2))
+	error = MP3GetNextFrameInfo(decoder.MP3Decoder, &mp3FrameInfo, in_buffer_ptr);
+	if(error)
 	{
 		in_buffer_ptr += 1;		//header not valid, try next one
 		bytes_left -= 1;
@@ -170,7 +168,6 @@ static _Bool decode_mp3(void)
 		}
 	} else {
 		/* no error */
-		error = MP3GetNextFrameInfo(decoder.MP3Decoder, &mp3FrameInfo, in_buffer_ptr);
 		frame_decoded = true;
 	}
 	}
