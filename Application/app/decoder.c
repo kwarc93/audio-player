@@ -34,7 +34,7 @@
 #define DECODER_MP3_FRAME_LEN			(MAX_NGRAN * MAX_NCHAN * MAX_NSAMP)
 
 #define DECODER_OUT_BUFFER_LEN			(2 * DECODER_MP3_FRAME_LEN)
-#define DECODER_IN_BUFFER_LEN			(2 * MAINBUF_SIZE + 216)
+#define DECODER_IN_BUFFER_LEN			(4 * MAINBUF_SIZE + 432)
 // +--------------------------------------------------------------------------
 // | @ Public variables
 // +--------------------------------------------------------------------------
@@ -93,6 +93,89 @@ static _Bool decode_wave(void)
 
 static _Bool decode_mp3(void)
 {
+	int error;
+	int offset;
+	MP3FrameInfo mp3FrameInfo;
+	static unsigned char* in_buffer_ptr = decoder.in_buffer;
+	static int bytes_left = 0;
+	_Bool frame_decoded = false;
+
+	do
+	{
+	if(bytes_left < 2 * MAINBUF_SIZE)
+	{
+		// Copy left bytes to beginning of input buffer
+		memmove(decoder.in_buffer, in_buffer_ptr, bytes_left);
+
+		in_buffer_ptr = decoder.in_buffer;
+
+		decoder.song.fresult = f_read(&decoder.song.ffile, in_buffer_ptr + bytes_left,
+				sizeof(decoder.in_buffer) - bytes_left, &decoder.song.fbr);
+
+		if(decoder.song.fbr != (sizeof(decoder.in_buffer) - bytes_left) || decoder.song.fresult != FR_OK)
+		{
+			// Reset all static variables
+			bytes_left = 0;
+			in_buffer_ptr = decoder.in_buffer;
+			return false;
+		}
+
+		// zero-pad to avoid finding false sync word after last frame (from old data in readBuf)
+		if (decoder.song.fbr < sizeof(decoder.in_buffer) - bytes_left)
+			memset(in_buffer_ptr+bytes_left+decoder.song.fbr, 0, sizeof(decoder.in_buffer)-bytes_left-decoder.song.fbr);
+		// Update bytes left value
+		bytes_left = sizeof(decoder.in_buffer);
+	}
+
+	offset = MP3FindSyncWord(in_buffer_ptr, bytes_left);
+	if(offset == -1)
+	{
+		in_buffer_ptr = decoder.in_buffer;
+		bytes_left = 0;
+		continue;
+	}
+	in_buffer_ptr += offset;
+	bytes_left -= offset;
+
+	//simple check for valid header
+	if(((*(in_buffer_ptr+1) & 24) == 8) || ((*(in_buffer_ptr+1) & 6) != 2) ||
+	  ((*(in_buffer_ptr+2) & 240) == 240) || ((*(in_buffer_ptr+2) & 12) == 12) ||
+	  ((*(in_buffer_ptr+3) & 3) == 2))
+	{
+		in_buffer_ptr += 1;		//header not valid, try next one
+		bytes_left -= 1;
+		continue;
+	}
+
+	error = MP3Decode(decoder.MP3Decoder, &in_buffer_ptr, &bytes_left, decoder.out_buffer_ready_part, 0);
+	if(error == -6)
+	{
+		in_buffer_ptr += 1;
+		bytes_left -= 1;
+		continue;
+	}
+	if (error) {
+		/* error occurred */
+		switch (error) {
+		case ERR_MP3_INDATA_UNDERFLOW:
+			return false;
+			break;
+		case ERR_MP3_MAINDATA_UNDERFLOW:
+			/* do nothing - next call to decode will provide more mainData */
+			break;
+		case ERR_MP3_FREE_BITRATE_SYNC:
+		default:
+			return false;
+			break;
+		}
+	} else {
+		/* no error */
+		error = MP3GetNextFrameInfo(decoder.MP3Decoder, &mp3FrameInfo, in_buffer_ptr);
+		frame_decoded = true;
+	}
+	}
+	while(!frame_decoded);
+
 	return true;
 }
 
