@@ -6,6 +6,7 @@
  */
 #include <stdlib.h>
 #include "main.h"
+#include "misc.h"
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "ui/leds.h"
@@ -21,6 +22,9 @@
 #else
 #define DBG_SIMPLE(...)
 #endif
+
+/* Heap pool for FreeRTOS */
+uint8_t ucHeap[ configTOTAL_HEAP_SIZE ] AT_CCMRAM;
 
 static void prvConfigureClock(void);
 

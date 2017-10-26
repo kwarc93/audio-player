@@ -23,6 +23,7 @@
 					 );\
 } while(0)
 
+#if 0
 #pragma GCC push_options
 #pragma GCC optimize ("O3")
 static inline void delayUS_DWT(uint32_t us) {
@@ -32,6 +33,7 @@ static inline void delayUS_DWT(uint32_t us) {
 	} while(DWT->CYCCNT - start < cycles);
 }
 #pragma GCC pop_options
+#endif
 
 static uint32_t primask;
 

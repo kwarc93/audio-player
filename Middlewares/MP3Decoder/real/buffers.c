@@ -45,23 +45,23 @@
  *  the only file you'll need to change.
  **************************************************************************************/
 
-// J.Sz. 21/04/2006 #include "hlxclib/stdlib.h"		/* for malloc, free */
-
-
+#include <stdlib.h>		/* for malloc, free */
+#include <string.h>
 #include "coder.h"
 
-#define static_buffers // KJ - Changes to Static buffers, Can run with dynamic buffers.
-#ifdef static_buffers
-MP3DecInfo  mp3DecInfo;     //  0x7f0 =  2032
-SubbandInfo sbi;            // 0x2204 =  8708
-IMDCTInfo mi;               // 0x1b20 =  6944
-HuffmanInfo hi;             // 0x1210 =  4624
-DequantInfo di;             //  0x348 =   840
-ScaleFactorInfo sfi;        //  0x124 =   292
-SideInfo si;                //  0x148 =   328
-FrameHeader fh;             //   0x38 =    56
-#else
-#include "stdlib.h" // J.Sz. 21/04/2006
+#ifndef HELIX_USE_STATIC_BUFFERS
+#define HELIX_USE_STATIC_BUFFERS 1
+#endif
+
+#if HELIX_USE_STATIC_BUFFERS
+	MP3DecInfo  mp3DecInfo;     //  0x7f0 =  2032b
+	SubbandInfo sbi;            // 0x2204 =  8708b
+	IMDCTInfo mi;               // 0x1b20 =  6944b
+	HuffmanInfo hi;             // 0x1210 =  4624b
+	DequantInfo di;             //  0x348 =   840b
+	ScaleFactorInfo sfi;        //  0x124 =   292b
+	SideInfo si;                //  0x148 =   328b
+	FrameHeader fh;             //   0x38 =    56b
 #endif
 
 /**************************************************************************************
@@ -78,14 +78,10 @@ FrameHeader fh;             //   0x38 =    56
  *
  * Notes:       slow, platform-independent equivalent to memset(buf, 0, nBytes)
  **************************************************************************************/
-void ClearBuffer(void *buf, int nBytes)
+static void ClearBuffer(void *buf, int nBytes)
 {
-	int i;
-	unsigned char *cbuf = (unsigned char *)buf;
-
-	for (i = 0; i < nBytes; i++)
-		cbuf[i] = 0;
-
+	memset(buf, 0, nBytes);
+	return;
 }
 
 /**************************************************************************************
@@ -103,36 +99,11 @@ void ClearBuffer(void *buf, int nBytes)
  *
  * Notes:       if one or more mallocs fail, function frees any buffers already
  *                allocated before returning
- *
- *              Changed by Kasper Jepsen to support static buffers as well.
- *
  **************************************************************************************/
 MP3DecInfo *AllocateBuffers(void)
 {
-  MP3DecInfo *mp3DecInfo_pointer;
-  #ifdef static_buffers
-  mp3DecInfo_pointer = (MP3DecInfo*)&mp3DecInfo;
-  ClearBuffer((void*)&mp3DecInfo, sizeof(MP3DecInfo));
-
-  	mp3DecInfo.FrameHeaderPS =     (void*)&fh;
-	mp3DecInfo.SideInfoPS =        (void*)&si;
-	mp3DecInfo.ScaleFactorInfoPS = (void*)&sfi;
-	mp3DecInfo.HuffmanInfoPS =     (void*)&hi;
-	mp3DecInfo.DequantInfoPS =     (void*)&di;
-	mp3DecInfo.IMDCTInfoPS =       (void*)&mi;
-	mp3DecInfo.SubbandInfoPS =     (void*)&sbi;
-
-	/* important to do this - DSP primitives assume a bunch of state variables are 0 on first use */
-    ClearBuffer((void*)&fh,  sizeof(FrameHeader));
-	ClearBuffer((void*)&si,  sizeof(SideInfo));
-	ClearBuffer((void*)&sfi, sizeof(ScaleFactorInfo));
-	ClearBuffer((void*)&hi,  sizeof(HuffmanInfo));
-	ClearBuffer((void*)&di,  sizeof(DequantInfo));
-	ClearBuffer((void*)&mi,  sizeof(IMDCTInfo));
-	ClearBuffer((void*)&sbi, sizeof(SubbandInfo));
-   // return mp3DecInfo_pointer;
-
-  #else
+#if !HELIX_USE_STATIC_BUFFERS
+	MP3DecInfo *mp3DecInfo;
 	FrameHeader *fh;
 	SideInfo *si;
 	ScaleFactorInfo *sfi;
@@ -141,10 +112,10 @@ MP3DecInfo *AllocateBuffers(void)
 	IMDCTInfo *mi;
 	SubbandInfo *sbi;
 
-	mp3DecInfo_pointer = (MP3DecInfo *)malloc(sizeof(MP3DecInfo));
-	if (!mp3DecInfo_pointer)
+	mp3DecInfo = (MP3DecInfo *)malloc(sizeof(MP3DecInfo));
+	if (!mp3DecInfo)
 		return 0;
-	ClearBuffer(mp3DecInfo_pointer, sizeof(MP3DecInfo));
+	ClearBuffer(mp3DecInfo, sizeof(MP3DecInfo));
 	
 	fh =  (FrameHeader *)     malloc(sizeof(FrameHeader));
 	si =  (SideInfo *)        malloc(sizeof(SideInfo));
@@ -154,22 +125,21 @@ MP3DecInfo *AllocateBuffers(void)
 	mi =  (IMDCTInfo *)       malloc(sizeof(IMDCTInfo));
 	sbi = (SubbandInfo *)     malloc(sizeof(SubbandInfo));
 
-	mp3DecInfo_pointer->FrameHeaderPS =     (void *)fh;
-	mp3DecInfo_pointer->SideInfoPS =        (void *)si;
-	mp3DecInfo_pointer->ScaleFactorInfoPS = (void *)sfi;
-	mp3DecInfo_pointer->HuffmanInfoPS =     (void *)hi;
-	mp3DecInfo_pointer->DequantInfoPS =     (void *)di;
-	mp3DecInfo_pointer->IMDCTInfoPS =       (void *)mi;
-	mp3DecInfo_pointer->SubbandInfoPS =     (void *)sbi;
+	mp3DecInfo->FrameHeaderPS =     (void *)fh;
+	mp3DecInfo->SideInfoPS =        (void *)si;
+	mp3DecInfo->ScaleFactorInfoPS = (void *)sfi;
+	mp3DecInfo->HuffmanInfoPS =     (void *)hi;
+	mp3DecInfo->DequantInfoPS =     (void *)di;
+	mp3DecInfo->IMDCTInfoPS =       (void *)mi;
+	mp3DecInfo->SubbandInfoPS =     (void *)sbi;
 
 	if (!fh || !si || !sfi || !hi || !di || !mi || !sbi) {
-		FreeBuffers(mp3DecInfo_pointer);	/* safe to call - only frees memory that was successfully allocated */
+		FreeBuffers(mp3DecInfo);	/* safe to call - only frees memory that was successfully allocated */
 		return 0;
 	}
 
 	/* important to do this - DSP primitives assume a bunch of state variables are 0 on first use */
-	//Optimized away.. hmm
-    ClearBuffer(fh,  sizeof(FrameHeader));
+	ClearBuffer(fh,  sizeof(FrameHeader));
 	ClearBuffer(si,  sizeof(SideInfo));
 	ClearBuffer(sfi, sizeof(ScaleFactorInfo));
 	ClearBuffer(hi,  sizeof(HuffmanInfo));
@@ -177,15 +147,33 @@ MP3DecInfo *AllocateBuffers(void)
 	ClearBuffer(mi,  sizeof(IMDCTInfo));
 	ClearBuffer(sbi, sizeof(SubbandInfo));
 
-#endif
-	return mp3DecInfo_pointer;
+	return mp3DecInfo;
+#else
 
+	ClearBuffer(&mp3DecInfo, sizeof(MP3DecInfo));
+
+	mp3DecInfo.FrameHeaderPS =     (void *)&fh;
+	mp3DecInfo.SideInfoPS =        (void *)&si;
+	mp3DecInfo.ScaleFactorInfoPS = (void *)&sfi;
+	mp3DecInfo.HuffmanInfoPS =     (void *)&hi;
+	mp3DecInfo.DequantInfoPS =     (void *)&di;
+	mp3DecInfo.IMDCTInfoPS =       (void *)&mi;
+	mp3DecInfo.SubbandInfoPS =     (void *)&sbi;
+
+	/* important to do this - DSP primitives assume a bunch of state variables are 0 on first use */
+	ClearBuffer(&fh,  sizeof(FrameHeader));
+	ClearBuffer(&si,  sizeof(SideInfo));
+	ClearBuffer(&sfi, sizeof(ScaleFactorInfo));
+	ClearBuffer(&hi,  sizeof(HuffmanInfo));
+	ClearBuffer(&di,  sizeof(DequantInfo));
+	ClearBuffer(&mi,  sizeof(IMDCTInfo));
+	ClearBuffer(&sbi, sizeof(SubbandInfo));
+
+	return &mp3DecInfo;
+#endif
 }
 
-
-#ifndef static_buffers
 #define SAFE_FREE(x)	{if (x)	free(x);	(x) = 0;}	/* helper macro */
-#endif
 
 /**************************************************************************************
  * Function:    FreeBuffers
@@ -202,8 +190,8 @@ MP3DecInfo *AllocateBuffers(void)
  **************************************************************************************/
 void FreeBuffers(MP3DecInfo *mp3DecInfo)
 {
-#ifndef static_buffers
-    if (!mp3DecInfo)
+#if !HELIX_USE_STATIC_BUFFERS
+	if (!mp3DecInfo)
 		return;
 
 	SAFE_FREE(mp3DecInfo->FrameHeaderPS);

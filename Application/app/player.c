@@ -11,12 +11,15 @@
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "FreeRTOS/semphr.h"
+#include "FreeRTOS/timers.h"
+
 #include "cs43l22/cs43l22.h"
 #include "player.h"
 
 #include "usb_host.h"
 #include "ui/display.h"
 #include "decoder.h"
+#include "cpu_utils.h"
 #include "misc.h"
 
 #include <stdbool.h>
@@ -34,6 +37,8 @@
 
 #define PLAYER_MAX_VOLUME			100
 #define PLAYER_MIN_VOLUME			0
+
+#define PLAYER_TIMER_PERIOD_MS		1000
 
 // +--------------------------------------------------------------------------
 // | @ Public variables
@@ -53,11 +58,18 @@ static struct player_context
 
 	TaskHandle_t xHandleTaskPlayer;
 	QueueHandle_t qhPlayerState;
+	TimerHandle_t thPlayerTimer;
 }player;
 
 // +--------------------------------------------------------------------------
 // | @ Private functions
 // +--------------------------------------------------------------------------
+
+static void vTimerCallback(TimerHandle_t xTimer)
+{
+	DBG_PRINTF("CPU Load: %u%%", Get_CPU_Usage());
+}
+
 static void Player_TaskProcess(void)
 {
 	if(!player.decoder.is_working() && player.state == PLAYER_PLAYING)
@@ -151,6 +163,11 @@ void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 
 	 // Create queue for player states
 	player.qhPlayerState = xQueueCreate(8, sizeof(enum player_commands));
+
+	// Create timer for printing CPU load
+	player.thPlayerTimer = xTimerCreate("TIMER", PLAYER_TIMER_PERIOD_MS/portTICK_PERIOD_MS, pdTRUE, (void*)0, vTimerCallback);
+	xTimerStart(player.thPlayerTimer, 0);
+
 	Player_SendCommand(PLAYER_INIT);
 
 	// Creating tasks

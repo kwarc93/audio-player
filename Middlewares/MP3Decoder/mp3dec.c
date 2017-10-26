@@ -40,10 +40,9 @@
  *
  * mp3dec.c - platform-independent top level MP3 decoder API
  **************************************************************************************/
-#include <string.h>
-//#include "hlxclib/string.h"		/* for memmove, memcpy (can replace with different implementations if desired) */
+
+#include <string.h>		/* for memmove, memcpy (can replace with different implementations if desired) */
 #include "mp3common.h"	/* includes mp3dec.h (public API) and internal, platform-independent API */
-//#include "hxthreadyield.h"
 
 /**************************************************************************************
  * Function:    MP3InitDecoder
@@ -283,8 +282,7 @@ int MP3Decode(HMP3Decoder hMP3Decoder, unsigned char **inbuf, int *bytesLeft, sh
 	int prevBitOffset, sfBlockBits, huffBlockBits;
 	unsigned char *mainPtr;
 	MP3DecInfo *mp3DecInfo = (MP3DecInfo *)hMP3Decoder;
-//mw	ULONG32 ulTime;
-//mw	StartYield(&ulTime); 
+
 	if (!mp3DecInfo)
 		return ERR_MP3_NULL_POINTER;
 
@@ -395,7 +393,6 @@ int MP3Decode(HMP3Decoder hMP3Decoder, unsigned char **inbuf, int *bytesLeft, sh
 			mainPtr += offset;
 			mainBits -= (8*offset - prevBitOffset + bitOffset);
 		}
-//mw		YieldIfRequired(&ulTime);
 		/* dequantize coefficients, decode stereo, reorder short blocks */
 		if (Dequantize(mp3DecInfo, gr) < 0) {
 			MP3ClearBadFrame(mp3DecInfo, outbuf);

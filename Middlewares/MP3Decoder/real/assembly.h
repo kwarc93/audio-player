@@ -49,14 +49,14 @@
  * FASTABS(x)          branchless absolute value of signed integer x
  * CLZ(x)              count leading zeros in x
  * MADD64(sum, x, y)   (Windows only) sum [64-bit] += x [32-bit] * y [32-bit]
- * SHL64(sum, x, y)    (Windows only) 64-bit left shift using __int64
- * SAR64(sum, x, y)    (Windows only) 64-bit right shift using __int64
+ * SHL64(sum, x, y)    (Windows only) 64-bit left shift using Word64
+ * SAR64(sum, x, y)    (Windows only) 64-bit right shift using Word64
  */
 
 #ifndef _ASSEMBLY_H
 #define _ASSEMBLY_H
 
-#if (defined _WIN32 && !defined _WIN32_WCE) || (defined __WINS__ && defined _SYMBIAN) || defined(_OPENWAVE_SIMULATOR) || defined(WINCE_EMULATOR) || defined (AEE_SIMULATOR)    /* Symbian emulator for Ix86 */
+#if (defined _WIN32 && !defined _WIN32_WCE) || (defined __WINS__ && defined _SYMBIAN) || defined(_OPENWAVE_SIMULATOR) || defined(WINCE_EMULATOR)    /* Symbian emulator for Ix86 */
 
 #pragma warning( disable : 4035 )	/* complains about inline asm not returning a value */
 
@@ -119,7 +119,7 @@ static __inline Word64 MADD64(Word64 sum, int x, int y)
 		adc		edx, sumHi
 	}
 
-	/* equivalent to return (sum + ((__int64)x * y)); */
+	/* equivalent to return (sum + ((Word64)x * y)); */
 }
 
 static __inline Word64 SHL64(Word64 x, int n)
@@ -186,7 +186,7 @@ static __inline Word64 SAR64(Word64 x, int n)
 
 #elif (defined _WIN32) && (defined _WIN32_WCE)
 
-/* use asm function for now (EVC++ 3.0 does horrible job compiling __int64 version) */
+/* use asm function for now (EVC++ 3.0 does horrible job compiling Word64 version) */
 #define MULSHIFT32	xmp3_MULSHIFT32
 int MULSHIFT32(int x, int y);
 
@@ -241,7 +241,7 @@ static __inline int MULSHIFT32(int x, int y)
 
 static __inline int FASTABS(int x) 
 {
-	int t=0; /*Really is not necessary to initialiaze only to avoid warning*/
+	int t;
 
 	__asm {
 		eor	t, x, x, asr #31
@@ -289,7 +289,7 @@ static __inline int MULSHIFT32(int x, int y)
 
 static __inline int FASTABS(int x) 
 {
-	int t=0; /*Really is not necessary to initialiaze only to avoid warning*/
+	int t=0; /*Really is not necessary to initialiaze only to avoid warning*/ 
 
 	__asm__ volatile (
 		"eor %0,%2,%2, asr #31;"
@@ -316,22 +316,6 @@ static __inline int CLZ(int x)
 
 	return numZeros;
 }
-
-//mw
-static __inline Word64 MADD64(Word64 sum, int x, int y)
-{
-   return (sum + ((int64_t)x * y));
-}
-static __inline Word64 SHL64(Word64 x, int n)
-{
-  return x << n;
-}
-
-static __inline Word64 SAR64(Word64 x, int n)
-{
-  return x >> n;
-}
-//mw
 
 #else
 

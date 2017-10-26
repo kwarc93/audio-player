@@ -159,6 +159,19 @@ SECTIONS
     _edata = .;        /* define a global symbol at data end */
   } >RAM AT> FLASH
 
+  _siccmram = LOADADDR(.ccmram);
+  
+  /* CCM-RAM section */
+    .ccmram : 
+  {
+    . = ALIGN(8);
+    _sccmram = .;        /* create a global symbol at ccmram start */
+    *(.ccmram)           /* .ccmram sections */
+    *(.ccmram*)          /* .ccmram* sections */
+
+    . = ALIGN(8);
+    _eccmram = .;        /* define a global symbol at ccmram end */
+  } >CCMRAM AT> FLASH
   
   /* Uninitialized data section */
   . = ALIGN(4);

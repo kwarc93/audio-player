@@ -34,7 +34,7 @@
 #define DECODER_MP3_FRAME_LEN			(MAX_NGRAN * MAX_NCHAN * MAX_NSAMP)
 
 #define DECODER_OUT_BUFFER_LEN			(2 * DECODER_MP3_FRAME_LEN)
-#define DECODER_IN_BUFFER_LEN			(2 * MAINBUF_SIZE)
+#define DECODER_IN_BUFFER_LEN			(4096)
 // +--------------------------------------------------------------------------
 // | @ Public variables
 // +--------------------------------------------------------------------------
@@ -95,10 +95,10 @@ static _Bool decode_mp3(void)
 {
 	int error;
 	int offset;
-	MP3FrameInfo mp3FrameInfo;
 	static unsigned char* in_buffer_ptr = decoder.in_buffer;
 	static int bytes_left = 0;
 	_Bool frame_decoded = false;
+	MP3FrameInfo mp3FrameInfo;
 
 	do
 	{
@@ -267,6 +267,7 @@ void set_audio_format(const char* file_ext)
 static void vTaskDecoder(void * pvParameters)
 {
 	f_open(&decoder.song.ffile, (const TCHAR*)&decoder.song.finfo.fname, FA_READ);
+
 	I2S_StartDMA(decoder.out_buffer, DECODER_OUT_BUFFER_LEN);
 	decoder.working = true;
 
@@ -281,6 +282,7 @@ static void vTaskDecoder(void * pvParameters)
 			result = decode();
 		}
 	}
+
 
 	decoder.working = false;
 	I2S_StopDMA();
@@ -302,7 +304,8 @@ static void init(char* filename)
 	memset(&decoder, 0, sizeof(decoder));
 
 	// Get file information to structure
-	decoder.song.fresult = f_stat(filename, &decoder.song.finfo);
+	if(f_stat(filename, &decoder.song.finfo) != FR_OK)
+		return;
 
 	// Set audio format based on file extension
 	set_audio_format(FB_GetFileExtension(filename));
@@ -329,6 +332,7 @@ static void init(char* filename)
 		return;
 
 	// Decoder initialized
+	DBG_PRINTF("Decoding file: %s", filename);
 	decoder.initialized = true;
 
 }
@@ -368,6 +372,7 @@ static void deinit(void)
 	memset(&decoder, 0, sizeof(decoder));
 
 	// Decoder deinitialized
+	DBG_PRINTF("Decoder stopped");
 	decoder.initialized = false;
 }
 

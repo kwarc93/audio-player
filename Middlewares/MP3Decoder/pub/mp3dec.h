@@ -40,9 +40,6 @@
  *
  * mp3dec.h - public C API for MP3 decoder
  **************************************************************************************/
-#include <stdint.h>
-#define ARM
-#define Word64 uint64_t
 
 #ifndef _MP3DEC_H
 #define _MP3DEC_H
@@ -62,8 +59,6 @@
 #elif defined(__GNUC__) && defined(__i386__)
 #
 #elif defined(_OPENWAVE_SIMULATOR) || defined(_OPENWAVE_ARMULATOR)
-#
-#elif defined(_AEE_SIMULATOR) || defined(_BREW)
 #
 #else
 #error No platform defined. See valid options in mp3dec.h
