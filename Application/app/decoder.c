@@ -34,7 +34,7 @@
 #define DECODER_MP3_FRAME_LEN			(MAX_NGRAN * MAX_NCHAN * MAX_NSAMP)
 
 #define DECODER_OUT_BUFFER_LEN			(2 * DECODER_MP3_FRAME_LEN)
-#define DECODER_IN_BUFFER_LEN			(4096)
+#define DECODER_IN_BUFFER_LEN			(2 * MAINBUF_SIZE)
 // +--------------------------------------------------------------------------
 // | @ Public variables
 // +--------------------------------------------------------------------------
@@ -50,20 +50,26 @@ struct audio_file
 	UINT fbr;
 };
 
+struct audio_buffers
+{
+	uint8_t* in_ptr;
+	uint8_t in[DECODER_IN_BUFFER_LEN];
+
+	int16_t* out_ptr;
+	int16_t out[DECODER_OUT_BUFFER_LEN];
+};
+
 static struct decoder_context
 {
 	_Bool initialized;
 	_Bool working;
 	enum audio_format format;
 
-	uint8_t in_buffer[DECODER_IN_BUFFER_LEN] __attribute__((aligned(4)));
-	int16_t out_buffer[DECODER_OUT_BUFFER_LEN] __attribute__((aligned(4)));
-	int16_t* out_buffer_ready_part;
-	uint32_t bytes_read;
-
 	struct audio_file song;
+	struct audio_buffers buffers;
 
 	HMP3Decoder MP3Decoder;
+	MP3FrameInfo mp3FrameInfo;
 
 	SemaphoreHandle_t shI2SEvent;
 	TaskHandle_t xHandleTaskDecoder;
@@ -76,14 +82,41 @@ static void init(char* filename);
 static void deinit(void);
 static void vTaskDecoder(void * pvParameters);
 
+// Helper functions
+// ---------------------------------------------------------------------------
+/* @brief 	Refills inbuffer
+ * @param 	Number of bytes left untouched in inbuffer
+ * @retval	Number of bytes filled to inbuffer
+ */
+static uint32_t refill_inbuffer(uint32_t bytes_left)
+{
+	// Move left bytes to beginning of input buffer
+	memmove(decoder.buffers.in, decoder.buffers.in + (sizeof(decoder.buffers.in) - bytes_left), bytes_left);
+
+	decoder.song.fresult = f_read(&decoder.song.ffile, decoder.buffers.in + bytes_left,
+							sizeof(decoder.buffers.in) - bytes_left, &decoder.song.fbr);
+
+	if(decoder.song.fbr != (sizeof(decoder.buffers.in) - bytes_left) || decoder.song.fresult != FR_OK)
+	{
+		return 0;
+	}
+
+	// Zero-pad last old bytes
+	if (decoder.song.fbr < sizeof(decoder.buffers.in) - bytes_left)
+		memset(decoder.buffers.in + bytes_left + decoder.song.fbr, 0,
+			   sizeof(decoder.buffers.in)-bytes_left-decoder.song.fbr);
+
+	return decoder.song.fbr;
+}
+
 // Decoding functions
 // ---------------------------------------------------------------------------
 static _Bool decode_wave(void)
 {
-	decoder.song.fresult = f_read(&decoder.song.ffile, decoder.out_buffer_ready_part,
-						   sizeof(decoder.out_buffer)/2, &decoder.song.fbr);
+	decoder.song.fresult = f_read(&decoder.song.ffile, decoder.buffers.out_ptr,
+						   sizeof(decoder.buffers.out)/2, &decoder.song.fbr);
 
-	if(decoder.song.fbr != sizeof(decoder.out_buffer)/2 || decoder.song.fresult != FR_OK)
+	if(decoder.song.fbr != sizeof(decoder.buffers.out)/2 || decoder.song.fresult != FR_OK)
 	{
 		return false;
 	}
@@ -93,83 +126,68 @@ static _Bool decode_wave(void)
 
 static _Bool decode_mp3(void)
 {
-	int error;
-	int offset;
-	static unsigned char* in_buffer_ptr = decoder.in_buffer;
+	int error = 0;
+	int offset = 0;
+	int bytes_filled = 0;
 	static int bytes_left = 0;
 	_Bool frame_decoded = false;
-	MP3FrameInfo mp3FrameInfo;
 
 	do
 	{
-	if(bytes_left < DECODER_IN_BUFFER_LEN)
-	{
-		// Copy left bytes to beginning of input buffer
-		memmove(decoder.in_buffer, in_buffer_ptr, bytes_left);
-
-		in_buffer_ptr = decoder.in_buffer;
-
-		decoder.song.fresult = f_read(&decoder.song.ffile, in_buffer_ptr + bytes_left,
-				sizeof(decoder.in_buffer) - bytes_left, &decoder.song.fbr);
-
-		if(decoder.song.fbr != (sizeof(decoder.in_buffer) - bytes_left) || decoder.song.fresult != FR_OK)
+		if(bytes_left < 2 * MAINBUF_SIZE)
 		{
-			// Reset all static variables
+			bytes_filled = refill_inbuffer(bytes_left);
+			if(!bytes_filled)
+			{
+				// Reset all static variables
+				bytes_left = 0;
+				decoder.buffers.in_ptr = decoder.buffers.in;
+				return false;
+			}
+
+			decoder.buffers.in_ptr = decoder.buffers.in;
+
+			bytes_left += bytes_filled;
+		}
+
+		offset = MP3FindSyncWord(decoder.buffers.in_ptr, bytes_left);
+		if(offset < 0)
+		{
+			// Refill whole inbuffer
 			bytes_left = 0;
-			in_buffer_ptr = decoder.in_buffer;
-			return false;
+			continue;
 		}
 
-		// zero-pad to avoid finding false sync word after last frame (from old data in readBuf)
-		if (decoder.song.fbr < sizeof(decoder.in_buffer) - bytes_left)
-			memset(in_buffer_ptr+bytes_left+decoder.song.fbr, 0, sizeof(decoder.in_buffer)-bytes_left-decoder.song.fbr);
-		// Update bytes left value
-		bytes_left += decoder.song.fbr;
-	}
+		decoder.buffers.in_ptr += offset;
+		bytes_left -= offset;
 
-	offset = MP3FindSyncWord(in_buffer_ptr, bytes_left);
-	if(offset == -1)
-	{
-		in_buffer_ptr = decoder.in_buffer;
-		bytes_left = 0;
-		continue;
-	}
-	in_buffer_ptr += offset;
-	bytes_left -= offset;
+		if(bytes_left < 2 * MAINBUF_SIZE)
+		{
+			continue;
+		}
 
-	error = MP3GetNextFrameInfo(decoder.MP3Decoder, &mp3FrameInfo, in_buffer_ptr);
-	if(error)
-	{
-		in_buffer_ptr += 1;		//header not valid, try next one
-		bytes_left -= 1;
-		continue;
-	}
+		error = MP3GetNextFrameInfo(decoder.MP3Decoder, &decoder.mp3FrameInfo, decoder.buffers.in_ptr);
+		if(error)
+		{
+			// Refill inbuffer
+			continue;
+		}
 
-	error = MP3Decode(decoder.MP3Decoder, &in_buffer_ptr, &bytes_left, decoder.out_buffer_ready_part, 0);
-	if(error == -6)
-	{
-		in_buffer_ptr += 1;
-		bytes_left -= 1;
-		continue;
-	}
-	if (error) {
-		/* error occurred */
-		switch (error) {
+		error = MP3Decode(decoder.MP3Decoder, &decoder.buffers.in_ptr, &bytes_left, decoder.buffers.out_ptr, 0);
+
+		switch(error)
+		{
+		case ERR_MP3_NONE:
+			frame_decoded = true;
+			break;
 		case ERR_MP3_INDATA_UNDERFLOW:
-			return false;
-			break;
 		case ERR_MP3_MAINDATA_UNDERFLOW:
-			/* do nothing - next call to decode will provide more mainData */
 			break;
-		case ERR_MP3_FREE_BITRATE_SYNC:
 		default:
+			frame_decoded = false;
 			return false;
-			break;
 		}
-	} else {
-		/* no error */
-		frame_decoded = true;
-	}
+
 	}
 	while(!frame_decoded);
 
@@ -268,7 +286,7 @@ static void vTaskDecoder(void * pvParameters)
 {
 	f_open(&decoder.song.ffile, (const TCHAR*)&decoder.song.finfo.fname, FA_READ);
 
-	I2S_StartDMA(decoder.out_buffer, DECODER_OUT_BUFFER_LEN);
+	I2S_StartDMA(decoder.buffers.out, DECODER_OUT_BUFFER_LEN);
 	decoder.working = true;
 
 	_Bool result = true;
@@ -419,7 +437,7 @@ void I2S_HalfTransferCallback(void)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-	decoder.out_buffer_ready_part = &decoder.out_buffer[0];
+	decoder.buffers.out_ptr = &decoder.buffers.out[0];
 	xSemaphoreGiveFromISR(decoder.shI2SEvent, &xHigherPriorityTaskWoken);
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 
@@ -429,7 +447,7 @@ void I2S_TransferCompleteCallback(void)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-	decoder.out_buffer_ready_part = &decoder.out_buffer[DECODER_OUT_BUFFER_LEN/2];
+	decoder.buffers.out_ptr = &decoder.buffers.out[DECODER_OUT_BUFFER_LEN/2];
 	xSemaphoreGiveFromISR(decoder.shI2SEvent, &xHigherPriorityTaskWoken);
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 }

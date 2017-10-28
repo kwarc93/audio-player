@@ -39,7 +39,7 @@ void Debug_Simple(const char* msg)
 	{
 #endif
 		USART_TxDMA((void*)msg, strlen(msg));
-		USART_TxDMA("\n", 1);
+		USART_TxDMA("\r\n", 2);
 #ifdef USE_FREERTOS
 		xSemaphoreGive(shMutexUSART);
 	}
@@ -62,7 +62,7 @@ void Debug_Printf(const char* fmt, ...)
 		exit_critical();
 
 		USART_TxDMA(debug_buffer, strlen(debug_buffer));
-		USART_TxDMA("\n", 1);
+		USART_TxDMA("\r\n", 2);
 
 #ifdef USE_FREERTOS
 		xSemaphoreGive(shMutexUSART);
