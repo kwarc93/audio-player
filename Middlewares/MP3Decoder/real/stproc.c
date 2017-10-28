@@ -61,7 +61,7 @@
  *
  * Notes:       assume at least 1 GB in input
  **************************************************************************************/
-void MidSideProc(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, int mOut[2])  
+void MidSideProc(int x[MP3_MAX_NCHAN][MP3_MAX_NSAMP], int nSamps, int mOut[2])  
 {
 	int i, xr, xl, mOutL, mOutR;
 	
@@ -103,7 +103,7 @@ void MidSideProc(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, int mOut[2])
  * TODO:        combine MPEG1/2 into one function (maybe)
  *              make sure all the mixed-block and IIP logic is right
  **************************************************************************************/
-void IntensityProcMPEG1(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, FrameHeader *fh, ScaleFactorInfoSub *sfis, 
+void IntensityProcMPEG1(int x[MP3_MAX_NCHAN][MP3_MAX_NSAMP], int nSamps, FrameHeader *fh, ScaleFactorInfoSub *sfis, 
 						CriticalBandInfo *cbi, int midSideFlag, int mixFlag, int mOut[2])
 {
 	int i=0, j=0, n=0, cb=0, w=0;
@@ -209,7 +209,7 @@ void IntensityProcMPEG1(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, FrameHeader *fh
  *              make sure all the mixed-block and IIP logic is right
  *                probably redo IIP logic to be simpler
  **************************************************************************************/
-void IntensityProcMPEG2(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, FrameHeader *fh, ScaleFactorInfoSub *sfis, 
+void IntensityProcMPEG2(int x[MP3_MAX_NCHAN][MP3_MAX_NSAMP], int nSamps, FrameHeader *fh, ScaleFactorInfoSub *sfis, 
 						CriticalBandInfo *cbi, ScaleFactorJS *sfjs, int midSideFlag, int mixFlag, int mOut[2])
 {
 	int i, j, k, n, r, cb, w;

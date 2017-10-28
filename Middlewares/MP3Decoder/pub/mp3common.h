@@ -71,7 +71,7 @@ typedef struct _MP3DecInfo {
 	void *SubbandInfoPS;
 
 	/* buffer which must be large enough to hold largest possible main_data section */
-	unsigned char mainBuf[MAINBUF_SIZE];
+	unsigned char mainBuf[MP3_MAINBUF_SIZE];
 
 	/* special info for "free" bitrate files */
 	int freeBitrateFlag;
@@ -90,7 +90,7 @@ typedef struct _MP3DecInfo {
 	int mainDataBegin;
 	int mainDataBytes;
 
-	int part23Length[MAX_NGRAN][MAX_NCHAN];
+	int part23Length[MP3_MAX_NGRAN][MP3_MAX_NCHAN];
 
 } MP3DecInfo;
 

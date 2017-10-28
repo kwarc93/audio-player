@@ -10,9 +10,10 @@
 
 #include "main.h"
 
-#define ARRAY_LEN(a)	(sizeof(a)/sizeof(a[0]))
-#define AT_CCMRAM	__attribute__((section (".ccmram")))
-#define AT_SDRAM	__attribute__((section (".sdram")))
+#define ARRAY_LEN(a)				(sizeof(a)/sizeof(a[0]))
+#define POINTS_TO_ARRAY(ptr,array)	(((ptr >= array) && (ptr < array + sizeof(array))))
+#define AT_CCMRAM					__attribute__((section (".ccmram")))
+#define AT_SDRAM					__attribute__((section (".sdram")))
 
 _Bool is_in_handler_mode(void);
 void disable_interrupts(void);

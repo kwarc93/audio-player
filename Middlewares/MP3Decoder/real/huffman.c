@@ -410,14 +410,14 @@ int DecodeHuffman(MP3DecInfo *mp3DecInfo, unsigned char *buf, int *bitOffset, in
 				r1Start = fh->sfBand->l[6] + 2*w;
 			}
 		}
-		r2Start = MAX_NSAMP;	/* short blocks don't have region 2 */
+		r2Start = MP3_MAX_NSAMP;	/* short blocks don't have region 2 */
 	} else {
 		r1Start = fh->sfBand->l[sis->region0Count + 1];
 		r2Start = fh->sfBand->l[sis->region0Count + 1 + sis->region1Count + 1];
 	}
 
 	/* offset rEnd index by 1 so first region = rEnd[1] - rEnd[0], etc. */
-	rEnd[3] = MIN(MAX_NSAMP, 2 * sis->nBigvals);
+	rEnd[3] = MIN(MP3_MAX_NSAMP, 2 * sis->nBigvals);
 	rEnd[2] = MIN(r2Start, rEnd[3]);
 	rEnd[1] = MIN(r1Start, rEnd[3]);
 	rEnd[0] = 0;
@@ -439,10 +439,10 @@ int DecodeHuffman(MP3DecInfo *mp3DecInfo, unsigned char *buf, int *bitOffset, in
 	}
 
 	/* decode Huffman quads (if any) */
-	hi->nonZeroBound[ch] += DecodeHuffmanQuads(hi->huffDecBuf[ch] + rEnd[3], MAX_NSAMP - rEnd[3], sis->count1TableSelect, bitsLeft, buf, *bitOffset);
+	hi->nonZeroBound[ch] += DecodeHuffmanQuads(hi->huffDecBuf[ch] + rEnd[3], MP3_MAX_NSAMP - rEnd[3], sis->count1TableSelect, bitsLeft, buf, *bitOffset);
 
-	ASSERT(hi->nonZeroBound[ch] <= MAX_NSAMP);
-	for (i = hi->nonZeroBound[ch]; i < MAX_NSAMP; i++)
+	ASSERT(hi->nonZeroBound[ch] <= MP3_MAX_NSAMP);
+	for (i = hi->nonZeroBound[ch]; i < MP3_MAX_NSAMP; i++)
 		hi->huffDecBuf[ch][i] = 0;
 	
 	/* If bits used for 576 samples < huffBlockBits, then the extras are considered

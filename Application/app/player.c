@@ -166,7 +166,7 @@ void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 
 	// Create timer for printing CPU load
 	player.thPlayerTimer = xTimerCreate("TIMER", PLAYER_TIMER_PERIOD_MS/portTICK_PERIOD_MS, pdTRUE, (void*)0, vTimerCallback);
-	xTimerStart(player.thPlayerTimer, 0);
+	xTimerStart(player.thPlayerTimer, 1000);
 
 	Player_SendCommand(PLAYER_INIT);
 

@@ -14,6 +14,7 @@
 
 #include "decoder.h"
 #include "mp3dec.h"
+#include "misc.h"
 #include "file_browser.h"
 #include "FatFs/ff.h"
 #include "i2s/i2s.h"
@@ -31,10 +32,10 @@
 #define DBG_PRINTF(...)
 #endif
 
-#define DECODER_MP3_FRAME_LEN			(MAX_NGRAN * MAX_NCHAN * MAX_NSAMP)
+#define DECODER_MP3_FRAME_LEN			(MP3_MAX_NGRAN * MP3_MAX_NCHAN * MP3_MAX_NSAMP)
 
 #define DECODER_OUT_BUFFER_LEN			(2 * DECODER_MP3_FRAME_LEN)
-#define DECODER_IN_BUFFER_LEN			(4096)
+#define DECODER_IN_BUFFER_LEN			(4 * MP3_MAINBUF_SIZE)
 // +--------------------------------------------------------------------------
 // | @ Public variables
 // +--------------------------------------------------------------------------
@@ -44,10 +45,20 @@
 // +--------------------------------------------------------------------------
 struct audio_file
 {
-	FIL ffile;
-	FILINFO finfo;
-	FRESULT fresult;
-	UINT fbr;
+	FIL file;
+	FILINFO info;
+	FRESULT result;
+};
+
+struct audio_buffers
+{
+	uint8_t* in_ptr;
+	uint8_t in[DECODER_IN_BUFFER_LEN];
+	uint32_t in_bytes_left;
+
+	int16_t* out_ptr;
+	int16_t out[DECODER_OUT_BUFFER_LEN];
+	uint32_t out_bytes_left;
 };
 
 static struct decoder_context
@@ -56,14 +67,11 @@ static struct decoder_context
 	_Bool working;
 	enum audio_format format;
 
-	uint8_t in_buffer[DECODER_IN_BUFFER_LEN] __attribute__((aligned(4)));
-	int16_t out_buffer[DECODER_OUT_BUFFER_LEN] __attribute__((aligned(4)));
-	int16_t* out_buffer_ready_part;
-	uint32_t bytes_read;
-
 	struct audio_file song;
+	struct audio_buffers buffers;
 
 	HMP3Decoder MP3Decoder;
+	MP3FrameInfo mp3FrameInfo;
 
 	SemaphoreHandle_t shI2SEvent;
 	TaskHandle_t xHandleTaskDecoder;
@@ -76,14 +84,60 @@ static void init(char* filename);
 static void deinit(void);
 static void vTaskDecoder(void * pvParameters);
 
+// Helper functions
+// ---------------------------------------------------------------------------
+/* @brief 	Sets audio format for decoder
+ * @param 	File extension
+ * @retval	None
+ */
+void set_audio_format(const char* file_ext)
+{
+	if(!strcmp(file_ext, "wav"))
+		decoder.format = WAVE;
+	else if(!strcmp(file_ext, "mp3"))
+		decoder.format = MP3;
+	else if(!strcmp(file_ext, "flac"))
+		decoder.format = FLAC;
+	else
+		decoder.format = UNSUPPORTED;
+}
+
+/* @brief 	Refills decoder's input buffer
+ * @param 	Number of unprocessed bytes left in input buffer
+ * @retval	Number of bytes filled to input buffer
+ */
+static uint32_t refill_inbuffer(uint32_t bytes_left)
+{
+	UINT bytes_read;
+	UINT bytes_to_read = sizeof(decoder.buffers.in) - bytes_left;
+
+	// Move unprocessed bytes to beginning of input buffer
+	decoder.buffers.in_ptr = memmove(decoder.buffers.in, decoder.buffers.in_ptr, bytes_left);
+
+	decoder.song.result = f_read(&decoder.song.file, decoder.buffers.in + bytes_left, bytes_to_read, &bytes_read);
+
+	if(bytes_read != bytes_to_read || decoder.song.result != FR_OK)
+	{
+		return 0;
+	}
+
+	// Zero-pad last old bytes
+	if (bytes_read < bytes_to_read)
+		memset(decoder.buffers.in + bytes_left + bytes_read, 0, bytes_to_read - bytes_read);
+
+	return bytes_read;
+}
+
 // Decoding functions
 // ---------------------------------------------------------------------------
 static _Bool decode_wave(void)
 {
-	decoder.song.fresult = f_read(&decoder.song.ffile, decoder.out_buffer_ready_part,
-						   sizeof(decoder.out_buffer)/2, &decoder.song.fbr);
+	UINT bytes_read;
 
-	if(decoder.song.fbr != sizeof(decoder.out_buffer)/2 || decoder.song.fresult != FR_OK)
+	decoder.song.result = f_read(&decoder.song.file, decoder.buffers.out_ptr,
+						   sizeof(decoder.buffers.out)/2, &bytes_read);
+
+	if(bytes_read != sizeof(decoder.buffers.out)/2 || decoder.song.result != FR_OK)
 	{
 		return false;
 	}
@@ -93,83 +147,62 @@ static _Bool decode_wave(void)
 
 static _Bool decode_mp3(void)
 {
-	int error;
-	int offset;
-	static unsigned char* in_buffer_ptr = decoder.in_buffer;
-	static int bytes_left = 0;
+	int error = 0;
+	int offset = 0;
 	_Bool frame_decoded = false;
-	MP3FrameInfo mp3FrameInfo;
 
 	do
 	{
-	if(bytes_left < DECODER_IN_BUFFER_LEN)
-	{
-		// Copy left bytes to beginning of input buffer
-		memmove(decoder.in_buffer, in_buffer_ptr, bytes_left);
-
-		in_buffer_ptr = decoder.in_buffer;
-
-		decoder.song.fresult = f_read(&decoder.song.ffile, in_buffer_ptr + bytes_left,
-				sizeof(decoder.in_buffer) - bytes_left, &decoder.song.fbr);
-
-		if(decoder.song.fbr != (sizeof(decoder.in_buffer) - bytes_left) || decoder.song.fresult != FR_OK)
+		if(decoder.buffers.in_bytes_left < MP3_MAINBUF_SIZE)
 		{
-			// Reset all static variables
-			bytes_left = 0;
-			in_buffer_ptr = decoder.in_buffer;
-			return false;
+			int bytes_filled;
+
+			bytes_filled = refill_inbuffer(decoder.buffers.in_bytes_left);
+			if(!bytes_filled)
+			{
+				decoder.buffers.in_bytes_left = 0;
+				return false;
+			}
+
+			decoder.buffers.in_bytes_left += bytes_filled;
 		}
 
-		// zero-pad to avoid finding false sync word after last frame (from old data in readBuf)
-		if (decoder.song.fbr < sizeof(decoder.in_buffer) - bytes_left)
-			memset(in_buffer_ptr+bytes_left+decoder.song.fbr, 0, sizeof(decoder.in_buffer)-bytes_left-decoder.song.fbr);
-		// Update bytes left value
-		bytes_left += decoder.song.fbr;
-	}
+		offset = MP3FindSyncWord(decoder.buffers.in_ptr, decoder.buffers.in_bytes_left);
+		if(offset < 0)
+		{
+            // This frame does not contain the frame sync -> get another frame
+			decoder.buffers.in_bytes_left = 0;
+			continue;
+		}
 
-	offset = MP3FindSyncWord(in_buffer_ptr, bytes_left);
-	if(offset == -1)
-	{
-		in_buffer_ptr = decoder.in_buffer;
-		bytes_left = 0;
-		continue;
-	}
-	in_buffer_ptr += offset;
-	bytes_left -= offset;
+		decoder.buffers.in_ptr += offset;
+		decoder.buffers.in_bytes_left -= offset;
 
-	error = MP3GetNextFrameInfo(decoder.MP3Decoder, &mp3FrameInfo, in_buffer_ptr);
-	if(error)
-	{
-		in_buffer_ptr += 1;		//header not valid, try next one
-		bytes_left -= 1;
-		continue;
-	}
 
-	error = MP3Decode(decoder.MP3Decoder, &in_buffer_ptr, &bytes_left, decoder.out_buffer_ready_part, 0);
-	if(error == -6)
-	{
-		in_buffer_ptr += 1;
-		bytes_left -= 1;
-		continue;
-	}
-	if (error) {
-		/* error occurred */
-		switch (error) {
-		case ERR_MP3_INDATA_UNDERFLOW:
-			return false;
+
+		// @ TODO: Here I2S can be reconfigured to match file sample rate
+
+		if(decoder.buffers.in_bytes_left < MP3_MAINBUF_SIZE)
+		{
+			continue;
+		}
+
+		error = MP3Decode(decoder.MP3Decoder, &decoder.buffers.in_ptr, (int*)&decoder.buffers.in_bytes_left, decoder.buffers.out_ptr, 0);
+
+		switch(error)
+		{
+		case ERR_MP3_NONE:
+			frame_decoded = true;
 			break;
 		case ERR_MP3_MAINDATA_UNDERFLOW:
-			/* do nothing - next call to decode will provide more mainData */
+		case ERR_MP3_INVALID_FRAMEHEADER:
+			// Do nothing
 			break;
-		case ERR_MP3_FREE_BITRATE_SYNC:
 		default:
+			frame_decoded = false;
 			return false;
-			break;
 		}
-	} else {
-		/* no error */
-		frame_decoded = true;
-	}
+
 	}
 	while(!frame_decoded);
 
@@ -249,26 +282,13 @@ static _Bool init_task(void)
 	return false;
 }
 
-// Other functions
-// ---------------------------------------------------------------------------
-void set_audio_format(const char* file_ext)
-{
-	if(!strcmp(file_ext, "wav"))
-		decoder.format = WAVE;
-	else if(!strcmp(file_ext, "mp3"))
-		decoder.format = MP3;
-	else if(!strcmp(file_ext, "flac"))
-		decoder.format = FLAC;
-	else
-		decoder.format = UNSUPPORTED;
-}
 // Decoder task
 // ---------------------------------------------------------------------------
 static void vTaskDecoder(void * pvParameters)
 {
-	f_open(&decoder.song.ffile, (const TCHAR*)&decoder.song.finfo.fname, FA_READ);
+	f_open(&decoder.song.file, (const TCHAR*)&decoder.song.info.fname, FA_READ);
 
-	I2S_StartDMA(decoder.out_buffer, DECODER_OUT_BUFFER_LEN);
+	I2S_StartDMA(decoder.buffers.out, DECODER_OUT_BUFFER_LEN);
 	decoder.working = true;
 
 	_Bool result = true;
@@ -286,7 +306,7 @@ static void vTaskDecoder(void * pvParameters)
 
 	decoder.working = false;
 	I2S_StopDMA();
-	f_close(&decoder.song.ffile);
+	f_close(&decoder.song.file);
 	vSemaphoreDelete(decoder.shI2SEvent);
 	vTaskDelete(decoder.xHandleTaskDecoder);
 }
@@ -302,9 +322,11 @@ static void init(char* filename)
 
 	// Clear structure
 	memset(&decoder, 0, sizeof(decoder));
+	decoder.buffers.in_ptr = decoder.buffers.in;
+	decoder.buffers.out_ptr = decoder.buffers.out;
 
 	// Get file information to structure
-	if(f_stat(filename, &decoder.song.finfo) != FR_OK)
+	if(f_stat(filename, &decoder.song.info) != FR_OK)
 		return;
 
 	// Set audio format based on file extension
@@ -346,7 +368,7 @@ static void deinit(void)
 	if(decoder.working)
 	{
 		I2S_StopDMA();
-		f_close(&decoder.song.ffile);
+		f_close(&decoder.song.file);
 		vSemaphoreDelete(decoder.shI2SEvent);
 		vTaskDelete(decoder.xHandleTaskDecoder);
 	}
@@ -419,7 +441,7 @@ void I2S_HalfTransferCallback(void)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-	decoder.out_buffer_ready_part = &decoder.out_buffer[0];
+	decoder.buffers.out_ptr = &decoder.buffers.out[0];
 	xSemaphoreGiveFromISR(decoder.shI2SEvent, &xHigherPriorityTaskWoken);
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 
@@ -429,7 +451,7 @@ void I2S_TransferCompleteCallback(void)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-	decoder.out_buffer_ready_part = &decoder.out_buffer[DECODER_OUT_BUFFER_LEN/2];
+	decoder.buffers.out_ptr = &decoder.buffers.out[DECODER_OUT_BUFFER_LEN/2];
 	xSemaphoreGiveFromISR(decoder.shI2SEvent, &xHigherPriorityTaskWoken);
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 }

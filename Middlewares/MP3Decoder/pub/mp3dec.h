@@ -73,11 +73,11 @@ extern "C" {
  *   max nSlots (concatenated with mainDataBegin bytes from before) = 1440 - 9 - 4 + 1 = 1428
  *   511 + 1428 = 1939, round up to 1940 (4-byte align)
  */
-#define MAINBUF_SIZE	1940
+#define MP3_MAINBUF_SIZE	1940
 
-#define MAX_NGRAN		2		/* max granules */
-#define MAX_NCHAN		2		/* max channels */
-#define MAX_NSAMP		576		/* max samples per channel, per granule */
+#define MP3_MAX_NGRAN		2		/* max granules */
+#define MP3_MAX_NCHAN		2		/* max channels */
+#define MP3_MAX_NSAMP		576		/* max samples per channel, per granule */
 
 /* map to 0,1,2 to make table indexing easier */
 typedef enum {

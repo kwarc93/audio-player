@@ -170,9 +170,9 @@ typedef struct _SideInfoSub {
 typedef struct _SideInfo {
 	int mainDataBegin;
 	int privateBits;
-	int scfsi[MAX_NCHAN][MAX_SCFBD];				/* 4 scalefactor bands per channel */
+	int scfsi[MP3_MAX_NCHAN][MAX_SCFBD];				/* 4 scalefactor bands per channel */
 	
-	SideInfoSub	sis[MAX_NGRAN][MAX_NCHAN];
+	SideInfoSub	sis[MP3_MAX_NGRAN][MP3_MAX_NCHAN];
 } SideInfo;
 
 typedef struct {
@@ -184,13 +184,13 @@ typedef struct {
 
 typedef struct _DequantInfo {
 	int workBuf[MAX_REORDER_SAMPS];		/* workbuf for reordering short blocks */
-	CriticalBandInfo cbi[MAX_NCHAN];	/* filled in dequantizer, used in joint stereo reconstruction */
+	CriticalBandInfo cbi[MP3_MAX_NCHAN];	/* filled in dequantizer, used in joint stereo reconstruction */
 } DequantInfo;
 
 typedef struct _HuffmanInfo {
-	int huffDecBuf[MAX_NCHAN][MAX_NSAMP];		/* used both for decoded Huffman values and dequantized coefficients */
-	int nonZeroBound[MAX_NCHAN];				/* number of coeffs in huffDecBuf[ch] which can be > 0 */
-	int gb[MAX_NCHAN];							/* minimum number of guard bits in huffDecBuf[ch] */
+	int huffDecBuf[MP3_MAX_NCHAN][MP3_MAX_NSAMP];		/* used both for decoded Huffman values and dequantized coefficients */
+	int nonZeroBound[MP3_MAX_NCHAN];				/* number of coeffs in huffDecBuf[ch] which can be > 0 */
+	int gb[MP3_MAX_NCHAN];							/* minimum number of guard bits in huffDecBuf[ch] */
 } HuffmanInfo;
 
 typedef enum _HuffTabType {
@@ -209,12 +209,12 @@ typedef struct _HuffTabLookup {
 } HuffTabLookup;
 
 typedef struct _IMDCTInfo {
-	int outBuf[MAX_NCHAN][BLOCK_SIZE][NBANDS];	/* output of IMDCT */	
-	int overBuf[MAX_NCHAN][MAX_NSAMP / 2];		/* overlap-add buffer (by symmetry, only need 1/2 size) */
-	int numPrevIMDCT[MAX_NCHAN];				/* how many IMDCT's calculated in this channel on prev. granule */
-	int prevType[MAX_NCHAN];
-	int prevWinSwitch[MAX_NCHAN];
-	int gb[MAX_NCHAN];
+	int outBuf[MP3_MAX_NCHAN][BLOCK_SIZE][NBANDS];	/* output of IMDCT */	
+	int overBuf[MP3_MAX_NCHAN][MP3_MAX_NSAMP / 2];		/* overlap-add buffer (by symmetry, only need 1/2 size) */
+	int numPrevIMDCT[MP3_MAX_NCHAN];				/* how many IMDCT's calculated in this channel on prev. granule */
+	int prevType[MP3_MAX_NCHAN];
+	int prevWinSwitch[MP3_MAX_NCHAN];
+	int gb[MP3_MAX_NCHAN];
 } IMDCTInfo;
 
 typedef struct _BlockCount {
@@ -242,7 +242,7 @@ typedef struct _ScaleFactorJS {
 } ScaleFactorJS;
 
 typedef struct _ScaleFactorInfo {
-	ScaleFactorInfoSub sfis[MAX_NGRAN][MAX_NCHAN];
+	ScaleFactorInfoSub sfis[MP3_MAX_NGRAN][MP3_MAX_NCHAN];
 	ScaleFactorJS sfjs;
 } ScaleFactorInfo;
 
@@ -251,7 +251,7 @@ typedef struct _ScaleFactorInfo {
  *   last 15 blocks to shift them down one, a hardware style FIFO)
  */ 
 typedef struct _SubbandInfo {
-	int vbuf[MAX_NCHAN * VBUF_LENGTH];		/* vbuf for fast DCT-based synthesis PQMF - double size for speed (no modulo indexing) */
+	int vbuf[MP3_MAX_NCHAN * VBUF_LENGTH];		/* vbuf for fast DCT-based synthesis PQMF - double size for speed (no modulo indexing) */
 	int vindex;								/* internal index for tracking position in vbuf */
 } SubbandInfo;
 
@@ -263,10 +263,10 @@ int CalcBitsUsed(BitStreamInfo *bsi, unsigned char *startBuf, int startOffset);
 /* dequant.c, dqchan.c, stproc.c */
 int DequantChannel(int *sampleBuf, int *workBuf, int *nonZeroBound, FrameHeader *fh, SideInfoSub *sis, 
 					ScaleFactorInfoSub *sfis, CriticalBandInfo *cbi);
-void MidSideProc(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, int mOut[2]);
-void IntensityProcMPEG1(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, FrameHeader *fh, ScaleFactorInfoSub *sfis, 
+void MidSideProc(int x[MP3_MAX_NCHAN][MP3_MAX_NSAMP], int nSamps, int mOut[2]);
+void IntensityProcMPEG1(int x[MP3_MAX_NCHAN][MP3_MAX_NSAMP], int nSamps, FrameHeader *fh, ScaleFactorInfoSub *sfis, 
 						CriticalBandInfo *cbi, int midSideFlag, int mixFlag, int mOut[2]);
-void IntensityProcMPEG2(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, FrameHeader *fh, ScaleFactorInfoSub *sfis, 
+void IntensityProcMPEG2(int x[MP3_MAX_NCHAN][MP3_MAX_NSAMP], int nSamps, FrameHeader *fh, ScaleFactorInfoSub *sfis, 
 						CriticalBandInfo *cbi, ScaleFactorJS *sfjs, int midSideFlag, int mixFlag, int mOut[2]);
 
 /* dct32.c */
