@@ -35,7 +35,7 @@
 #define DECODER_MP3_FRAME_LEN			(MP3_MAX_NGRAN * MP3_MAX_NCHAN * MP3_MAX_NSAMP)
 
 #define DECODER_OUT_BUFFER_LEN			(2 * DECODER_MP3_FRAME_LEN)
-#define DECODER_IN_BUFFER_LEN			(4 * MP3_MAINBUF_SIZE)
+#define DECODER_IN_BUFFER_LEN			(2 * MP3_MAINBUF_SIZE)
 // +--------------------------------------------------------------------------
 // | @ Public variables
 // +--------------------------------------------------------------------------
@@ -53,11 +53,11 @@ struct audio_file
 struct audio_buffers
 {
 	uint8_t* in_ptr;
-	uint8_t in[DECODER_IN_BUFFER_LEN];
+	uint8_t  in[DECODER_IN_BUFFER_LEN];
 	uint32_t in_bytes_left;
 
 	int16_t* out_ptr;
-	int16_t out[DECODER_OUT_BUFFER_LEN];
+	int16_t  out[DECODER_OUT_BUFFER_LEN];
 	uint32_t out_bytes_left;
 };
 
@@ -71,7 +71,7 @@ static struct decoder_context
 	struct audio_buffers buffers;
 
 	HMP3Decoder MP3Decoder;
-	MP3FrameInfo mp3FrameInfo;
+	MP3FrameInfo MP3FrameInfo;
 
 	SemaphoreHandle_t shI2SEvent;
 	TaskHandle_t xHandleTaskDecoder;
@@ -108,7 +108,7 @@ void set_audio_format(const char* file_ext)
  */
 static uint32_t refill_inbuffer(uint32_t bytes_left)
 {
-	UINT bytes_read;
+	UINT bytes_read = 0;
 	UINT bytes_to_read = sizeof(decoder.buffers.in) - bytes_left;
 
 	// Move unprocessed bytes to beginning of input buffer
@@ -116,10 +116,8 @@ static uint32_t refill_inbuffer(uint32_t bytes_left)
 
 	decoder.song.result = f_read(&decoder.song.file, decoder.buffers.in + bytes_left, bytes_to_read, &bytes_read);
 
-	if(bytes_read != bytes_to_read || decoder.song.result != FR_OK)
-	{
+	if(decoder.song.result != FR_OK || !bytes_read)
 		return 0;
-	}
 
 	// Zero-pad last old bytes
 	if (bytes_read < bytes_to_read)
@@ -149,11 +147,17 @@ static _Bool decode_mp3(void)
 {
 	int error = 0;
 	int offset = 0;
-	_Bool frame_decoded = false;
+	_Bool frame_decoded = true;
+
+//	int bytes_filled;
+//
+//	bytes_filled = refill_inbuffer(0);
+//
+//	return frame_decoded;
 
 	do
 	{
-		if(decoder.buffers.in_bytes_left < MP3_MAINBUF_SIZE)
+		if(decoder.buffers.in_bytes_left < 2 * MP3_MAINBUF_SIZE)
 		{
 			int bytes_filled;
 
@@ -161,7 +165,8 @@ static _Bool decode_mp3(void)
 			if(!bytes_filled)
 			{
 				decoder.buffers.in_bytes_left = 0;
-				return false;
+				frame_decoded = false;
+				break;
 			}
 
 			decoder.buffers.in_bytes_left += bytes_filled;
@@ -170,43 +175,35 @@ static _Bool decode_mp3(void)
 		offset = MP3FindSyncWord(decoder.buffers.in_ptr, decoder.buffers.in_bytes_left);
 		if(offset < 0)
 		{
-            // This frame does not contain the frame sync -> get another frame
-			decoder.buffers.in_bytes_left = 0;
-			continue;
+			frame_decoded = false;
+			break;
 		}
 
 		decoder.buffers.in_ptr += offset;
 		decoder.buffers.in_bytes_left -= offset;
-
-
-
-		// @ TODO: Here I2S can be reconfigured to match file sample rate
-
-		if(decoder.buffers.in_bytes_left < MP3_MAINBUF_SIZE)
-		{
-			continue;
-		}
 
 		error = MP3Decode(decoder.MP3Decoder, &decoder.buffers.in_ptr, (int*)&decoder.buffers.in_bytes_left, decoder.buffers.out_ptr, 0);
 
 		switch(error)
 		{
 		case ERR_MP3_NONE:
+			MP3GetLastFrameInfo(decoder.MP3Decoder, &decoder.MP3FrameInfo);
 			frame_decoded = true;
 			break;
 		case ERR_MP3_MAINDATA_UNDERFLOW:
-		case ERR_MP3_INVALID_FRAMEHEADER:
-			// Do nothing
+			// Do nothing - next call to decode will provide more maindata
 			break;
+		case ERR_MP3_INDATA_UNDERFLOW:
+		case ERR_MP3_FREE_BITRATE_SYNC:
 		default:
 			frame_decoded = false;
-			return false;
+			return frame_decoded;
 		}
 
 	}
 	while(!frame_decoded);
 
-	return true;
+	return frame_decoded;
 }
 
 static _Bool decode_flac(void)

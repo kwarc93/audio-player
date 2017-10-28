@@ -18,9 +18,9 @@
 
 #ifdef DEBUG
 #include "debug.h"
-#define DBG_SIMPLE(_MSG)	(Debug_Simple("[MAIN] " _MSG))
+#define DBG_PRINTF(...)	(Debug_Printf("[MAIN] " __VA_ARGS__))
 #else
-#define DBG_SIMPLE(...)
+#define DBG_PRINTF(...)
 #endif
 
 /* Heap pool for FreeRTOS */
@@ -35,16 +35,17 @@ int main(void)
 	// Init debug module
 	Debug_Init();
 
-	DBG_SIMPLE("-MP3 PLAYER-");
+	DBG_PRINTF("-MP3 PLAYER-");
 	// Tasks startup
-	DBG_SIMPLE("Starting tasks...");
+	DBG_PRINTF("Starting tasks...");
 	Led_StartTasks(mainFLASH_TASK_PRIORITY);
 	Display_StartTasks(mainFLASH_TASK_PRIORITY + 1);
 	Joystick_StartTasks(mainFLASH_TASK_PRIORITY + 2);
 	USB_StartTasks(mainFLASH_TASK_PRIORITY);
 	Player_StartTasks(mainFLASH_TASK_PRIORITY + 1);
 	// Scheduler startup
-	DBG_SIMPLE("Starting scheduler...");
+	DBG_PRINTF("RTOS heap bytes left: %u", xPortGetFreeHeapSize());
+	DBG_PRINTF("Starting scheduler...");
 	vTaskStartScheduler();
 }
 
@@ -167,4 +168,22 @@ while(!(RCC->CR & RCC_CR_PLLSAI2RDY));
 #error Wrong system clock selection!
 #endif
 
+}
+
+void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
+{
+	Debug_Simple("+----------------+");
+	Debug_Simple("STACK OVREFLOW!!!");
+	Debug_Simple("Task:");
+	Debug_Simple(pcTaskName);
+	Debug_Simple("+----------------+");
+	asm volatile ("BKPT 0");
+}
+
+void vApplicationMallocFailedHook( void )
+{
+	Debug_Simple("+----------------+");
+	Debug_Simple("MALLOC FAILED!!!");
+	Debug_Simple("+----------------+");
+	asm volatile ("BKPT 0");
 }

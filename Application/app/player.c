@@ -68,6 +68,7 @@ static struct player_context
 static void vTimerCallback(TimerHandle_t xTimer)
 {
 	DBG_PRINTF("CPU Load: %u%%", Get_CPU_Usage());
+	DBG_PRINTF("RTOS heap bytes left: %u", xPortGetFreeHeapSize());
 }
 
 static void Player_TaskProcess(void)
@@ -88,7 +89,7 @@ static void Player_TaskProcess(void)
 		case PLAYER_PLAY:
 			if(USB_IsDiskReady())
 			{
-				player.decoder.start("blink.mp3");
+				player.decoder.start("t_128.mp3");
 				CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
 				Display_SendText("PLAYING");
 				player.state = PLAYER_PLAYING;

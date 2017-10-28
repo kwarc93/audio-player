@@ -8,7 +8,7 @@
 #ifndef APP_DECODER_H_
 #define APP_DECODER_H_
 
-#define DECODER_STACK_SIZE	(2*1024)
+#define DECODER_STACK_SIZE	(2 * 1024)
 
 enum audio_format { UNSUPPORTED = 0, WAVE, MP3, FLAC };
 

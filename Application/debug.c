@@ -34,16 +34,8 @@ void Debug_Init(void)
 
 void Debug_Simple(const char* msg)
 {
-#ifdef USE_FREERTOS
-	if(xSemaphoreTake(shMutexUSART, 0))
-	{
-#endif
-		USART_TxDMA((void*)msg, strlen(msg));
-		USART_TxDMA("\r\n", 2);
-#ifdef USE_FREERTOS
-		xSemaphoreGive(shMutexUSART);
-	}
-#endif
+	USART_TxDMA((void*)msg, strlen(msg));
+	USART_TxDMA("\r\n", 2);
 }
 
 void Debug_Printf(const char* fmt, ...)

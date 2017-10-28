@@ -54,14 +54,15 @@
 #endif
 
 #if HELIX_USE_STATIC_BUFFERS
-	MP3DecInfo  mp3DecInfo;     //  0x7f0 =  2032b
-	SubbandInfo sbi;            // 0x2204 =  8708b
-	IMDCTInfo mi;               // 0x1b20 =  6944b
-	HuffmanInfo hi;             // 0x1210 =  4624b
-	DequantInfo di;             //  0x348 =   840b
-	ScaleFactorInfo sfi;        //  0x124 =   292b
-	SideInfo si;                //  0x148 =   328b
-	FrameHeader fh;             //   0x38 =    56b
+	MP3DecInfo  mp3DecInfo;		//  0x7f0 =  2032B
+	SubbandInfo sbi ;			// 0x2204 =  8708B
+	IMDCTInfo mi;				// 0x1b20 =  6944B
+	HuffmanInfo hi;				// 0x1210 =  4624B
+	DequantInfo di;				//  0x348 =   840B
+	ScaleFactorInfo sfi;		//  0x124 =   292B
+	SideInfo si;				//  0x148 =   328B
+	FrameHeader fh;				//   0x38 =    56B
+								// Summary:	 ~24kB
 #endif
 
 /**************************************************************************************

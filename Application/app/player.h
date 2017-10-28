@@ -8,7 +8,7 @@
 #ifndef APP_PLAYER_H_
 #define APP_PLAYER_H_
 
-#define PLAYER_STACK_SIZE	(2*1024)
+#define PLAYER_STACK_SIZE	(2 * 1024)
 
 enum player_commands
 {
