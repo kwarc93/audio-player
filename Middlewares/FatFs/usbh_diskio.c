@@ -20,7 +20,7 @@
 /* Private define ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 extern USBH_HandleTypeDef hUsbHostFS;
-#if FF_USE_BUFF_WO_ALIGNMENT == 0
+#if FF_USE_BUFF_WO_ALIGNMENT == 1
 /* Local buffer use to handle buffer not aligned 32bits*/
 static DWORD scratch[FF_MAX_SS / 4];
 #endif
@@ -90,7 +90,7 @@ DRESULT USBH_Read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 
   if ((DWORD)buff & 3) /* DMA Alignment issue, do single up to aligned buffer */
   {
-#if FF_USE_BUFF_WO_ALIGNMENT == 0
+#if FF_USE_BUFF_WO_ALIGNMENT == 1
     while ((count--)&&(status == USBH_OK))
     {
       status = USBH_MSC_Read(&hUsbHostFS, lun, sector + count, (uint8_t *)scratch, 1);
@@ -154,7 +154,7 @@ DRESULT USBH_Write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 
   if ((DWORD)buff & 3) /* DMA Alignment issue, do single up to aligned buffer */
   {
-#if FF_USE_BUFF_WO_ALIGNMENT == 0
+#if FF_USE_BUFF_WO_ALIGNMENT == 1
     while (count--)
     {
       memcpy (scratch, &buff[count * FF_MAX_SS], FF_MAX_SS);

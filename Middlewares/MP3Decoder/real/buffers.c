@@ -50,7 +50,7 @@
 #include "coder.h"
 
 #ifndef HELIX_USE_STATIC_BUFFERS
-#define HELIX_USE_STATIC_BUFFERS 1
+#define HELIX_USE_STATIC_BUFFERS 0
 #endif
 
 #if HELIX_USE_STATIC_BUFFERS

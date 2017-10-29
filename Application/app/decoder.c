@@ -35,7 +35,7 @@
 #define DECODER_MP3_FRAME_LEN			(MP3_MAX_NGRAN * MP3_MAX_NCHAN * MP3_MAX_NSAMP)
 
 #define DECODER_OUT_BUFFER_LEN			(2 * DECODER_MP3_FRAME_LEN)
-#define DECODER_IN_BUFFER_LEN			(2 * MP3_MAINBUF_SIZE)
+#define DECODER_IN_BUFFER_LEN			(4 * MP3_MAINBUF_SIZE)
 // +--------------------------------------------------------------------------
 // | @ Public variables
 // +--------------------------------------------------------------------------
