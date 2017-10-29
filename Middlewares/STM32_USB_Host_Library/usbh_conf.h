@@ -80,10 +80,10 @@ extern HCD_HandleTypeDef hhcd;
 
 #define USBH_memset               memset
 #define USBH_memcpy               memcpy
-    
+
 /* DEBUG macros */
-#ifdef DEBUG
 #include "debug.h"
+#if DEBUG
 #define DBG_SIMPLE(_MSG)		(Debug_Simple("[USB HOST] " _MSG))
 #else
 #define DBG_SIMPLE(...)

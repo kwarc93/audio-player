@@ -28,8 +28,8 @@
 // +--------------------------------------------------------------------------
 // | @ Defines
 // +--------------------------------------------------------------------------
-#ifdef DEBUG
 #include "debug.h"
+#if DEBUG
 #define DBG_PRINTF(...)	(Debug_Printf("[PLAYER] " __VA_ARGS__))
 #else
 #define DBG_PRINTF(...)
@@ -89,7 +89,7 @@ static void Player_TaskProcess(void)
 		case PLAYER_PLAY:
 			if(USB_IsDiskReady())
 			{
-				player.decoder.start("t_128.mp3");
+				player.decoder.start("t_192.mp3");
 				CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
 				Display_SendText("PLAYING");
 				player.state = PLAYER_PLAYING;

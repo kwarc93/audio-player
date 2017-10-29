@@ -8,7 +8,7 @@
 #ifndef UI_LEDS_H_
 #define UI_LEDS_H_
 
-#define LED_STACK_SIZE	128
+#define LED_STACK_SIZE	TASK_STACK_BYTES(512)
 
 void Led_StartTasks(unsigned portBASE_TYPE uxPriority);
 

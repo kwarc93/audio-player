@@ -15,9 +15,8 @@
 #include "app/usb_host.h"
 #include "app/player.h"
 
-
-#ifdef DEBUG
 #include "debug.h"
+#if DEBUG
 #define DBG_PRINTF(...)	(Debug_Printf("[MAIN] " __VA_ARGS__))
 #else
 #define DBG_PRINTF(...)

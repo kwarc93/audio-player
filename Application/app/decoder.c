@@ -25,8 +25,8 @@
 // +--------------------------------------------------------------------------
 // | @ Defines
 // +--------------------------------------------------------------------------
-#ifdef DEBUG
 #include "debug.h"
+#if DEBUG
 #define DBG_PRINTF(...)	(Debug_Printf("[DECODER] " __VA_ARGS__))
 #else
 #define DBG_PRINTF(...)
@@ -148,12 +148,6 @@ static _Bool decode_mp3(void)
 	int error = 0;
 	int offset = 0;
 	_Bool frame_decoded = true;
-
-//	int bytes_filled;
-//
-//	bytes_filled = refill_inbuffer(0);
-//
-//	return frame_decoded;
 
 	do
 	{

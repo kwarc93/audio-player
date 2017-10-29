@@ -14,8 +14,8 @@
 #include "ui/display.h"
 #include "app/player.h"
 
-#ifdef DEBUG
 #include "debug.h"
+#if DEBUG
 #define DBG_PRINTF(...)	(Debug_Printf("[Joystick] " __VA_ARGS__))
 #else
 #define DBG_PRINTF(...)

@@ -13,8 +13,8 @@
 #include "FreeRTOS/queue.h"
 #include "display.h"
 
-#ifdef DEBUG
 #include "debug.h"
+#if DEBUG
 #define DBG_PRINTF(...)	(Debug_Printf("[DISPLAY] " __VA_ARGS__))
 #else
 #define DBG_PRINTF(...)

@@ -52,7 +52,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#define USB_STACK_SIZE (1024)
+#define USB_STACK_SIZE TASK_STACK_BYTES(4 * 1024)
 
 typedef enum {
   USB_HOST_IDLE = 0,  

@@ -13,8 +13,9 @@
 #define USE_HSI_CLOCK
 
 #define mainFLASH_TASK_PRIORITY ( tskIDLE_PRIORITY + 1 )
+#define TASK_STACK_BYTES(bytes)	(((bytes) < configMINIMAL_STACK_SIZE * 4) ? configMINIMAL_STACK_SIZE : ((bytes) / 4))
 
-#define assert_param(expr) ((void)0U)
+#define assert_param(expr) 		((void)0U)
 
 /* Macros for dummies ;) */
 

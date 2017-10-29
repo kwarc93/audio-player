@@ -10,8 +10,8 @@
 #include "FreeRTOS/task.h"
 #include "leds.h"
 
-#ifdef DEBUG
 #include "debug.h"
+#if DEBUG
 #define DBG_PRINTF(...)	(Debug_Printf("[LED] " __VA_ARGS__))
 #else
 #define DBG_PRINTF(...)
