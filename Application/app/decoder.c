@@ -13,7 +13,12 @@
 #include "FreeRTOS/semphr.h"
 
 #include "decoder.h"
+
+/* For MP3 decoder */
 #include "mp3dec.h"
+/* For FLAC decoder */
+#include "stream_decoder.h"
+
 #include "misc.h"
 #include "file_browser.h"
 #include "FatFs/ff.h"
@@ -72,6 +77,8 @@ static struct decoder_context
 
 	HMP3Decoder MP3Decoder;
 	MP3FrameInfo MP3FrameInfo;
+
+	FLAC__StreamDecoder* FLACDecoder;
 
 	SemaphoreHandle_t shI2SEvent;
 	TaskHandle_t xHandleTaskDecoder;
@@ -245,7 +252,7 @@ static _Bool init_mp3(void)
 	decoder.MP3Decoder = MP3InitDecoder();
 	if(!decoder.MP3Decoder)
 	{
-		DBG_PRINTF("MP3 decoder init ERROR");
+		DBG_PRINTF("ERROR: MP3 decoder init fail");
 		return false;
 	}
 
@@ -254,6 +261,11 @@ static _Bool init_mp3(void)
 
 static _Bool init_flac(void)
 {
+	decoder.FLACDecoder = FLAC__stream_decoder_new();
+	if(!decoder.FLACDecoder) {
+		DBG_PRINTF("ERROR: FLAC decoder init fail");
+		return false;
+	}
 	return true;
 }
 
@@ -375,6 +387,7 @@ static void deinit(void)
 		break;
 
 	case FLAC:
+		FLAC__stream_decoder_delete(decoder.FLACDecoder);
 		break;
 
 	default:
