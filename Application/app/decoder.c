@@ -79,6 +79,8 @@ static struct decoder_context
 	MP3FrameInfo MP3FrameInfo;
 
 	FLAC__StreamDecoder* FLACDecoder;
+	FLAC__StreamDecoderInitStatus FLACInitStatus;
+	FLAC__bool FLACStatus;
 
 	SemaphoreHandle_t shI2SEvent;
 	TaskHandle_t xHandleTaskDecoder;
@@ -265,6 +267,27 @@ static _Bool init_flac(void)
 	if(!decoder.FLACDecoder) {
 		DBG_PRINTF("ERROR: FLAC decoder init fail");
 		return false;
+	}
+
+#if TODO
+	decoder.FLACInitStatus = FLAC__stream_decoder_init_stream(
+		decoder.FLACDecoder,
+        read_callback,
+        seek_callback,
+        tell_callback,
+        length_callback,
+        eof_callback,
+        write_callback,
+        metadata_callback,
+        error_callback,
+        NULL);
+#endif
+
+	if (decoder.FLACInitStatus != FLAC__STREAM_DECODER_INIT_STATUS_OK)
+	{
+		DBG_PRINTF("ERROR: FLAC decoder init fail\r\nReason: %s\r\n",
+		FLAC__StreamDecoderInitStatusString[decoder.FLACInitStatus]);
+		decoder.FLACStatus = false;
 	}
 	return true;
 }

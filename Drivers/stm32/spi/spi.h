@@ -9,27 +9,9 @@
 #define SPI_H_
 
 #include "main.h"
+#include "gpio/gpio.h"
 
 #define SPIx					SPI2
-
-#define SPI_GYRO_CS_PIN       	7                			/* PD.07 */
-#define SPI_GYRO_CS_PORT   		GPIOD                       /* GPIOD */
-
-#define SPI_ACC_CS_PIN       	0                			/* PE.00 */
-#define SPI_ACC_CS_PORT   		GPIOE                       /* GPIOE */
-
-#define SPI_MAG_CS_PIN       	0                			/* PC.00 */
-#define SPI_MAG_CS_PORT   		GPIOC                       /* GPIOC */
-
-/* Chip Select macro definition */
-#define SPI_GYRO_CS_LOW()       (SPI_GYRO_CS_PORT->BSRR = GPIO_BSRR_BR_7)
-#define SPI_GYRO_CS_HIGH()      (SPI_GYRO_CS_PORT->BSRR = GPIO_BSRR_BS_7)
-
-#define SPI_ACC_CS_LOW()       (SPI_ACC_CS_PORT->BSRR = GPIO_BSRR_BR_0)
-#define SPI_ACC_CS_HIGH()      (SPI_ACC_CS_PORT->BSRR = GPIO_BSRR_BS_0)
-
-#define SPI_MAG_CS_LOW()       (SPI_MAG_CS_PORT->BSRR = GPIO_BSRR_BR_0)
-#define SPI_MAG_CS_HIGH()      (SPI_MAG_CS_PORT->BSRR = GPIO_BSRR_BS_0)
 
 /* LL definition */
 #define __SPI_DIRECTION_2LINES(__HANDLE__)   do{\

@@ -39,6 +39,16 @@
 #include <stdbool.h>
 #include "lsm303c/lsm303c.h"
 
+#define SPI_ACC_CS_PIN       	0                			/* PE.00 */
+#define SPI_ACC_CS_PORT   		GPIOE                       /* GPIOE */
+#define SPI_ACC_CS_LOW()        (SPI_ACC_CS_PORT->BSRR = GPIO_BSRR_BR_0)
+#define SPI_ACC_CS_HIGH()       (SPI_ACC_CS_PORT->BSRR = GPIO_BSRR_BS_0)
+
+#define SPI_MAG_CS_PIN       	0                			/* PC.00 */
+#define SPI_MAG_CS_PORT   		GPIOC                       /* GPIOC */
+#define SPI_MAG_CS_LOW()        (SPI_MAG_CS_PORT->BSRR = GPIO_BSRR_BR_0)
+#define SPI_MAG_CS_HIGH()       (SPI_MAG_CS_PORT->BSRR = GPIO_BSRR_BS_0)
+
 /**
   * @brief  Initialize the accelrometer.
   * @retval STATUS_OK or STATUS_ERROR
@@ -47,6 +57,10 @@ status_t ACC_Init(void)
 {
   status_t ret = STATUS_OK;
   uint16_t ctrl = 0x0000;
+
+  /* ACC CS */
+  GPIO_PinConfig(SPI_ACC_CS_PORT,SPI_ACC_CS_PIN,GPIO_OUT_PP_25MHz);
+  SPI_ACC_CS_HIGH();
 
   if(LSM303C_AccReadID() != LSM303C_ACC_ID)
   {
@@ -249,6 +263,10 @@ _Bool LSM303C_AccCalcOffset(int32_t *pOffset, const uint8_t avg_n)
 status_t MAGN_Init(void)
 {
   status_t ret = STATUS_OK;
+
+  /* MAGN CS */
+  GPIO_PinConfig(SPI_MAG_CS_PORT,SPI_MAG_CS_PIN,GPIO_OUT_PP_25MHz);
+  SPI_MAG_CS_HIGH();
 
   if(LSM303C_MagReadID() != LSM303C_MAG_ID)
   {

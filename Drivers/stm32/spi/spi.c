@@ -5,7 +5,6 @@
  *      Author: Kwarc
  */
 #include "spi/spi.h"
-#include "gpio/gpio.h"
 
 void SPI_Init(void)
 {
@@ -16,17 +15,9 @@ void SPI_Init(void)
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN | RCC_AHB2ENR_GPIOEEN;
 	__DSB();
 	/* Configure SPI2 pins */
-	GPIO_PinConfig(SPI_GYRO_CS_PORT,SPI_GYRO_CS_PIN,GPIO_OUT_PP_25MHz);		/* GYRO CS */
-	GPIO_PinConfig(SPI_ACC_CS_PORT,SPI_ACC_CS_PIN,GPIO_OUT_PP_25MHz);		/* ACC CS */
-	GPIO_PinConfig(SPI_MAG_CS_PORT,SPI_MAG_CS_PIN,GPIO_OUT_PP_25MHz);		/* MAG CS */
 	GPIO_PinConfig(GPIOD, 1, GPIO_AF5_PP_25MHz); 							/* SCK */
 	GPIO_PinConfig(GPIOD, 3, GPIO_AF5_PP_25MHz); 							/* MISO */
 	GPIO_PinConfig(GPIOD, 4, GPIO_AF5_PP_25MHz); 							/* MOSI */
-
-	/* Deselect: Chip Select high */
-	SPI_GYRO_CS_HIGH();
-	SPI_ACC_CS_HIGH();
-	SPI_MAG_CS_HIGH();
 
 	/* Setup SPI peripheral */
 	SPIx->CR1 = SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_MSTR;		// Full-duplex master

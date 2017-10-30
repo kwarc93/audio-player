@@ -38,6 +38,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
 #include "l3gd20/l3gd20.h"
+
+#define SPI_GYRO_CS_PIN       	7                			/* PD.07 */
+#define SPI_GYRO_CS_PORT   		GPIOD                       /* GPIOD */
+#define SPI_GYRO_CS_LOW()       (SPI_GYRO_CS_PORT->BSRR = GPIO_BSRR_BR_7)
+#define SPI_GYRO_CS_HIGH()      (SPI_GYRO_CS_PORT->BSRR = GPIO_BSRR_BS_7)
   
 /**
   * @brief  Set Gyroscope Initialization.
@@ -47,6 +52,10 @@ uint8_t GYRO_Init(void)
 {
   status_t ret = STATUS_OK;
   uint16_t ctrl = 0x0000;
+
+  /* GYRO CS */
+  GPIO_PinConfig(SPI_GYRO_CS_PORT,SPI_GYRO_CS_PIN,GPIO_OUT_PP_25MHz);
+  SPI_GYRO_CS_HIGH();
 
   if((L3GD20_ReadID() == I_AM_L3GD20) || (L3GD20_ReadID() == I_AM_L3GD20_TR))
   {
