@@ -8,8 +8,8 @@
 #ifndef DECODER_FLAC_H_
 #define DECODER_FLAC_H_
 
-_Bool FLAC_Init(void);
-_Bool FLAC_Decode(struct audio_decoder* decoder);
+_Bool FLAC_Init(struct audio_decoder* main_decoder);
+_Bool FLAC_Decode(void);
 _Bool FLAC_Deinit(void);
 
 

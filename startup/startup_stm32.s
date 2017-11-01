@@ -55,6 +55,9 @@
 /* start address for the initialization values of the .data section.
 defined in linker script */
 .word	_sidata
+/* start address for the initialization values of the .ccmram section.
+defined in linker script */
+.word	_siccmram
 /* start address for the .data section. defined in linker script */
 .word	_sdata
 /* end address for the .data section. defined in linker script */
@@ -63,6 +66,10 @@ defined in linker script */
 .word	_sbss
 /* end address for the .bss section. defined in linker script */
 .word	_ebss
+/* start address for the .ccmram section. defined in linker script */
+.word	_sccmram
+/* end address for the .ccmram section. defined in linker script */
+.word	_eccmram
 
 .equ  BootRAM,        0xF1E0F85F
 /**
@@ -125,8 +132,6 @@ LoopFillZerobss:
 	cmp	r2, r3
 	bcc	FillZerobss
 
-/* Call the clock system intitialization function.*/
-    bl  SystemInit
 /* Call static constructors */
     bl __libc_init_array
 /* Call the application's entry point.*/

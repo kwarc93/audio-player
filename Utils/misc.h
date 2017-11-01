@@ -20,6 +20,7 @@ void disable_interrupts(void);
 void enable_interrupts(void);
 void enter_critical(void);
 void exit_critical(void);
+int32_t revsh(int32_t value);
 
 void delay_us(uint32_t t);
 void delay_ms(uint32_t t);

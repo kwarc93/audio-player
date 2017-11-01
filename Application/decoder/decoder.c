@@ -78,15 +78,15 @@ static _Bool decode(void)
 	switch(decoder.format)
 	{
 	case WAVE:
-		result = WAVE_Decode(&decoder);
+		result = WAVE_Decode();
 		break;
 
 	case MP3:
-		result = MP3_Decode(&decoder);
+		result = MP3_Decode();
 		break;
 
 	case FLAC:
-		result = FLAC_Decode(&decoder);
+		result = FLAC_Decode();
 		break;
 
 	default:
@@ -95,24 +95,6 @@ static _Bool decode(void)
 	}
 
 	return result;
-}
-// Init functions
-// --------------------------------------------------------------------------
-
-static _Bool init_task(void)
-{
-	// Create and take binary semaphore
-	vSemaphoreCreateBinary(decoder.shI2SEvent);
-	xSemaphoreTake(decoder.shI2SEvent, 0);
-
-	// Creating tasks
-	if(xTaskCreate(vTaskDecoder, "DECODER", DECODER_STACK_SIZE, NULL, mainFLASH_TASK_PRIORITY + 2, &decoder.xHandleTaskDecoder) == pdPASS)
-	{
-		DBG_PRINTF("Task(s) started!");
-		return true;
-	}
-
-	return false;
 }
 
 // Decoder task
@@ -144,6 +126,22 @@ static void vTaskDecoder(void * pvParameters)
 	vTaskDelete(decoder.xHandleTaskDecoder);
 }
 
+static _Bool init_task(void)
+{
+	// Create and take binary semaphore
+	vSemaphoreCreateBinary(decoder.shI2SEvent);
+	xSemaphoreTake(decoder.shI2SEvent, 0);
+
+	// Creating tasks
+	if(xTaskCreate(vTaskDecoder, "DECODER", DECODER_STACK_SIZE, NULL, mainFLASH_TASK_PRIORITY + 2, &decoder.xHandleTaskDecoder) == pdPASS)
+	{
+		DBG_PRINTF("Task(s) started!");
+		return true;
+	}
+
+	return false;
+}
+
 // Interface functions
 // ---------------------------------------------------------------------------
 static void init(char* filename)
@@ -169,13 +167,13 @@ static void init(char* filename)
 	switch(decoder.format)
 	{
 	case WAVE:
-		WAVE_Init();
+		WAVE_Init(&decoder);
 		break;
 	case MP3:
-		MP3_Init();
+		MP3_Init(&decoder);
 		break;
 	case FLAC:
-		FLAC_Init();
+		FLAC_Init(&decoder);
 		break;
 	default:
 		DBG_PRINTF("Unsupported format!");

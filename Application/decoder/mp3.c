@@ -14,6 +14,7 @@
 
 #include "mp3.h"
 #include "mp3dec.h"
+#include "FatFs/ff.h"
 
 #include <stdbool.h>
 #include <string.h>
@@ -30,6 +31,7 @@
 // +--------------------------------------------------------------------------
 static HMP3Decoder hMP3Decoder;
 static MP3FrameInfo hMP3FrameInfo;
+static struct audio_decoder* decoder;
 // +--------------------------------------------------------------------------
 // | @ Private functions
 // +--------------------------------------------------------------------------
@@ -38,7 +40,7 @@ static MP3FrameInfo hMP3FrameInfo;
  * @param 	Number of unprocessed bytes left in input buffer
  * @retval	Number of bytes filled to input buffer
  */
-static uint32_t refill_inbuffer(struct audio_decoder* decoder, uint32_t bytes_left)
+static uint32_t refill_inbuffer(uint32_t bytes_left)
 {
 	UINT bytes_read = 0;
 	UINT bytes_to_read = sizeof(decoder->buffers.in) - bytes_left;
@@ -60,8 +62,9 @@ static uint32_t refill_inbuffer(struct audio_decoder* decoder, uint32_t bytes_le
 // +--------------------------------------------------------------------------
 // | @ Public functions
 // +--------------------------------------------------------------------------
-_Bool MP3_Init(void)
+_Bool MP3_Init(struct audio_decoder* main_decoder)
 {
+	decoder = main_decoder;
 	hMP3Decoder = MP3InitDecoder();
 
 	if(!hMP3Decoder)
@@ -70,7 +73,7 @@ _Bool MP3_Init(void)
 	return true;
 }
 
-_Bool MP3_Decode(struct audio_decoder* decoder)
+_Bool MP3_Decode(void)
 {
 	int error = 0;
 	int offset = 0;
@@ -82,7 +85,7 @@ _Bool MP3_Decode(struct audio_decoder* decoder)
 		{
 			int bytes_filled;
 
-			bytes_filled = refill_inbuffer(decoder, decoder->buffers.in_bytes_left);
+			bytes_filled = refill_inbuffer(decoder->buffers.in_bytes_left);
 			if(!bytes_filled)
 			{
 				decoder->buffers.in_bytes_left = 0;
