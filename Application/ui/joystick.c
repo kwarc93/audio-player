@@ -12,7 +12,7 @@
 #include "FreeRTOS/semphr.h"
 #include "joystick.h"
 #include "ui/display.h"
-#include "app/player.h"
+#include "player/player.h"
 
 #include "debug.h"
 #if DEBUG

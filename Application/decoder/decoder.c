@@ -8,21 +8,15 @@
 // +--------------------------------------------------------------------------
 // | @ Includes
 // +--------------------------------------------------------------------------
-#include "FreeRTOS/FreeRTOS.h"
-#include "FreeRTOS/task.h"
-#include "FreeRTOS/semphr.h"
-
 #include "decoder.h"
+#include "wave.h"
+#include "mp3.h"
+#include "flac.h"
 
-/* For MP3 decoder */
-#include "mp3dec.h"
-/* For FLAC decoder */
-#include "stream_decoder.h"
-
-#include "misc.h"
-#include "file_browser.h"
+#include "filebrowser/file_browser.h"
 #include "FatFs/ff.h"
 #include "i2s/i2s.h"
+#include "misc.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -37,10 +31,6 @@
 #define DBG_PRINTF(...)
 #endif
 
-#define DECODER_MP3_FRAME_LEN			(MP3_MAX_NGRAN * MP3_MAX_NCHAN * MP3_MAX_NSAMP)
-
-#define DECODER_OUT_BUFFER_LEN			(2 * DECODER_MP3_FRAME_LEN)
-#define DECODER_IN_BUFFER_LEN			(4 * MP3_MAINBUF_SIZE)
 // +--------------------------------------------------------------------------
 // | @ Public variables
 // +--------------------------------------------------------------------------
@@ -48,43 +38,8 @@
 // +--------------------------------------------------------------------------
 // | @ Private variables
 // +--------------------------------------------------------------------------
-struct audio_file
-{
-	FIL file;
-	FILINFO info;
-	FRESULT result;
-};
 
-struct audio_buffers
-{
-	uint8_t* in_ptr;
-	uint8_t  in[DECODER_IN_BUFFER_LEN];
-	uint32_t in_bytes_left;
-
-	int16_t* out_ptr;
-	int16_t  out[DECODER_OUT_BUFFER_LEN];
-	uint32_t out_bytes_left;
-};
-
-static struct decoder_context
-{
-	_Bool initialized;
-	_Bool working;
-	enum audio_format format;
-
-	struct audio_file song;
-	struct audio_buffers buffers;
-
-	HMP3Decoder MP3Decoder;
-	MP3FrameInfo MP3FrameInfo;
-
-	FLAC__StreamDecoder* FLACDecoder;
-	FLAC__StreamDecoderInitStatus FLACInitStatus;
-	FLAC__bool FLACStatus;
-
-	SemaphoreHandle_t shI2SEvent;
-	TaskHandle_t xHandleTaskDecoder;
-} decoder;
+static struct audio_decoder decoder;
 
 // +--------------------------------------------------------------------------
 // | @ Private functions
@@ -111,109 +66,8 @@ void set_audio_format(const char* file_ext)
 		decoder.format = UNSUPPORTED;
 }
 
-/* @brief 	Refills decoder's input buffer
- * @param 	Number of unprocessed bytes left in input buffer
- * @retval	Number of bytes filled to input buffer
- */
-static uint32_t refill_inbuffer(uint32_t bytes_left)
-{
-	UINT bytes_read = 0;
-	UINT bytes_to_read = sizeof(decoder.buffers.in) - bytes_left;
-
-	// Move unprocessed bytes to beginning of input buffer
-	decoder.buffers.in_ptr = memmove(decoder.buffers.in, decoder.buffers.in_ptr, bytes_left);
-
-	decoder.song.result = f_read(&decoder.song.file, decoder.buffers.in + bytes_left, bytes_to_read, &bytes_read);
-
-	if(decoder.song.result != FR_OK || !bytes_read)
-		return 0;
-
-	// Zero-pad last old bytes
-	if (bytes_read < bytes_to_read)
-		memset(decoder.buffers.in + bytes_left + bytes_read, 0, bytes_to_read - bytes_read);
-
-	return bytes_read;
-}
-
 // Decoding functions
-// ---------------------------------------------------------------------------
-static _Bool decode_wave(void)
-{
-	UINT bytes_read;
-
-	decoder.song.result = f_read(&decoder.song.file, decoder.buffers.out_ptr,
-						   sizeof(decoder.buffers.out)/2, &bytes_read);
-
-	if(bytes_read != sizeof(decoder.buffers.out)/2 || decoder.song.result != FR_OK)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-static _Bool decode_mp3(void)
-{
-	int error = 0;
-	int offset = 0;
-	_Bool frame_decoded = true;
-
-	do
-	{
-		if(decoder.buffers.in_bytes_left < 2 * MP3_MAINBUF_SIZE)
-		{
-			int bytes_filled;
-
-			bytes_filled = refill_inbuffer(decoder.buffers.in_bytes_left);
-			if(!bytes_filled)
-			{
-				decoder.buffers.in_bytes_left = 0;
-				frame_decoded = false;
-				break;
-			}
-
-			decoder.buffers.in_bytes_left += bytes_filled;
-		}
-
-		offset = MP3FindSyncWord(decoder.buffers.in_ptr, decoder.buffers.in_bytes_left);
-		if(offset < 0)
-		{
-			frame_decoded = false;
-			break;
-		}
-
-		decoder.buffers.in_ptr += offset;
-		decoder.buffers.in_bytes_left -= offset;
-
-		error = MP3Decode(decoder.MP3Decoder, &decoder.buffers.in_ptr, (int*)&decoder.buffers.in_bytes_left, decoder.buffers.out_ptr, 0);
-
-		switch(error)
-		{
-		case ERR_MP3_NONE:
-			MP3GetLastFrameInfo(decoder.MP3Decoder, &decoder.MP3FrameInfo);
-			frame_decoded = true;
-			break;
-		case ERR_MP3_MAINDATA_UNDERFLOW:
-			// Do nothing - next call to decode will provide more maindata
-			break;
-		case ERR_MP3_INDATA_UNDERFLOW:
-		case ERR_MP3_FREE_BITRATE_SYNC:
-		default:
-			frame_decoded = false;
-			return frame_decoded;
-		}
-
-	}
-	while(!frame_decoded);
-
-	return frame_decoded;
-}
-
-static _Bool decode_flac(void)
-{
-	return true;
-}
-
+// --------------------------------------------------------------------------
 static _Bool decode(void)
 {
 	_Bool result = false;
@@ -224,15 +78,15 @@ static _Bool decode(void)
 	switch(decoder.format)
 	{
 	case WAVE:
-		result = decode_wave();
+		result = WAVE_Decode(&decoder);
 		break;
 
 	case MP3:
-		result = decode_mp3();
+		result = MP3_Decode(&decoder);
 		break;
 
 	case FLAC:
-		result = decode_flac();
+		result = FLAC_Decode(&decoder);
 		break;
 
 	default:
@@ -243,54 +97,7 @@ static _Bool decode(void)
 	return result;
 }
 // Init functions
-// ---------------------------------------------------------------------------
-static _Bool init_wave(void)
-{
-	return true;
-}
-
-static _Bool init_mp3(void)
-{
-	decoder.MP3Decoder = MP3InitDecoder();
-	if(!decoder.MP3Decoder)
-	{
-		DBG_PRINTF("ERROR: MP3 decoder init fail");
-		return false;
-	}
-
-	return true;
-}
-
-static _Bool init_flac(void)
-{
-	decoder.FLACDecoder = FLAC__stream_decoder_new();
-	if(!decoder.FLACDecoder) {
-		DBG_PRINTF("ERROR: FLAC decoder init fail");
-		return false;
-	}
-
-#if TODO
-	decoder.FLACInitStatus = FLAC__stream_decoder_init_stream(
-		decoder.FLACDecoder,
-        read_callback,
-        seek_callback,
-        tell_callback,
-        length_callback,
-        eof_callback,
-        write_callback,
-        metadata_callback,
-        error_callback,
-        NULL);
-#endif
-
-	if (decoder.FLACInitStatus != FLAC__STREAM_DECODER_INIT_STATUS_OK)
-	{
-		DBG_PRINTF("ERROR: FLAC decoder init fail\r\nReason: %s\r\n",
-		FLAC__StreamDecoderInitStatusString[decoder.FLACInitStatus]);
-		decoder.FLACStatus = false;
-	}
-	return true;
-}
+// --------------------------------------------------------------------------
 
 static _Bool init_task(void)
 {
@@ -362,13 +169,13 @@ static void init(char* filename)
 	switch(decoder.format)
 	{
 	case WAVE:
-		init_wave();
+		WAVE_Init();
 		break;
 	case MP3:
-		init_mp3();
+		MP3_Init();
 		break;
 	case FLAC:
-		init_flac();
+		FLAC_Init();
 		break;
 	default:
 		DBG_PRINTF("Unsupported format!");
@@ -403,14 +210,15 @@ static void deinit(void)
 	switch(decoder.format)
 	{
 	case WAVE:
+		WAVE_Deinit();
 		break;
 
 	case MP3:
-		MP3FreeDecoder(decoder.MP3Decoder);
+		MP3_Deinit();
 		break;
 
 	case FLAC:
-		FLAC__stream_decoder_delete(decoder.FLACDecoder);
+		FLAC_Deinit();
 		break;
 
 	default:

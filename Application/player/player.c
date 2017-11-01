@@ -18,7 +18,7 @@
 
 #include "usb_host.h"
 #include "ui/display.h"
-#include "decoder.h"
+#include "decoder/decoder.h"
 #include "cpu_utils.h"
 #include "misc.h"
 
