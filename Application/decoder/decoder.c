@@ -12,6 +12,7 @@
 #include "wave.h"
 #include "mp3.h"
 #include "flac.h"
+#include "aac.h"
 
 #include "filebrowser/file_browser.h"
 #include "FatFs/ff.h"
@@ -62,6 +63,8 @@ void set_audio_format(const char* file_ext)
 		decoder.format = MP3;
 	else if(!strcmp(file_ext, "flac"))
 		decoder.format = FLAC;
+	else if(!strcmp(file_ext, "aac"))
+		decoder.format = AAC;
 	else
 		decoder.format = UNSUPPORTED;
 }
@@ -87,6 +90,10 @@ static _Bool decode(void)
 
 	case FLAC:
 		result = FLAC_Decode();
+		break;
+
+	case AAC:
+		result = AAC_Decode();
 		break;
 
 	default:
@@ -178,6 +185,9 @@ static void init(char* filename)
 	case FLAC:
 		result = FLAC_Init(&decoder);
 		break;
+	case AAC:
+		result = AAC_Init(&decoder);
+		break;
 	default:
 		DBG_PRINTF("Unsupported format!");
 		result = false;
@@ -220,6 +230,10 @@ static void deinit(void)
 
 	case FLAC:
 		FLAC_Deinit();
+		break;
+
+	case AAC:
+		AAC_Deinit();
 		break;
 
 	default:

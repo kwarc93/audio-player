@@ -21,7 +21,7 @@
 #define DECODER_OUT_BUFFER_LEN			(2 * DECODER_MP3_FRAME_LEN)
 #define DECODER_IN_BUFFER_LEN			(4 * MP3_MAINBUF_SIZE)
 
-enum audio_format { UNSUPPORTED = 0, WAVE, MP3, FLAC };
+enum audio_format { UNSUPPORTED = 0, WAVE, MP3, FLAC, AAC };
 
 struct audio_file
 {
