@@ -14,6 +14,7 @@
 #include "ui/joystick.h"
 #include "usb_host.h"
 #include "player/player.h"
+#include "tlsf/tlsf.h"
 
 #include "debug.h"
 #if DEBUG
@@ -25,16 +26,22 @@
 /* Heap pool for FreeRTOS */
 uint8_t ucHeap[ configTOTAL_HEAP_SIZE ] AT_CCMRAM;
 
+/* Heap pool for application */
+#define APP_HEAP_SIZE	(60 * 1024)
+uint8_t appHeap[ APP_HEAP_SIZE ];
+
 static void prvConfigureClock(void);
 
 int main(void)
 {
 	// Clock configuration
 	prvConfigureClock();
+	// Init application memory pool
+	init_memory_pool(APP_HEAP_SIZE, appHeap);
 	// Init debug module
 	Debug_Init();
 
-	DBG_PRINTF("-MP3 PLAYER-");
+	DBG_PRINTF("-STM32L4 AUDIO PLAYER-");
 	// Tasks startup
 	DBG_PRINTF("Starting tasks...");
 	Led_StartTasks(mainFLASH_TASK_PRIORITY);

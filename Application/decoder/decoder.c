@@ -110,6 +110,9 @@ static void vTaskDecoder(void * pvParameters)
 
 	for(;;)
 	{
+		// Wait for decoder to be initialized
+		while(!decoder.initialized)	vTaskDelay(100);
+
 		if(xSemaphoreTake(decoder.shI2SEvent, portMAX_DELAY) == pdTRUE)
 		{
 			if(!result)
@@ -146,10 +149,10 @@ static _Bool init_task(void)
 // ---------------------------------------------------------------------------
 static void init(char* filename)
 {
+	_Bool result;
+
 	if(decoder.initialized)
-	{
 		deinit();
-	}
 
 	// Clear structure
 	memset(&decoder, 0, sizeof(decoder));
@@ -167,20 +170,23 @@ static void init(char* filename)
 	switch(decoder.format)
 	{
 	case WAVE:
-		WAVE_Init(&decoder);
+		result = WAVE_Init(&decoder);
 		break;
 	case MP3:
-		MP3_Init(&decoder);
+		result = MP3_Init(&decoder);
 		break;
 	case FLAC:
-		FLAC_Init(&decoder);
+		result = FLAC_Init(&decoder);
 		break;
 	default:
 		DBG_PRINTF("Unsupported format!");
+		result = false;
 		return;
 	}
 
-	// Init decoder task
+	if(!result)
+		return;
+
 	if(!init_task())
 		return;
 
@@ -192,9 +198,6 @@ static void init(char* filename)
 
 static void deinit(void)
 {
-	if(!decoder.initialized)
-		return;
-
 	// Cleanup
 	if(decoder.working)
 	{
