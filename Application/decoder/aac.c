@@ -69,6 +69,14 @@ _Bool AAC_Init(struct audio_decoder* main_decoder)
 	if(!hAACDecoder)
 		return false;
 
+	memset(&hAACFrameInfo, 0, sizeof(AACFrameInfo));
+	hAACFrameInfo.nChans = 2;
+	hAACFrameInfo.sampRateCore = 44100;
+	hAACFrameInfo.profile = AAC_PROFILE_LC;
+
+	if(AACSetRawBlockParams(hAACDecoder, 0, &hAACFrameInfo) < 0)
+		return false;
+
 	return true;
 }
 
@@ -76,11 +84,11 @@ _Bool AAC_Decode(void)
 {
 	int error = 0;
 	int offset = 0;
-	_Bool frame_decoded = true;
+	_Bool frame_decoded = false;
 
 	do
 	{
-		if(decoder->buffers.in_bytes_left < 2 * MP3_MAINBUF_SIZE)
+		if(decoder->buffers.in_bytes_left < 2 * AAC_MAINBUF_SIZE)
 		{
 			int bytes_filled;
 
@@ -98,8 +106,8 @@ _Bool AAC_Decode(void)
 		offset = AACFindSyncWord(decoder->buffers.in_ptr, decoder->buffers.in_bytes_left);
 		if(offset < 0)
 		{
-			frame_decoded = false;
-			break;
+			decoder->buffers.in_bytes_left = 0;
+			continue;
 		}
 
 		decoder->buffers.in_ptr += offset;
@@ -107,21 +115,19 @@ _Bool AAC_Decode(void)
 
 		error = AACDecode(hAACDecoder, &decoder->buffers.in_ptr, (int*)&decoder->buffers.in_bytes_left, decoder->buffers.out_ptr);
 
-//		switch(error)
-//		{
-//		case ERR_AAC_NONE:
-//			AACGetLastFrameInfo(hAACDecoder, &hAACFrameInfo);
-//			frame_decoded = true;
-//			break;
-//		case ERR_AAC_MAINDATA_UNDERFLOW:
-//			// Do nothing - next call to decode will provide more maindata
-//			break;
-//		case ERR_AAC_INDATA_UNDERFLOW:
-//		case ERR_AAC_FREE_BITRATE_SYNC:
-//		default:
-//			frame_decoded = false;
-//			return frame_decoded;
-//		}
+		switch(error)
+		{
+		case ERR_AAC_NONE:
+			AACGetLastFrameInfo(hAACDecoder, &hAACFrameInfo);
+			frame_decoded = true;
+			break;
+		case ERR_AAC_INDATA_UNDERFLOW:
+			// Do nothing - next call to decode will provide more maindata
+			break;
+		default:
+			frame_decoded = false;
+			return frame_decoded;
+		}
 
 	}
 	while(!frame_decoded);

@@ -77,7 +77,7 @@ _Bool MP3_Decode(void)
 {
 	int error = 0;
 	int offset = 0;
-	_Bool frame_decoded = true;
+	_Bool frame_decoded = false;
 
 	do
 	{
@@ -99,8 +99,8 @@ _Bool MP3_Decode(void)
 		offset = MP3FindSyncWord(decoder->buffers.in_ptr, decoder->buffers.in_bytes_left);
 		if(offset < 0)
 		{
-			frame_decoded = false;
-			break;
+			decoder->buffers.in_bytes_left = 0;
+			continue;
 		}
 
 		decoder->buffers.in_ptr += offset;

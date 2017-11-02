@@ -64,7 +64,7 @@
  *
  * Return:      none
  **************************************************************************************/
-__attribute__ ((section (".data.ramfunc.ramfunc"))) void DecodeICSInfo(BitStreamInfo *bsi, ICSInfo *icsInfo, int sampRateIdx)
+/*__attribute__ ((section (".data.ramfunc")))*/ void DecodeICSInfo(BitStreamInfo *bsi, ICSInfo *icsInfo, int sampRateIdx)
 {
 	int sfb, g, mask;
 
@@ -121,7 +121,7 @@ __attribute__ ((section (".data.ramfunc.ramfunc"))) void DecodeICSInfo(BitStream
  *
  * Notes:       sectCB, sectEnd, sfbCodeBook, ordered by window groups for short blocks
  **************************************************************************************/
-__attribute__ ((section (".data.ramfunc")))  static void DecodeSectionData(BitStreamInfo *bsi, int winSequence, int numWinGrp, int maxSFB, unsigned char *sfbCodeBook)
+/*__attribute__ ((section (".data.ramfunc")))*/  static void DecodeSectionData(BitStreamInfo *bsi, int winSequence, int numWinGrp, int maxSFB, unsigned char *sfbCodeBook)
 {
 	int g, cb, sfb;
 	int sectLen, sectLenBits, sectLenIncr, sectEscapeVal;
@@ -194,7 +194,7 @@ static int DecodeOneScaleFactor(BitStreamInfo *bsi)
  *              for section with codebook 14 or 15, scaleFactors buffer has intensity
  *                stereo weight instead of regular scalefactor
  **************************************************************************************/
-__attribute__ ((section (".data.ramfunc")))  static void DecodeScaleFactors(BitStreamInfo *bsi, int numWinGrp, int maxSFB, int globalGain,
+/*__attribute__ ((section (".data.ramfunc")))*/  static void DecodeScaleFactors(BitStreamInfo *bsi, int numWinGrp, int maxSFB, int globalGain,
 								  unsigned char *sfbCodeBook, short *scaleFactors)
 {
 	int g, sfbCB, nrg, npf, val, sf, is;
@@ -247,7 +247,7 @@ __attribute__ ((section (".data.ramfunc")))  static void DecodeScaleFactors(BitS
  *
  * Return:      none
  **************************************************************************************/
-__attribute__ ((section (".data.ramfunc")))  static void DecodePulseInfo(BitStreamInfo *bsi, PulseInfo *pi)
+/*__attribute__ ((section (".data.ramfunc")))*/  static void DecodePulseInfo(BitStreamInfo *bsi, PulseInfo *pi)
 {
 	int i;
 
