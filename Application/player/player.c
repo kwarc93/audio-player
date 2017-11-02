@@ -89,7 +89,7 @@ static void Player_TaskProcess(void)
 		case PLAYER_PLAY:
 			if(USB_IsDiskReady())
 			{
-				player.decoder.start("aac_ex2.aac");
+				player.decoder.start("aac_ex.aac");
 				CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
 				Display_SendText("PLAYING");
 				player.state = PLAYER_PLAYING;

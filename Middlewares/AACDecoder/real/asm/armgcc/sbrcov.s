@@ -35,11 +35,10 @@
 @   
 @ ***** END LICENSE BLOCK *****  
 .cpu cortex-m4
-.fpu vfp
+.fpu softvfp
 .syntax unified
+.thumb
 .text
-.code 16
-.align
 
 @ commmon
 XBUF    .req    r0

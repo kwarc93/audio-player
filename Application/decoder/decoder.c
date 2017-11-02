@@ -63,7 +63,7 @@ void set_audio_format(const char* file_ext)
 		decoder.format = MP3;
 	else if(!strcmp(file_ext, "flac"))
 		decoder.format = FLAC;
-	else if(!strcmp(file_ext, "aac"))
+	else if(!strcmp(file_ext, "aac") || !strcmp(file_ext, "mp4") || !strcmp(file_ext, "m4a"))
 		decoder.format = AAC;
 	else
 		decoder.format = UNSUPPORTED;

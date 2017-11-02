@@ -69,13 +69,13 @@ _Bool AAC_Init(struct audio_decoder* main_decoder)
 	if(!hAACDecoder)
 		return false;
 
-	memset(&hAACFrameInfo, 0, sizeof(AACFrameInfo));
-	hAACFrameInfo.nChans = 2;
-	hAACFrameInfo.sampRateCore = 44100;
-	hAACFrameInfo.profile = AAC_PROFILE_LC;
-
-	if(AACSetRawBlockParams(hAACDecoder, 0, &hAACFrameInfo) < 0)
-		return false;
+//	memset(&hAACFrameInfo, 0, sizeof(AACFrameInfo));
+//	hAACFrameInfo.nChans = 2;
+//	hAACFrameInfo.sampRateCore = 44100;
+//	hAACFrameInfo.profile = AAC_PROFILE_LC;
+//
+//	if(AACSetRawBlockParams(hAACDecoder, 0, &hAACFrameInfo) < 0)
+//		return false;
 
 	return true;
 }

@@ -79,6 +79,9 @@
 #define	slotTab				STATNAME(slotTab)
 #define	sfBandTable			STATNAME(sfBandTable)
 
+#define MULSHIFT32			STATNAME(MULSHIFT32)
+#define FASTABS				STATNAME(FASTABS)
+
 /* in your implementation's top-level include file (e.g. real\coder.h) you should
  *   add new #define sym STATNAME(sym) lines for all the
  *   additional global functions or variables which your

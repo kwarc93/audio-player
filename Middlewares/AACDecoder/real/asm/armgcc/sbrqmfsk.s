@@ -36,11 +36,10 @@
 @ ***** END LICENSE BLOCK *****  
 
 .cpu cortex-m4
-.fpu vfp
+.fpu softvfp
 .syntax unified
+.thumb
 .text
-.code 16
-.align
 
 CPTR    .req    r0
 DELAY   .req    r1

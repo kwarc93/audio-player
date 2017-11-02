@@ -88,6 +88,9 @@
 #define FreeSBR					STATNAME(FreeSBR)
 #define FlushCodecSBR			STATNAME(FlushCodecSBR)
 
+#define MULSHIFT32				STATNAME(MULSHIFT32)
+#define FASTABS					STATNAME(FASTABS)
+
 /* global ROM tables */
 #define sampRateTab				STATNAME(sampRateTab)
 #define predSFBMax				STATNAME(predSFBMax)
