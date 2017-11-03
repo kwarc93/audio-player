@@ -81,11 +81,13 @@ static void vTaskJoystick(void *pvParameters)
 			case KEY_LEFT:
 				ClrKeyb( KBD_LOCK );
 				Display_SendText("PREV");
+				Player_PlayPrev();
 				DBG_PRINTF("Key LEFT");
 				break;
 			case KEY_RIGHT:
 				ClrKeyb( KBD_LOCK );
 				Display_SendText("NEXT");
+				Player_PlayNext();
 				DBG_PRINTF("Key RIGHT");
 				break;
 			default:

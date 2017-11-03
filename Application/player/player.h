@@ -41,4 +41,7 @@ void Player_VolumeUp(void);
 void Player_VolumeDown(void);
 void Player_Mute(_Bool state);
 
+void Player_PlayNext(void);
+void Player_PlayPrev(void);
+
 #endif /* APP_PLAYER_H_ */

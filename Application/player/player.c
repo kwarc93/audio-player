@@ -63,6 +63,15 @@ static struct player_context
 	TimerHandle_t thPlayerTimer;
 }player;
 
+// temporary data
+static const char* playlist[4] =
+{
+		"wav_ex.wav",
+		"mp3_ex.mp3",
+		"aac_ex.aac",
+		"flac_ex.flac"
+};
+static uint8_t song_nr = 0;
 // +--------------------------------------------------------------------------
 // | @ Private functions
 // +--------------------------------------------------------------------------
@@ -97,9 +106,9 @@ static void Player_TaskProcess(void)
 		case PLAYER_PLAY:
 			if(USB_IsDiskReady())
 			{
-				player.decoder.start("wav_ex.wav");
+				player.decoder.start((char*)playlist[song_nr]);
 				CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
-				Display_SendText("PLAYING");
+				Display_SendText((char*)playlist[song_nr]);
 				player.state = PLAYER_PLAYING;
 			}
 			else
@@ -218,4 +227,24 @@ void Player_Mute(_Bool state)
 {
 	player.mute = state;
 	Player_SendCommand(PLAYER_MUTE);
+}
+// temporary function
+void Player_PlayNext(void)
+{
+	song_nr++;
+	if(song_nr == 4)
+		song_nr = 0;
+
+	Player_SendCommand(PLAYER_STOP);
+	Player_SendCommand(PLAYER_PLAY);
+}
+
+void Player_PlayPrev(void)
+{
+	song_nr--;
+	if(song_nr == 255)
+		song_nr = 3;
+
+	Player_SendCommand(PLAYER_STOP);
+	Player_SendCommand(PLAYER_PLAY);
 }

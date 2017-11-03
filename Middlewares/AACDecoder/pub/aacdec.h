@@ -93,7 +93,7 @@ extern "C" {
 #define AAC_PROFILE_LC		1
 #define AAC_PROFILE_SSR		2
 
-/* define these to enable decoder features */
+/* define these to enable decoder features (consumes about 50kB of heap) */
 //#define HELIX_FEATURE_AUDIO_CODEC_AAC_SBR
 
 #if defined(HELIX_FEATURE_AUDIO_CODEC_AAC_SBR)
