@@ -14,6 +14,8 @@
 #include "ui/display.h"
 #include "player/player.h"
 
+#include <stdbool.h>
+
 #include "debug.h"
 #if DEBUG
 #define DBG_PRINTF(...)	(Debug_Printf("[Joystick] " __VA_ARGS__))
@@ -44,33 +46,21 @@ static void vTaskJoystick(void *pvParameters)
 			switch(GetKeys())
 			{
 			case KEY_OK:
-				if( KeysTime( ) >= KEY_PERIOD_1S )
+				ClrKeyb( KBD_LOCK );
+				switch(Player_GetState())
 				{
-					ClrKeyb( KBD_LOCK );
-					// Tutaj kod reakcji na naciœniecie klawisza KEY_ENTER
-					// Kod wykona siê tylko wtedy gdy czas trzymania
-					// klawisza przekroczy 1s
-					Player_SendCommand(PLAYER_STOP);
-
-				}
-				else
-				{
-					ClrKeyb( KBD_LOCK );
-					switch(Player_GetState())
-					{
-					case PLAYER_IDLE:
-					case PLAYER_STOPPED:
-						Player_SendCommand(PLAYER_PLAY);
-						break;
-					case PLAYER_PAUSED:
-						Player_SendCommand(PLAYER_RESUME);
-						break;
-					case PLAYER_PLAYING:
-						Player_SendCommand(PLAYER_PAUSE);
-						break;
-					default:
-						break;
-					}
+				case PLAYER_IDLE:
+				case PLAYER_STOPPED:
+					Player_SendCommand(PLAYER_PLAY);
+					break;
+				case PLAYER_PAUSED:
+					Player_SendCommand(PLAYER_RESUME);
+					break;
+				case PLAYER_PLAYING:
+					Player_SendCommand(PLAYER_PAUSE);
+					break;
+				default:
+					break;
 				}
 				DBG_PRINTF("Key OK");
 				break;

@@ -49,21 +49,18 @@
  *
  */
 
-//#define USE_SBRK        (0)
-//#define USE_MMAP        (0)
-
-//#ifndef USE_PRINTF
-//#define USE_PRINTF      (0)
-//#endif
-
 #include <string.h>
+
+#ifndef USE_PRINTF
+#define USE_PRINTF      (0)
+#endif
 
 #ifndef TLSF_USE_LOCKS
 #define	TLSF_USE_LOCKS 	(0)
 #endif
 
 #ifndef TLSF_STATISTIC
-#define	TLSF_STATISTIC 	(0)
+#define	TLSF_STATISTIC 	(1)
 #endif
 
 #ifndef USE_MMAP
@@ -167,7 +164,7 @@
 #define PAGE_SIZE (getpagesize())
 #endif
 
-#ifdef USE_PRINTF
+#if USE_PRINTF
 #include <stdio.h>
 # define PRINT_MSG(fmt, args...) printf(fmt, ## args)
 # define ERROR_MSG(fmt, args...) printf(fmt, ## args)

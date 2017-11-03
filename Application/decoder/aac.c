@@ -18,10 +18,20 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 // +--------------------------------------------------------------------------
 // | @ Defines
 // +--------------------------------------------------------------------------
+#include "debug.h"
+#if DEBUG
+#define DBG_PRINTF(...)	(Debug_Printf("[AAC] " __VA_ARGS__))
+#else
+#define DBG_PRINTF(...)
+#endif
 
+#define DECODER_AAC_FRAME_LEN			(AAC_MAX_NCHANS * AAC_MAX_NSAMPS)
+#define DECODER_OUT_BUFFER_LEN			(2 * DECODER_AAC_FRAME_LEN)
+#define DECODER_IN_BUFFER_LEN			(4 * AAC_MAINBUF_SIZE)
 // +--------------------------------------------------------------------------
 // | @ Public variables
 // +--------------------------------------------------------------------------
@@ -42,7 +52,7 @@ static struct audio_decoder* decoder;
 static uint32_t refill_inbuffer(uint32_t bytes_left)
 {
 	UINT bytes_read = 0;
-	UINT bytes_to_read = sizeof(decoder->buffers.in) - bytes_left;
+	UINT bytes_to_read = decoder->buffers.in_size - bytes_left;
 
 	// Move unprocessed bytes to beginning of input buffer
 	decoder->buffers.in_ptr = memmove(decoder->buffers.in, decoder->buffers.in_ptr, bytes_left);
@@ -67,6 +77,16 @@ _Bool AAC_Init(struct audio_decoder* main_decoder)
 	hAACDecoder = AACInitDecoder();
 
 	if(!hAACDecoder)
+		return false;
+
+	// Allocate audio buffers
+	decoder->buffers.in_size = DECODER_IN_BUFFER_LEN * sizeof(*decoder->buffers.in);
+	decoder->buffers.out_size = DECODER_OUT_BUFFER_LEN * sizeof(*decoder->buffers.out);
+
+	decoder->buffers.in = malloc(decoder->buffers.in_size);
+	decoder->buffers.out = malloc(decoder->buffers.out_size);
+
+	if(!decoder->buffers.in || !decoder->buffers.out)
 		return false;
 
 //	memset(&hAACFrameInfo, 0, sizeof(AACFrameInfo));
@@ -138,6 +158,8 @@ _Bool AAC_Decode(void)
 _Bool AAC_Deinit(void)
 {
 	AACFreeDecoder(hAACDecoder);
+	free(decoder->buffers.in);
+	free(decoder->buffers.out);
 
 	return true;
 }

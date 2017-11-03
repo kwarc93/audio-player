@@ -27,7 +27,7 @@ void Debug_Init(void)
 	USART_Init();
 #ifdef USE_FREERTOS
 	// Create Mutex for USART interface
-	shMutexUSART = xSemaphoreCreateRecursiveMutex();
+	shMutexUSART = xSemaphoreCreateMutex();
 	xSemaphoreGive(shMutexUSART);
 #endif
 }
@@ -42,7 +42,7 @@ void Debug_Printf(const char* fmt, ...)
 {
 	va_list args;
 #ifdef USE_FREERTOS
-	if(xSemaphoreTake(shMutexUSART, 0))
+	if(xSemaphoreTake(shMutexUSART, 10))
 	{
 #endif
 		enter_critical();

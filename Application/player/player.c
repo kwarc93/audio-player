@@ -35,6 +35,8 @@
 #define DBG_PRINTF(...)
 #endif
 
+#define DEBUG_PLAYER_STATS			1
+
 #define PLAYER_MAX_VOLUME			100
 #define PLAYER_MIN_VOLUME			0
 
@@ -67,8 +69,14 @@ static struct player_context
 
 static void vTimerCallback(TimerHandle_t xTimer)
 {
+#if DEBUG_PLAYER_STATS
+	extern uint8_t appHeap[];
+	extern size_t get_used_size(void *mem_pool);
+
 	DBG_PRINTF("CPU Load: %u%%", Get_CPU_Usage());
-	DBG_PRINTF("RTOS heap bytes left: %u", xPortGetFreeHeapSize());
+	DBG_PRINTF("RTOS heap used: %uB", configTOTAL_HEAP_SIZE - xPortGetFreeHeapSize());
+	DBG_PRINTF("TLSF heap used: %uB", get_used_size(appHeap));
+#endif
 }
 
 static void Player_TaskProcess(void)
@@ -89,7 +97,7 @@ static void Player_TaskProcess(void)
 		case PLAYER_PLAY:
 			if(USB_IsDiskReady())
 			{
-				player.decoder.start("aac_ex.aac");
+				player.decoder.start("wav_ex.wav");
 				CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
 				Display_SendText("PLAYING");
 				player.state = PLAYER_PLAYING;

@@ -5,8 +5,6 @@
  *      Author: Kwarc
  */
 
-
-
 // +--------------------------------------------------------------------------
 // | @ Includes
 // +--------------------------------------------------------------------------
@@ -18,6 +16,7 @@
 #include "misc.h"
 
 #include <stdbool.h>
+#include <stdlib.h>
 // +--------------------------------------------------------------------------
 // | @ Defines
 // +--------------------------------------------------------------------------
@@ -27,6 +26,8 @@
 #else
 #define DBG_PRINTF(...)
 #endif
+
+#define DECODER_OUT_BUFFER_LEN			(8 * 1024)
 // +--------------------------------------------------------------------------
 // | @ Public variables
 // +--------------------------------------------------------------------------
@@ -122,7 +123,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder* 
 		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
 	for(i = 0; i < frame->header.blocksize - 1; i++) {
-		out_buf[i] = revsh((FLAC__int16)buffer[0][i]);	/* left channel */
+		out_buf[i] = revsh((FLAC__int16)buffer[0][i]);		/* left channel */
 		out_buf[i+1] = revsh((FLAC__int16)buffer[1][i]);	/* right channel */
 	}
 
@@ -277,6 +278,14 @@ _Bool FLAC_Init(struct audio_decoder* main_decoder)
 	if (FLACInitStatus != FLAC__STREAM_DECODER_INIT_STATUS_OK)
 		return false;
 
+	// Allocate audio buffers
+	decoder->buffers.out_size = DECODER_OUT_BUFFER_LEN * sizeof(*decoder->buffers.out);
+
+	decoder->buffers.out = malloc(decoder->buffers.out_size);
+
+	if(!decoder->buffers.out)
+		return false;
+
 	FLAC__stream_decoder_set_md5_checking(FLACDecoder, false);
 
 	return true;
@@ -313,8 +322,11 @@ _Bool FLAC_Decode(void)
 _Bool FLAC_Deinit(void)
 {
 	DBG_PRINTF("Exited with status: %s", FLAC__StreamDecoderStateString[FLAC__stream_decoder_get_state(FLACDecoder)]);
+
 	FLAC__stream_decoder_finish(FLACDecoder);
 	FLAC__stream_decoder_delete(FLACDecoder);
+	free(decoder->buffers.out);
+
 	return true;
 }
 // +--------------------------------------------------------------------------

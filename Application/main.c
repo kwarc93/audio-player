@@ -27,7 +27,7 @@
 uint8_t ucHeap[ configTOTAL_HEAP_SIZE ] AT_CCMRAM;
 
 /* Heap pool for application */
-#define APP_HEAP_SIZE	(60 * 1024)
+#define APP_HEAP_SIZE	(72 * 1024)
 uint8_t appHeap[ APP_HEAP_SIZE ];
 
 static void prvConfigureClock(void);

@@ -110,7 +110,7 @@ static void vTaskDecoder(void * pvParameters)
 {
 	f_open(&decoder.song.file, (const TCHAR*)&decoder.song.info.fname, FA_READ);
 
-	I2S_StartDMA(decoder.buffers.out, DECODER_OUT_BUFFER_LEN);
+	I2S_StartDMA(decoder.buffers.out, decoder.buffers.out_size / sizeof(int16_t));
 	decoder.working = true;
 
 	_Bool result = true;
@@ -163,8 +163,6 @@ static void init(char* filename)
 
 	// Clear structure
 	memset(&decoder, 0, sizeof(decoder));
-	decoder.buffers.in_ptr = decoder.buffers.in;
-	decoder.buffers.out_ptr = decoder.buffers.out;
 
 	// Get file information to structure
 	if(f_stat(filename, &decoder.song.info) != FR_OK)
@@ -199,6 +197,9 @@ static void init(char* filename)
 
 	if(!init_task())
 		return;
+
+	decoder.buffers.in_ptr = decoder.buffers.in;
+	decoder.buffers.out_ptr = decoder.buffers.out;
 
 	// Decoder initialized
 	DBG_PRINTF("Decoding file: %s", filename);
@@ -301,7 +302,7 @@ void I2S_TransferCompleteCallback(void)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-	decoder.buffers.out_ptr = &decoder.buffers.out[DECODER_OUT_BUFFER_LEN/2];
+	decoder.buffers.out_ptr = &decoder.buffers.out[decoder.buffers.out_size / (sizeof(int16_t)*2)];
 	xSemaphoreGiveFromISR(decoder.shI2SEvent, &xHigherPriorityTaskWoken);
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 }
