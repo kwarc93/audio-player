@@ -212,14 +212,14 @@ enum player_state Player_GetState(void)
 void Player_VolumeUp(void)
 {
 	if(player.volume < PLAYER_MAX_VOLUME)
-		player.volume += 5;
+		player.volume += 2;
 	Player_SendCommand(PLAYER_VOLUME);
 }
 
 void Player_VolumeDown(void)
 {
 	if(player.volume > PLAYER_MIN_VOLUME)
-		player.volume -= 5;
+		player.volume -= 2;
 	Player_SendCommand(PLAYER_VOLUME);
 }
 

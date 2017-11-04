@@ -83,13 +83,16 @@ while ((RCC->CR & RCC_CR_MSIRDY) == 0);
 
 #elif defined(USE_HSI_CLOCK)
 
-uint32_t hsi_trim;
+#if USE_ART_ACCELERATOR
+// Enable ART accelerator
+FLASH->ACR |= FLASH_ACR_PRFTEN;
+#endif
 
 // To correctly read data from FLASH memory , the number of wait states (LATECY)
 // must bue correctly programmed according to the frequency of the CPU clock (HCLK)
 // and the supply voltage of the device.
 FLASH->ACR &= ~FLASH_ACR_LATENCY;
-FLASH->ACR |=  FLASH_ACR_LATENCY_2WS;
+FLASH->ACR |=  FLASH_ACR_LATENCY_4WS;
 
 // Enable the internal high speed oscillator (HSI) and wait until ready
 RCC->CR |= RCC_CR_HSION;
@@ -98,7 +101,7 @@ while(!(RCC->CR & RCC_CR_HSIRDY));
 // Adjusts the HSI calibration value
 // RC oscillator frequencies are factory calibrated by ST for 1% accuracy at 25*C
 // After reset, the factory calibration value is loaded  in HSICAL[7:0] of RCC_ICSR.
-hsi_trim = 16;	// user-programmable trimming value that is added to HSICAL[7:0] in ICSCR
+uint32_t hsi_trim = 16;	// user-programmable trimming value that is added to HSICAL[7:0] in ICSCR
 RCC->ICSCR &= ~RCC_ICSCR_HSITRIM;
 RCC->ICSCR |= hsi_trim << 24;
 

@@ -42,7 +42,5 @@
 #include <FLACDecoder/libFLAC/include/private/lpc.h>
 #include <FLACDecoder/libFLAC/include/private/md5.h>
 #include <FLACDecoder/libFLAC/include/private/memory.h>
-#include <FLACDecoder/libFLAC/include/private/metadata.h>
-//#include "stream_encoder_framing.h"
 
 #endif

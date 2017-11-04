@@ -36,10 +36,8 @@
 #include <FLACDecoder/FLAC/callback.h>
 #include <FLACDecoder/FLAC/export.h>
 #include <FLACDecoder/FLAC/format.h>
-#include <FLACDecoder/FLAC/metadata.h>
 #include <FLACDecoder/FLAC/ordinals.h>
 #include <FLACDecoder/FLAC/stream_decoder.h>
-//#include "stream_encoder.h"
 
 /** \mainpage
  *

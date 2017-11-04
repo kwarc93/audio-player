@@ -33,6 +33,5 @@
 #define FLAC__PROTECTED__ALL_H
 
 #include <FLACDecoder/libFLAC/include/protected/stream_decoder.h>
-//#include "stream_encoder.h"
 
 #endif

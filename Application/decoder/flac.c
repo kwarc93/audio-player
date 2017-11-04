@@ -26,8 +26,6 @@
 #else
 #define DBG_PRINTF(...)
 #endif
-
-#define DECODER_OUT_BUFFER_LEN			(8 * 1024)
 // +--------------------------------------------------------------------------
 // | @ Public variables
 // +--------------------------------------------------------------------------
@@ -104,7 +102,8 @@ static FLAC__StreamDecoderReadStatus read_callback(const FLAC__StreamDecoder* de
 static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder* decoder, const FLAC__Frame* frame,
     const FLAC__int32* const buffer[], void* client_data)
 {
-    int16_t* out_buf = (int16_t*)&((struct audio_decoder*)client_data)->buffers.out_ptr;
+    int16_t* out_buf = ((struct audio_decoder*)client_data)->buffers.out_ptr;
+    uint32_t out_buf_size = ((struct audio_decoder*)client_data)->buffers.out_size;
 
 	size_t i;
 
@@ -119,12 +118,13 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder* 
 		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 	}
 	/* write decoded PCM samples */
-	if(frame->header.blocksize > DECODER_OUT_BUFFER_LEN/2)
+	if(frame->header.blocksize > out_buf_size / (2 * sizeof(*out_buf)))
 		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
-	for(i = 0; i < frame->header.blocksize - 1; i++) {
-		out_buf[i] = revsh((FLAC__int16)buffer[0][i]);		/* left channel */
-		out_buf[i+1] = revsh((FLAC__int16)buffer[1][i]);	/* right channel */
+	for(i = 0; i < frame->header.blocksize; i++) {
+		*(out_buf) = (FLAC__int16)buffer[0][i];		/* left channel */
+		*(out_buf + 1) = (FLAC__int16)buffer[1][i];	/* right channel */
+		out_buf += 2;
 	}
 
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
@@ -278,15 +278,25 @@ _Bool FLAC_Init(struct audio_decoder* main_decoder)
 	if (FLACInitStatus != FLAC__STREAM_DECODER_INIT_STATUS_OK)
 		return false;
 
+	FLAC__stream_decoder_set_md5_checking(FLACDecoder, false);
+
+	// Find metadata to know blocksize of FLAC file and then allocate proper output buffer size
+	if(f_open(&decoder->song.file, decoder->song.info.fname, FA_READ) == FR_OK)
+	{
+		FLAC__stream_decoder_process_until_end_of_metadata(FLACDecoder);
+		FLAC__stream_decoder_flush(FLACDecoder);
+		f_close(&decoder->song.file);
+	}
+	else
+		return false;
+
 	// Allocate audio buffers
-	decoder->buffers.out_size = DECODER_OUT_BUFFER_LEN * sizeof(*decoder->buffers.out);
+	decoder->buffers.out_size = 4 * block_size * sizeof(*decoder->buffers.out);
 
 	decoder->buffers.out = malloc(decoder->buffers.out_size);
 
 	if(!decoder->buffers.out)
 		return false;
-
-	FLAC__stream_decoder_set_md5_checking(FLACDecoder, false);
 
 	return true;
 }
