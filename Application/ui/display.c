@@ -22,6 +22,9 @@
 #define DBG_PRINTF(...)
 #endif
 
+extern const uint8_t* const system8_array[];
+extern const uint8_t image_data_headphones[];
+
 static TaskHandle_t xHandleTaskDisplay;
 static QueueHandle_t qhDisplayText;
 static QueueHandle_t qhDisplayBar;
@@ -49,9 +52,9 @@ static void vTaskDisplay(void * pvParameters)
 		/* Receive and display text */
 		if(xQueueReceive(qhDisplayText, &q_text, 0))
 		{
-			clr_buff();
-			write_string(0,0,q_text);
-			show_buff();
+			SSD1306_Clear(0);
+			SSD1306_SetText(0,0, q_text, system8_array, 0);
+			SSD1306_CpyDirtyPages();
 		}
 
 		task_tick += task_delay_ms;
@@ -75,8 +78,11 @@ void Display_StartTasks(unsigned portBASE_TYPE uxPriority)
 	 // Create queue for display bar level
 	qhDisplayBar = xQueueCreate(1, sizeof(uint8_t));
 
-	// Display init text
-	Display_SendText("AUDIO PLAYER");
+	// Display init screen
+	SSD1306_Clear(0);
+	SSD1306_DrawBitmap(50,28,image_data_headphones, 0);
+	SSD1306_SetText(30, 0, "AUDIO PLAYER", system8_array, 0);
+	SSD1306_CpyDirtyPages();
 
 	// Creating task for LCD
 	if(xTaskCreate(vTaskDisplay, "LCD", LCD_STACK_SIZE, NULL, uxPriority, &xHandleTaskDisplay) == pdPASS)

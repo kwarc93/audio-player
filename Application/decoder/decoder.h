@@ -16,7 +16,7 @@
 
 #define DECODER_STACK_SIZE	TASK_STACK_BYTES(8 * 1024)
 
-enum audio_format { UNSUPPORTED = 0, WAVE, MP3, FLAC, AAC };
+enum audio_format { UNSUPPORTED = 0, WAVE, MP3, FLAC, AAC, M4A, MP4 };
 
 struct audio_file
 {

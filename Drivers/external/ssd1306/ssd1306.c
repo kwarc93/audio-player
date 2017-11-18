@@ -1,20 +1,14 @@
 
 
 #include "ssd1306.h"
-
 #include "gpio/gpio.h"
 #include "misc.h"
-
-#include "ascii_char.h"
-#include "CalBlk36.h"
-#include "CalLite24.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
 /*
  * @brief GPIO definitions and routines for software SPI-Interface (hardware dependent)
- * Used ports: GPIOA, GPIOB, GPIOC, GPIOD
  */
 #define SSD1306_VCC_PIN		(0)
 #define SSD1306_VCC_PORT	(GPIOB)
@@ -52,12 +46,6 @@
 #define SSD1306_RST_HIGH()	(SSD1306_RST_PORT->BSRR = 1 << SSD1306_RST_PIN)
 
 
-static uint8_t     display_buffer[BUFFER];
-static uint8_t     LCD_X=0;
-static uint8_t     LCD_Y=0;
-static uint8_t 	   byte;
-
-
 static void softspi_init()
 {
 	/* Enable GPIO clocks */
@@ -84,6 +72,7 @@ static inline void softspi_write_bit(uint8_t byte, uint8_t mask)
   SSD1306_CLK_LOW();
   if (byte & mask) SSD1306_MOSI_HIGH(); else SSD1306_MOSI_LOW();
   SSD1306_CLK_HIGH();
+  nop();
 }
 
 
@@ -101,7 +90,23 @@ static void softspi_write_byte(uint8_t byte)
 	softspi_write_bit(byte, (1 << 0));
 }
 
-static void set_instruction(_Bool dc, uint8_t byte)
+/*
+ * @brief SSD1306 LCD driver routines
+ * Display resolution: 128x64
+ */
+
+// Private variables
+
+enum lcd_buffer {DIRTY, CLEAN};
+enum ssd1306_instruction {CMD, DATA};
+
+// @brief Video buffer in RAM (the last byte defines whether page must be redrawn)
+static uint8_t lcd_buffer[LCD_HEIGHT / 8][LCD_WIDTH + 1];
+static uint8_t lcd_x, lcd_y;
+
+// Private functions
+
+static void set_instruction(enum ssd1306_instruction dc, uint8_t byte)
 {
 	if(dc) 	SSD1306_DC_HIGH();
 	else   	SSD1306_DC_LOW();
@@ -109,10 +114,43 @@ static void set_instruction(_Bool dc, uint8_t byte)
 	SSD1306_CS_LOW();
 	softspi_write_byte(byte);
 	SSD1306_CS_HIGH();
-	}
+}
 
-// These defaults are for a 128x64 configuration, adapt as needed
-// seg remap, com scan, mux ratio, addr mode are suggested things to poke at
+static void clr_vram()
+{
+	uint8_t height = LCD_HEIGHT;
+	uint8_t width = LCD_WIDTH;
+	while(height--)
+	{
+		lcd_x = 0; lcd_y = height;
+		while(width--)
+			set_instruction(DATA, 0x00);
+		width=LCD_WIDTH;
+	}
+}
+
+static inline void set_page_address(uint8_t address)
+{
+	address &= 0x0F;
+	set_instruction(CMD, LCD_SET_PAGE | address);
+}
+
+static inline void set_column_address(uint8_t address)
+{
+	address &= 0x7F;
+	set_instruction(CMD, LCD_SET_COL_HI | (address >> 4));
+	set_instruction(CMD, LCD_SET_COL_LO | (address & 0x0F));
+}
+
+void write_data_at(uint8_t x, uint8_t y, uint8_t data)
+{
+	set_page_address(y);
+	set_column_address(x);
+	set_instruction(DATA, data);
+}
+
+// Public functions
+
 void SSD1306_Init() {
 
 	softspi_init();
@@ -123,310 +161,289 @@ void SSD1306_Init() {
 	SSD1306_RST_HIGH();
 	delay_ms(10);
 
-	set_instruction(0, 0xAE); // display off
-	set_instruction(0, 0xD5); // clock
-	set_instruction(0, 0x81); // upper nibble is rate, lower nibble is divisor
-	set_instruction(0, 0xA8); // mux ratio
-	set_instruction(0, 0x3F); // rtfm
-	set_instruction(0, 0xD3); // display offset
-	set_instruction(0, 0x00); // rtfm
-	set_instruction(0, 0x00);
-	set_instruction(0, 0x8D); // charge pump
-	set_instruction(0, 0x14); // enable
-	set_instruction(0, 0x20); // memory addr mode
-	set_instruction(0, 0x00); // horizontal
-	set_instruction(0, 0xA1); // segment remap
-	set_instruction(0, 0xA5); // display on
-	set_instruction(0, 0xC8); // com scan direction
-	set_instruction(0, 0xDA); // com hardware cfg
-	set_instruction(0, 0x12); // alt com cfg
-	set_instruction(0, 0x81); // contrast aka current
-	set_instruction(0, 0x7F); // 128 is midpoint
-	set_instruction(0, 0xD9); // precharge
-	set_instruction(0, 0x11); // rtfm
-	set_instruction(0, 0xDB); // vcomh deselect level
-	set_instruction(0, 0x20); // rtfm
-	set_instruction(0, 0xA6); // non-inverted
-	set_instruction(0, 0xA4); // display scan on
-	set_instruction(0, 0xAF); // drivers on
+	set_instruction(CMD, 0xAE); // display off
+	set_instruction(CMD, 0xD5); // clock
+	set_instruction(CMD, 0x81); // upper nibble is rate, lower nibble is divisor
+	set_instruction(CMD, 0xA8); // mux ratio
+	set_instruction(CMD, 0x3F); // rtfm
+	set_instruction(CMD, 0xD3); // display offset
+	set_instruction(CMD, 0x00); // rtfm
+	set_instruction(CMD, 0x00);
+	set_instruction(CMD, 0x8D); // charge pump
+	set_instruction(CMD, 0x14); // enable
+	set_instruction(CMD, 0x20); // memory addr mode
+	set_instruction(CMD, 0x00); // horizontal
+	set_instruction(CMD, 0xA1); // segment remap
+	set_instruction(CMD, 0xA5); // display on
+	set_instruction(CMD, 0xC8); // com scan direction
+	set_instruction(CMD, 0xDA); // com hardware cfg
+	set_instruction(CMD, 0x12); // alt com cfg
+	set_instruction(CMD, 0x81); // contrast aka current
+	set_instruction(CMD, 0x7F); // 128 is midpoint
+	set_instruction(CMD, 0xD9); // precharge
+	set_instruction(CMD, 0x11); // rtfm
+	set_instruction(CMD, 0xDB); // vcomh deselect level
+	set_instruction(CMD, 0x20); // rtfm
+	set_instruction(CMD, 0xA6); // non-inverted
+	set_instruction(CMD, 0xA4); // display scan on
+	set_instruction(CMD, 0xAF); // drivers on
 
-	clr_VRAM();
+	clr_vram();
 
 }
 
-// Clear VRAM in LCD
-void clr_VRAM()
+void SSD1306_SetPixel(uint8_t x, uint8_t y, _Bool isSet)
 {
-	uint8_t height=64;
-	uint8_t width=128;
-	while(height--)
+	lcd_x=x; lcd_y=y;
+	if(isSet) lcd_buffer[y >> 3][x] |= (1 << (y%8));
+	     else lcd_buffer[y >> 3][x] &= ~(1 << (y%8));
+	lcd_buffer[y >> 3][LCD_WIDTH]=DIRTY;
+}
+
+void SSD1306_CpyFramebuffer()
+{
+	uint8_t *ptr=(uint8_t*)lcd_buffer;
+	for(uint8_t y=0; y < (LCD_HEIGHT >> 3); y++)
 	{
-		set_cursor(0,height);
-		while(width--)
-			set_instruction(1,0x00);
-		width=lcd_width;
+		set_page_address(y);
+		set_column_address(0);
+		for(uint8_t x=0; x < LCD_WIDTH; x++) set_instruction(DATA, *ptr++);
+		ptr++; //Synchronizacja ze wzglêdu na bajt Dirty w buforze
 	}
 }
 
-// Set pixel on display buffer
-void set_pixel(uint8_t x, uint8_t y) {
-    display_buffer[((uint16_t)(y<<4)&0xFF80) + x] |= (uint8_t)(0x01 << (y & 0x07));
-}
-
-// Write byte on display buffer
-void write_display(uint8_t data) {
-    display_buffer[((uint16_t)(LCD_Y<<7)) + (LCD_X++)] |= data;
-}
-
-// Set cursor on display buffer
-void set_cursor(uint8_t x, uint8_t y)
+void SSD1306_CpyDirtyPages()
 {
-	LCD_X=x; LCD_Y=y;
-}
-
-// Clear display buffer
-void clr_buff(void) {
-    uint16_t i;
-    for(i=0; i<BUFFER; i++) display_buffer[i]=0x00;
-}
-
-// Transfer display buffer to LCD
-void show_buff(void) {
-    unsigned char u8Page,u8Column;
-    uint8_t *p;
-    set_instruction(0,LCD_SET_PAGE);
-    set_instruction(0,LCD_SET_COL_HI);	// Set column at 0
-    set_instruction(0,LCD_SET_COL_LO);
-
-    p=display_buffer;
-   	// process the 8 pages of the LCD
-	for(u8Page=0; u8Page<8; u8Page++) {
-	    for(u8Column=0; u8Column<128; u8Column++) {
-	    	set_instruction(1,*p++);
-	    }
-    }
-}
-
-// Cleans selected area of LCD
-void clean_area(unsigned char x_start, unsigned char x_end, unsigned char y_start, unsigned char y_end)
-{
-	byte=x_start;
-	while(y_start<=y_end)
+	uint8_t *ptr=(uint8_t*)lcd_buffer;
+	for(uint8_t y=0; y < (LCD_HEIGHT >> 3); y++)
 	{
-		set_cursor(x_start,y_start++);
-		while(x_start++<=x_end)
-			 write_display(0x00);
-		x_start=byte;
-	}
-} 
-
-// Sends bitmap directly to VRAM
-void lcd_bitmap(const uint8_t *gData) {
-    uint16_t i,j;
-    for(j=0;j<8;j++) {
-    	set_instruction(0,0xb0+j);   //set page address
-
-    	set_instruction(0,0x10);     //set column Address
-    	set_instruction(0,0x00);
-
-        for(i=0;i<128;i++){
-        	set_instruction(1,gData[i+(j*128)]);
-        }
-
-    }
-}
-// Draw a line
-void lcd_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
-    uint8_t i,dxabs,dyabs,x,y;
-    int8_t dx,dy,stepx,stepy;
-    dx=(int8_t)x2-x1;      // the horizontal distance of the line
-    dy=(int8_t)y2-y1;      // the vertical distance of the line
-    if(dy<0) { dyabs=-dy; stepy=-1; }
-    else { dyabs=dy; stepy=1; }
-    if(dx<0) { dxabs=-dx; stepx=-1; }
-    else {dxabs=dx; stepx=1; }
-    x=(uint8_t)(dyabs>>1);
-    y=(uint8_t)(dxabs>>1);
-    set_pixel(x1,y1);
-    if (dxabs>=dyabs) { // the line is more horizontal than vertical
-        for(i=0;i<dxabs;i++) {
-            y+=dyabs;
-            if (y>=dxabs) {
-                y-=dxabs;
-                y1+=stepy;
-            }
-            x1+=stepx;
-            set_pixel(x1,y1);
-        }
-    }
-    else {  // the line is more vertical than horizontal
-        for(i=0;i<dyabs;i++) {
-            x+=dxabs;
-            if (x>=dyabs) {
-                x-=dyabs;
-                x1+=stepx;
-            }
-            y1+=stepy;
-            set_pixel(x1,y1);
-        }
-    }
-}
-/*------------------------------------------------ Small 5x8 font functions ------------------------------------------------------*/
-
-void write_string(unsigned char x, unsigned char y, const  char *string)
-{
-	x*=(f_width+space_char);
-	set_cursor(x,y);
-	while(*string!=0)
-	{
-		send_data_array(ascii_table[*string++],f_width);
-		y=space_char;	// space between chars
-		while(y--) write_display(0);
-	}
-}
-
-void write_char(unsigned char x, unsigned char y, unsigned char character)
-{
-	x*=(f_width+space_char);
-	set_cursor(x,y);
-	send_data_array(ascii_table[character],f_width);
-}
-
-
-void send_data_array(const char *d_array, unsigned char size)
-{
-	while(size--)
-		 write_display(*(d_array++));
-}
-/*--------------------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------- Medium font functions --------------------------------------------------------*/
-void lcdCharLite24(uint8_t x, uint8_t y, char s)
-{
-	uint8_t i;
-	uint16_t size,idx;
-
-	s-=32; // konwersja kodu znaku
-	idx=0;
-	size=4*(*(CalLite24_width + s));					// d³ugosæ znaku w tablicy
-	set_cursor(x,y);
-
-	for(i=0;i<s;i++) idx+=(*(CalLite24_width + i));	// obliczenie pozycji znaku w tablicy
-	for(i = 0; i < size; i++)
+		if(ptr[LCD_WIDTH] == DIRTY)  //Wysy³amy dane tylko jeœli dana strona by³a zmieniona
 		{
-		if(i%(size/4)==0) set_cursor(x,y++);							// jesli osi¹gnelo szerokosæ znaku skocz do nowej linii
-		 write_display((*(CalLite24 + 4*idx + i)));
-		}
-
-}
-
-void lcdStringLite24(uint8_t x, uint8_t y, char * s)
-{
-
-	while(*s) // wykonuj dopóki znak wskazywany przez s jest ró¿ny od zera
-	{
-    lcdCharLite24(x,y,*s); // zapis znaku
-	set_cursor(x+=(*(CalLite24_width + (*s++ - 32))) + 2,y); //przesuñ kursor o szerkokoæ znaku + 2pixele
+			set_page_address(y);
+			set_column_address(0);
+			for(uint8_t x=0; x < LCD_WIDTH; x++) set_instruction(DATA, *ptr++);
+			*ptr++=CLEAN;                //Skasuj flagê Dirty
+		} else ptr+=LCD_WIDTH+1;
 	}
-
 }
-/*--------------------------------------------------------------------------------------------------------------------------------*/
-/*-------------------------------------------------- Big font functions ----------------------------------------------------------*/
-void lcdCharBlk36(uint8_t x, uint8_t y, char s)
+
+void SSD1306_Clear(_Bool color)
 {
-	uint8_t i;
-	uint16_t size,idx;
+	uint8_t pix=0;
+	if(color) pix=0xff;
+	uint8_t *ptr=(uint8_t*)lcd_buffer;
+	for(uint8_t y=0; y < (LCD_HEIGHT >> 3); y++)
+	{
+		for(uint16_t i=0; i < LCD_WIDTH; i++) *ptr++=pix;
+		*ptr++=DIRTY; //Bajt dirty
+	}
+}
 
-	s-=32; // konwersja kodu znaku
-	idx=0;
-	size=5*(*(CalBlk36_width + s));					// d³ugosæ znaku w tablicy
-	set_cursor(x,y);
+void SSD1306_MoveTo(uint8_t x, uint8_t y)
+{
+	lcd_x=x; lcd_y=y;
+}
 
-	for(i=0;i<s;i++) idx+=(*(CalBlk36_width + i));	// obliczenie pozycji znaku w tablicy
-	for(i = 0; i < size; i++)
+void SSD1306_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, _Bool isSet)
+{
+    int dy = y1 - lcd_y;
+    int dx = x1 - lcd_x;
+    int8_t stepx, stepy;
+
+    SSD1306_MoveTo(x0, y0);
+
+    if (dy < 0) { dy = -dy;  stepy = -1; } else stepy = 1;
+    if (dx < 0) { dx = -dx;  stepx = -1; } else stepx = 1;
+    dy <<= 1;
+    dx <<= 1;
+
+    SSD1306_SetPixel(lcd_x, lcd_y, isSet);
+    if (dx > dy)
+    {
+        int fraction = dy - (dx >> 1);  // same as 2*dy - dx
+        while (lcd_x != x1)
+        {
+           if (fraction >= 0)
+           {
+               lcd_y += stepy;
+               fraction -= dx;          // same as fraction -= 2*dx
+           }
+           lcd_x += stepx;
+           fraction += dy;              // same as fraction -= 2*dy
+           SSD1306_SetPixel(lcd_x, lcd_y, isSet);
+        }
+     } else {
+        int fraction = dx - (dy >> 1);
+        while (lcd_y != y1) {
+           if (fraction >= 0) {
+               lcd_x += stepx;
+               fraction -= dy;
+           }
+           lcd_y += stepy;
+           fraction += dx;
+           SSD1306_SetPixel(lcd_x, lcd_y, isSet);
+        }
+     }
+ }
+
+void SSD1306_DrawHLine(uint8_t x, _Bool isSet)
+{
+	x+=lcd_x;
+    for(uint8_t x1=lcd_x; x1<x; x1++) SSD1306_SetPixel(x1, lcd_y, isSet);
+}
+
+void SSD1306_DrawRect(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, _Bool isSet)
+{
+	int height = y2;
+	int width = x2;
+
+	if(isSet == true){
+
+		for (int a = y1; a != height+y1; a++)
 		{
-		if(i%(size/5)==0) set_cursor(x,y++);							// jesli osi¹gnelo szerokosæ znaku skocz do nowej linii
-		 write_display((*(CalBlk36 + 5*idx + i)));
+			for (int b = x1; b != width+x1; b++ )
+			{
+				SSD1306_SetPixel(b,a,true);
+			}
 		}
-
-}
-
-void lcdStringBlk36(uint8_t x, uint8_t y, char * s)
-{
-
-	while(*s) // wykonuj dopóki znak wskazywany przez s jest ró¿ny od zera
+	}
+	else
 	{
-    lcdCharBlk36(x,y,*s); // zapis znaku
-	set_cursor(x+=(*(CalBlk36_width + (*s++ - 32))) + 2,y); //przesuñ kursor o szerkokoæ znaku + 2pixele
+		for (int a = y1; a != height+y1; a++)
+		{
+			for (int b = x1; b != width+x1; b++ )
+			{
+				if ((a == y1) || (a == height+y1-1) || (b == width+x1-1) || (b == x1))
+				{
+					SSD1306_SetPixel(b,a,true);
+				}
+				else
+				{
+					SSD1306_SetPixel(b,a,false);
+				}
+			}
+		}
 	}
 
 }
-/*--------------------------------------------------------------------------------------------------------------------------------*/
 
-const unsigned char AGH_LOGO[] = {
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x3C, 0xF2, 0x8C, 0x7A, 0xF4, 0x8C,
-0x78, 0xF0, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0xFC, 0xFC, 0x00, 0xFC, 0xFC, 0x00, 0xFC, 0xFC, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF,
-0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFC, 0xFC, 0x00, 0xFC, 0xFC, 0x00, 0xFC, 0xFC, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF,
-0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF,
-0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF,
-0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x07, 0x1F, 0x38, 0x67, 0x5F, 0x30, 0x4F, 0x3F, 0x60, 0x00, 0x00, 0x03, 0x03, 0x00, 0x03, 0x03,
-0x00, 0x03, 0x03, 0x00, 0x40, 0x38, 0x5F, 0x23, 0x5C, 0x2F, 0x33, 0x1C, 0x0F, 0x03, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0xA0, 0xE0, 0xE0, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xC0, 0xE0, 0x60, 0x60,
-0x60, 0x60, 0x00, 0x00, 0x00, 0x00, 0xE0, 0xE0, 0xC0, 0x00, 0x00, 0x00, 0xE0, 0xE0, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60,
-0x7C, 0x0F, 0x09, 0x09, 0x0F, 0x7F, 0x78, 0x40, 0x00, 0x00, 0x0F, 0x3F, 0x3F, 0x60, 0x60, 0x42,
-0x7E, 0x7E, 0x00, 0x00, 0x00, 0x00, 0x7F, 0x7F, 0x7F, 0x06, 0x06, 0x06, 0x7F, 0x7F, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
+void SSD1306_Circle(uint8_t cx, uint8_t cy , uint8_t radius, uint8_t attrs)
+{
+    int8_t x, y, xchange, ychange, radiusError;
+    x=radius;
+    y=0;
+    xchange=1-2*radius;
+    ychange=1;
+    radiusError=0;
+	_Bool isSet=attrs & 1;
 
+    while(x>=y)
+    {
+        if((attrs & 2)==0)
+        {
+            SSD1306_SetPixel(cx+x, cy+y, isSet);
+            SSD1306_SetPixel(cx-x, cy+y, isSet);
+            SSD1306_SetPixel(cx-x, cy-y, isSet);
+            SSD1306_SetPixel(cx+x, cy-y, isSet);
+            SSD1306_SetPixel(cx+y, cy+x, isSet);
+            SSD1306_SetPixel(cx-y, cy+x, isSet);
+            SSD1306_SetPixel(cx-y, cy-x, isSet);
+            SSD1306_SetPixel(cx+y, cy-x, isSet);
+        } else
+        {
+            SSD1306_MoveTo(cx-x, cy+y); SSD1306_DrawHLine(2*x, isSet);
+            SSD1306_MoveTo(cx-x, cy-y); SSD1306_DrawHLine(2*x, isSet);
+            SSD1306_MoveTo(cx-y, cy+x); SSD1306_DrawHLine(2*y, isSet);
+            SSD1306_MoveTo(cx-y, cy-x); SSD1306_DrawHLine(2*y, isSet);
+        }
 
+        y++;
+        radiusError+=ychange;
+        ychange+=2;
+        if(2*radiusError+xchange>0)
+        {
+            x--;
+            radiusError+=xchange;
+            xchange+=2;
+        }
+    }
+}
+
+void SSD1306_SetText(uint8_t x, uint8_t y, const char *tekst, const uint8_t * const font[], _Bool invert)
+{
+	lcd_y=y; lcd_x=x;
+	uint8_t rows=(uintptr_t)font[0]; //Pobierz wysokoœæ fontu
+	y+=rows-1;
+	char ch;
+
+	while((ch=*tekst++))  //Wyœwietl kolejne znaki a¿ do koñca tekstu (znaku NUL)
+	{
+		const uint8_t *znak=font[ch-30]; //Adres pocz¹tku opisu znaku
+		uint8_t col=*znak++;                     //Szerokoœæ znaku w pikselach
+		uint8_t page=0, coldesc=0, colmask=0;
+
+		for(uint8_t ox=0; ox < col; ox++)        //Wyœwietlamy kolejne kolumny tworz¹ce znak
+		{
+			uint8_t dispmask=1 << (y % 8);
+			for(uint8_t oy=0; oy < rows; oy++)   //Narysuj jedn¹ kolumnê znaku
+			{
+				if(colmask == 0)
+				{
+					colmask=0x80;
+					coldesc=*znak++;             //Pobierz bajt opisu znaku
+				}
+				page=((y - oy) >> 3) & 0b111;    //Zabezpieczenie przed zapisem poza bufor
+				lcd_buffer[page][lcd_x]&=~dispmask;
+				if(coldesc & colmask) lcd_buffer[page][lcd_x]|=dispmask;
+				if(invert) lcd_buffer[page][lcd_x]^=dispmask;  //Dokonaj inwersji obrazu
+				colmask>>=1;
+				dispmask>>=1;
+				if(dispmask == 0)   //Przekraczamy stronê - nale¿y zapisaæ kompletny bajt
+				{
+					lcd_buffer[page][LCD_WIDTH]=DIRTY;
+					dispmask=0x80;
+				}
+			}
+			if(dispmask != 0x80) lcd_buffer[page][LCD_WIDTH]=DIRTY;
+			lcd_x++;
+			if(lcd_x == LCD_WIDTH) return; //Wychodzimy za LCD
+		}
+	}
+}
+
+void SSD1306_DrawBitmap(uint8_t x, uint8_t y, const uint8_t image[], _Bool invert)
+{
+	uint8_t page, imagedata=0;
+	uint8_t rows=image[1];                  //Pobierz szerokoœæ bitmapy
+	uint8_t cols=image[0];                  //Pobierz wysokoœæ bitmapy
+	const uint8_t *data=&image[2];  //WskaŸnik do danych obrazu
+
+	uint8_t datamask=0x00;
+
+	for(uint8_t ox=x; ox < (x + cols); ox++)   //Rysujemy kolumny
+	{
+		page=(y >> 3) & 0b111;                 //Zabezpieczenie przed zapisem poza bufor
+		uint8_t dispmask=1<<(y & 0b0111);      //Maska pozycji od której rysujemy bitmapê
+
+		for(uint8_t oy=y; oy < (y + rows); oy++)
+		{
+			if(dispmask == 0)        //Zapisujemy kolejne 8 bitów
+			{
+				lcd_buffer[page][LCD_WIDTH]=DIRTY;
+				dispmask=0x01;
+				page++;
+			}
+			if(datamask == 0)        //Pobieramy kolejny bajt danych bitmapy
+			{
+				datamask=0x80;
+				imagedata=*data++;
+			}
+
+			lcd_buffer[page][ox]&=~dispmask;
+			if(imagedata & datamask) lcd_buffer[page][ox]|=dispmask;
+			if(invert) lcd_buffer[page][ox]^=dispmask;  //Dokonaj inwersji obrazu
+			dispmask<<=1;
+			datamask>>=1;
+		}
+	}
+}

@@ -3,13 +3,8 @@
 
 #include "main.h"
 
-#define lcd_width		128
-#define lcd_height		64
-#define lcd_height_b	8
-
-#define space_char	1		// space between chars
-
-#define BUFFER 1024
+#define LCD_WIDTH		128
+#define LCD_HEIGHT		64
 
 // commands SSD1306 controller
 #define LCD_SET_COL_HI		0x10
@@ -50,23 +45,18 @@
 #define LCD_SET_PAGE_ADDR	0x22
 
 void SSD1306_Init();
-void clean_area(unsigned char,unsigned char,unsigned char,unsigned char);
-void write_string(unsigned char,unsigned char,const char*);
-void write_char(unsigned char,unsigned char,unsigned char);
-void send_data_array(const char*,unsigned char);
-void set_cursor(unsigned char,unsigned char);
-void clr_VRAM(void);
-void lcdCharBlk36(uint8_t x, uint8_t y, char s);
-void lcdStringBlk36(uint8_t x, uint8_t y, char * s);
-void lcdCharLite24(uint8_t x, uint8_t y, char s);
-void lcdStringLite24(uint8_t x, uint8_t y, char * s);
-void lcd_bitmap(const uint8_t *gData);
-void set_pixel(uint8_t x, uint8_t y);
-void lcd_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
-void show_buff(void);
-void write_display(uint8_t data);
-void clr_buff(void);
+void SSD1306_SetPixel(uint8_t x, uint8_t y, _Bool isSet);
+void SSD1306_CpyFramebuffer();
+void SSD1306_CpyDirtyPages();
+void SSD1306_Clear(_Bool color);
+void SSD1306_MoveTo(uint8_t x, uint8_t y);
+void SSD1306_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, _Bool isSet);
+void SSD1306_DrawHLine(uint8_t x, _Bool isSet);
+void SSD1306_DrawRect(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, _Bool isSet);
+void SSD1306_Circle(uint8_t cx, uint8_t cy , uint8_t radius, uint8_t attrs);
+void SSD1306_SetText(uint8_t x, uint8_t y, const char *tekst, const uint8_t * const font[], _Bool invert);
+void SSD1306_DrawBitmap(uint8_t x, uint8_t y, const uint8_t image[], _Bool invert);
 
-extern const unsigned char AGH_LOGO[];
+
 
 #endif /*SSD1306_H_*/

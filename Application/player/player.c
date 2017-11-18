@@ -64,12 +64,14 @@ static struct player_context
 }player;
 
 // temporary data
-static const char* playlist[4] =
+static const char* playlist[6] =
 {
 		"wav_ex.wav",
 		"mp3_ex.mp3",
 		"aac_ex.aac",
-		"flac_ex.flac"
+		"flac_ex.flac",
+		"m4a_ex.m4a",
+		"mp4_ex.mp4"
 };
 static uint8_t song_nr = 0;
 // +--------------------------------------------------------------------------
@@ -232,7 +234,7 @@ void Player_Mute(_Bool state)
 void Player_PlayNext(void)
 {
 	song_nr++;
-	if(song_nr == 4)
+	if(song_nr == 6)
 		song_nr = 0;
 
 	Player_SendCommand(PLAYER_STOP);
@@ -243,7 +245,7 @@ void Player_PlayPrev(void)
 {
 	song_nr--;
 	if(song_nr == 255)
-		song_nr = 3;
+		song_nr = 5;
 
 	Player_SendCommand(PLAYER_STOP);
 	Player_SendCommand(PLAYER_PLAY);

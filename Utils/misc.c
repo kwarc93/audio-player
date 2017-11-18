@@ -82,12 +82,9 @@ void exit_critical(void)
 #endif
 }
 
-__attribute__((always_inline)) inline int32_t revsh(int32_t value)
+__attribute__((always_inline)) inline void nop(void)
 {
-	int32_t result;
-	asm volatile ("revsh %0, %1" : __CMSIS_GCC_OUT_REG (result) : __CMSIS_GCC_USE_REG (value) );
-	return(result);
-//	return __REVSH(value);
+	asm volatile ("MOV R0, R0");
 }
 
 char* mystrcat( char* dest, char* src )

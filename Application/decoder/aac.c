@@ -89,14 +89,6 @@ _Bool AAC_Init(struct audio_decoder* main_decoder)
 	if(!decoder->buffers.in || !decoder->buffers.out)
 		return false;
 
-//	memset(&hAACFrameInfo, 0, sizeof(AACFrameInfo));
-//	hAACFrameInfo.nChans = 2;
-//	hAACFrameInfo.sampRateCore = 44100;
-//	hAACFrameInfo.profile = AAC_PROFILE_LC;
-//
-//	if(AACSetRawBlockParams(hAACDecoder, 0, &hAACFrameInfo) < 0)
-//		return false;
-
 	return true;
 }
 
@@ -123,15 +115,18 @@ _Bool AAC_Decode(void)
 			decoder->buffers.in_bytes_left += bytes_filled;
 		}
 
-		offset = AACFindSyncWord(decoder->buffers.in_ptr, decoder->buffers.in_bytes_left);
-		if(offset < 0)
+		if(decoder->format == AAC)
 		{
-			decoder->buffers.in_bytes_left = 0;
-			continue;
-		}
+			offset = AACFindSyncWord(decoder->buffers.in_ptr, decoder->buffers.in_bytes_left);
+			if(offset < 0)
+			{
+				decoder->buffers.in_bytes_left = 0;
+				continue;
+			}
 
-		decoder->buffers.in_ptr += offset;
-		decoder->buffers.in_bytes_left -= offset;
+			decoder->buffers.in_ptr += offset;
+			decoder->buffers.in_bytes_left -= offset;
+		}
 
 		error = AACDecode(hAACDecoder, &decoder->buffers.in_ptr, (int*)&decoder->buffers.in_bytes_left, decoder->buffers.out_ptr);
 

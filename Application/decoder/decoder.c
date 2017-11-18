@@ -63,8 +63,12 @@ void set_audio_format(const char* file_ext)
 		decoder.format = MP3;
 	else if(!strcmp(file_ext, "flac"))
 		decoder.format = FLAC;
-	else if(!strcmp(file_ext, "aac") || !strcmp(file_ext, "mp4") || !strcmp(file_ext, "m4a"))
+	else if(!strcmp(file_ext, "aac"))
 		decoder.format = AAC;
+	else if(!strcmp(file_ext, "mp4"))
+		decoder.format = MP4;
+	else if(!strcmp(file_ext, "m4a"))
+		decoder.format = M4A;
 	else
 		decoder.format = UNSUPPORTED;
 }
@@ -93,6 +97,8 @@ static _Bool decode(void)
 		break;
 
 	case AAC:
+	case MP4:
+	case M4A:
 		result = AAC_Decode();
 		break;
 
@@ -184,6 +190,8 @@ static void init(char* filename)
 		result = FLAC_Init(&decoder);
 		break;
 	case AAC:
+	case MP4:
+	case M4A:
 		result = AAC_Init(&decoder);
 		break;
 	default:
@@ -234,6 +242,8 @@ static void deinit(void)
 		break;
 
 	case AAC:
+	case MP4:
+	case M4A:
 		AAC_Deinit();
 		break;
 
