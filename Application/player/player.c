@@ -54,6 +54,7 @@ static struct player_context
 	enum player_commands command;
 	enum player_state state;
 
+	char song_name[64];
 	struct decoder_if decoder;
 	uint8_t volume;
 	_Bool mute;
@@ -63,17 +64,6 @@ static struct player_context
 	TimerHandle_t timer;
 }player;
 
-// temporary data
-static const char* playlist[6] =
-{
-		"wav_ex.wav",
-		"mp3_ex.mp3",
-		"aac_ex.aac",
-		"flac_ex.flac",
-		"m4a_ex.m4a",
-		"mp4_ex.mp4"
-};
-static uint8_t song_nr = 0;
 // +--------------------------------------------------------------------------
 // | @ Private functions
 // +--------------------------------------------------------------------------
@@ -108,9 +98,8 @@ static void TaskProcess(void)
 		case PLAYER_PLAY:
 			if(USB_IsDiskReady())
 			{
-				player.decoder.start((char*)playlist[song_nr]);
+				player.decoder.start(player.song_name);
 				CS43L22_Play(CS43L22_I2C_ADDRESS, 0, 0);
-				Display_SendText((char*)playlist[song_nr]);
 				player.state = PLAYER_PLAYING;
 			}
 			else
@@ -121,19 +110,16 @@ static void TaskProcess(void)
 		case PLAYER_PAUSE:
 			CS43L22_Pause(CS43L22_I2C_ADDRESS);
 			player.decoder.pause();
-			Display_SendText("PAUSE");
 			player.state = PLAYER_PAUSED;
 			break;
 		case PLAYER_RESUME:
 			CS43L22_Resume(CS43L22_I2C_ADDRESS);
 			player.decoder.resume();
-			Display_SendText("PLAYING");
 			player.state = PLAYER_PLAYING;
 			break;
 		case PLAYER_STOP:
 			CS43L22_Stop(CS43L22_I2C_ADDRESS, CODEC_PDWN_SW);
 			player.decoder.stop();
-			Display_SendText("STOP");
 			player.state = PLAYER_STOPPED;
 			break;
 		case PLAYER_NEXT:
@@ -230,23 +216,19 @@ void Player_Mute(_Bool state)
 	player.mute = state;
 	Player_SendCommand(PLAYER_MUTE);
 }
-// temporary functions
+
+void Player_SetSongName(char* name)
+{
+	strncpy(player.song_name, name, sizeof(player.song_name));
+}
 void Player_PlayNext(void)
 {
-	song_nr++;
-	if(song_nr == 6)
-		song_nr = 0;
-
 	Player_SendCommand(PLAYER_STOP);
 	Player_SendCommand(PLAYER_PLAY);
 }
 
 void Player_PlayPrev(void)
 {
-	song_nr--;
-	if(song_nr == 255)
-		song_nr = 5;
-
 	Player_SendCommand(PLAYER_STOP);
 	Player_SendCommand(PLAYER_PLAY);
 }

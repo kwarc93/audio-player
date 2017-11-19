@@ -13,6 +13,7 @@
 
 enum user_action
 {
+	// User actions
 	PRESS_OK,
 	PRESS_UP,
 	PRESS_DOWN,
@@ -20,7 +21,16 @@ enum user_action
 	PRESS_RIGHT
 };
 
+enum menu_action
+{
+	// Menu actions
+	SELECT_THIS,
+	SELECT_PREV,
+	SELECT_NEXT
+};
+
 void Controller_StartTasks(unsigned portBASE_TYPE uxPriority);
 void Controller_SetUserAction(enum user_action action);
+void Controller_SetMenuAction(enum menu_action action, char* txt);
 
 #endif /* CONTROLLER_H_ */

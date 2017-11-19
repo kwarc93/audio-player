@@ -36,6 +36,7 @@ enum player_state
 void Player_StartTasks(unsigned portBASE_TYPE uxPriority);
 void Player_SendCommand(enum player_commands command);
 enum player_state Player_GetState(void);
+void Player_SetSongName(char* name);
 
 void Player_VolumeUp(void);
 void Player_VolumeDown(void);

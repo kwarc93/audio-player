@@ -39,10 +39,12 @@
 // +--------------------------------------------------------------------------
 static struct controller_context
 {
-	enum user_action action;
+	enum user_action u_action;
+	enum menu_action m_action;
 
 	TaskHandle_t task;
-	QueueHandle_t queue;
+	QueueHandle_t user_queue;
+	QueueHandle_t menu_queue;
 
 }controller;
 // +--------------------------------------------------------------------------
@@ -50,22 +52,6 @@ static struct controller_context
 // +--------------------------------------------------------------------------
 static void press_ok_handle(void)
 {
-//	switch(Player_GetState())
-//	{
-//	case PLAYER_IDLE:
-//	case PLAYER_STOPPED:
-//		Player_SendCommand(PLAYER_PLAY);
-//		break;
-//	case PLAYER_PAUSED:
-//		Player_SendCommand(PLAYER_RESUME);
-//		break;
-//	case PLAYER_PLAYING:
-//		Player_SendCommand(PLAYER_PAUSE);
-//		break;
-//	default:
-//		break;
-//	}
-
 	Menu_Click();
 }
 
@@ -81,22 +67,21 @@ static void press_down_handle(void)
 
 static void press_left_handle(void)
 {
-//	Player_PlayPrev();
 	Menu_SelectPrev();
 }
 
 static void press_right_handle(void)
 {
-//	Player_PlayNext();
 	Menu_SelectNext();
 }
 
 static void TaskProcess(void)
 {
-	if(xQueueReceive(controller.queue, &controller.action, 0))
+	if(xQueueReceive(controller.user_queue, &controller.u_action, 0))
 	{
-		switch(controller.action)
+		switch(controller.u_action)
 		{
+		// User actions
 		case PRESS_OK:
 			press_ok_handle();
 			break;
@@ -112,6 +97,26 @@ static void TaskProcess(void)
 		case PRESS_RIGHT:
 			press_right_handle();
 			break;
+		default:
+			break;
+		}
+	}
+	if(xQueueReceive(controller.menu_queue, &controller.m_action, 0))
+	{
+		switch(controller.m_action)
+		{
+		// Menu actions
+		case SELECT_THIS:
+		{
+			Player_SendCommand(PLAYER_STOP);
+			Player_SendCommand(PLAYER_PLAY);
+			break;
+		}
+		case SELECT_PREV:
+			break;
+		case SELECT_NEXT:
+			break;
+
 		default:
 			break;
 		}
@@ -137,7 +142,9 @@ void Controller_StartTasks(unsigned portBASE_TYPE uxPriority)
 	memset(&controller, 0, sizeof(controller));
 
 	 // Create input queue for user actions
-	controller.queue = xQueueCreate(8, sizeof(enum user_action));
+	controller.user_queue = xQueueCreate(2, sizeof(enum user_action));
+	 // Create input queue for menu actions
+	controller.menu_queue = xQueueCreate(1, sizeof(enum menu_action));
 
 	// Creating tasks
 	if(xTaskCreate(vTaskController, "CONTROLLER", CONTROLER_STACK_SIZE, NULL, uxPriority, &controller.task) == pdPASS)
@@ -148,12 +155,24 @@ void Controller_StartTasks(unsigned portBASE_TYPE uxPriority)
 
 void Controller_SetUserAction(enum user_action action)
 {
-	if(!xQueueSend(controller.queue, (void*)&action, 0))
+	if(!xQueueSend(controller.user_queue, (void*)&action, 0))
 	{
 		// Error!
 		// Failed to send item to queue
 	}
 }
+
+void Controller_SetMenuAction(enum menu_action action, char* txt)
+{
+	Player_SetSongName(txt);
+
+	if(!xQueueSend(controller.menu_queue, (void*)&action, 0))
+	{
+		// Error!
+		// Failed to send item to queue
+	}
+}
+
 // +--------------------------------------------------------------------------
 // | @ Interrupt handlers
 // +--------------------------------------------------------------------------

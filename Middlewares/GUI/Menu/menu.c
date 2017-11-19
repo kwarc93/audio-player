@@ -36,6 +36,11 @@ const struct _menuitem *Menu_GetMenuItem(uint8_t index)
 	return tmpmenuitem;
 }
 
+const struct _menuitem *Menu_GetCurrentMenuItem(void)
+{
+	return Menu_GetMenuItem(menuindex);
+}
+
 uint8_t Menu_GetMenuRows()
 {
 	uint8_t rows = 0;

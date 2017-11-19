@@ -8,6 +8,8 @@
 #include "misc.h"
 #include "Menu/menu.h"
 #include "ssd1306/ssd1306.h"
+#include "FreeRTOS/FreeRTOS.h"
+#include "controller/controller.h"
 
 //Prototypy funkcji obs³ugi wybranej pozycji menu
 void menu_music();
@@ -29,10 +31,10 @@ struct _menuitem const menu;
 
 // Music menu text items (temporary, only for tests)
 struct _menuitem const s5_menu = {0, 0, "<back>", Menu_Back, &menu, 0, 0 };
-struct _menuitem const s4_menu = {0, 0, "song4.mp3", menu_music_play, &menu, 0, &s5_menu };
-struct _menuitem const s3_menu = {0, 0, "song3.mp3", menu_music_play, &menu, 0, &s4_menu };
-struct _menuitem const s2_menu = {0, 0, "song2.mp3", menu_music_play, &menu, 0, &s3_menu };
-struct _menuitem const s1_menu = {0, 0, "song1.mp3", menu_music_play, &menu, 0, &s2_menu };
+struct _menuitem const s4_menu = {0, 0, "flac_ex.flac", menu_music_play, &menu, 0, &s5_menu };
+struct _menuitem const s3_menu = {0, 0, "aac_ex.aac", menu_music_play, &menu, 0, &s4_menu };
+struct _menuitem const s2_menu = {0, 0, "mp3_ex.mp3", menu_music_play, &menu, 0, &s3_menu };
+struct _menuitem const s1_menu = {0, 0, "wav_ex.wav", menu_music_play, &menu, 0, &s2_menu };
 
 // Main menu graphical items
 struct _menuitem const menu3 = {"Shutdown", image_data_off, 0, menu_shutdown, &menu, 0, 0};
@@ -74,7 +76,7 @@ void menu_shutdown()
 
 void menu_music_play()
 {
-
+	Controller_SetMenuAction(SELECT_THIS, (char*)Menu_GetCurrentMenuItem()->text);
 }
 
 

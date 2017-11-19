@@ -36,7 +36,6 @@ static void vTimerCallback(TimerHandle_t xTimer)
 
 static void vTaskJoystick(void *pvParameters)
 {
-	uint8_t bar_lvl = 0;
 	// Task's infinite loop
 	for(;;)
 	{
