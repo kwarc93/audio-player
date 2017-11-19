@@ -5,17 +5,18 @@
  *  Author: tmf
  */
 
-#include "menu.h"
 #include "misc.h"
+#include "Menu/menu.h"
 #include "ssd1306/ssd1306.h"
 
 //Prototypy funkcji obs³ugi wybranej pozycji menu
 void menu_music();
 void menu_recorder();
 void menu_settings();
-void menu_filebrowser();
+void menu_shutdown();
 void menu_music_play();
 
+extern const uint8_t image_data_off[];
 extern const uint8_t image_data_floppydisc[];
 extern const uint8_t image_data_headphones[];
 extern const uint8_t image_data_microphone[];
@@ -34,7 +35,7 @@ struct _menuitem const s2_menu = {0, 0, "song2.mp3", menu_music_play, &menu, 0, 
 struct _menuitem const s1_menu = {0, 0, "song1.mp3", menu_music_play, &menu, 0, &s2_menu };
 
 // Main menu graphical items
-struct _menuitem const menu3 = {"Filebrowser", image_data_floppydisc, 0, menu_filebrowser, &menu, 0, 0};
+struct _menuitem const menu3 = {"Shutdown", image_data_off, 0, menu_shutdown, &menu, 0, 0};
 struct _menuitem const menu2 = {"Settings", image_data_tools, 0, menu_settings, &menu, 0, &menu3};
 struct _menuitem const menu1 = {"Recorder", image_data_microphone, 0, menu_recorder, &menu, 0, &menu2};
 
@@ -66,12 +67,9 @@ void menu_settings()
 	delay_ms(2000);
 }
 
-void menu_filebrowser()
+void menu_shutdown()
 {
-	SSD1306_Clear(false); //Wyczyœæ LCD
-	SSD1306_SetText(0, 0,"Filebrowser menu", system8_array, false);
-	SSD1306_CpyDirtyPages();
-	delay_ms(2000);
+	sleep_deep();
 }
 
 void menu_music_play()

@@ -39,11 +39,10 @@ const struct _menuitem *Menu_GetMenuItem(uint8_t index)
 uint8_t Menu_GetMenuRows()
 {
 	uint8_t rows = 0;
-	const struct _menuitem *tmpmenuitem=Menu_GetMenuItem(menufirstpos);
 
-	if(tmpmenuitem->gfx)
-		rows =  LCD_HEIGHT / (tmpmenuitem->gfx[1] + Menu_YBorder); //Wysokoœæ bitmapy
-	else if(tmpmenuitem->text)
+	if(currMenuPtr->gfx)
+		rows =  LCD_HEIGHT / (currMenuPtr->gfx[1] + Menu_YBorder); //Wysokoœæ bitmapy
+	else if(currMenuPtr->text)
 		rows =  LCD_HEIGHT/(uintptr_t)menu_font[0];			// Wysokoœc cznionki
 
 	return rows;
@@ -117,11 +116,9 @@ void Menu_ShowTxt()
 
 void Menu_Show()
 {
-	const struct _menuitem *tmpmenuitem=Menu_GetMenuItem(menufirstpos);
-
-	if(tmpmenuitem->gfx)
+	if(currMenuPtr->gfx)
 		Menu_ShowGfx();
-	else if(tmpmenuitem->text)
+	else if(currMenuPtr->text)
 		Menu_ShowTxt();
 }
 

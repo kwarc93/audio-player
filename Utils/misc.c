@@ -87,6 +87,13 @@ __attribute__((always_inline)) inline void nop(void)
 	asm volatile ("MOV R0, R0");
 }
 
+void sleep_deep(void)
+{
+	// Sleep deep
+	PWR->CR1 |= PWR_CR1_LPMS_SHUTDOWN;
+	SCB->SCR |= (1 << SCB_SCR_SLEEPDEEP_Pos);
+}
+
 char* mystrcat( char* dest, char* src )
 {
      while (*dest) dest++;

@@ -21,6 +21,7 @@ void enable_interrupts(void);
 void enter_critical(void);
 void exit_critical(void);
 void nop(void);
+void sleep_deep(void);
 
 void delay_us(uint32_t t);
 void delay_ms(uint32_t t);

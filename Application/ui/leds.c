@@ -19,31 +19,29 @@
 
 static TaskHandle_t xHandleTaskLEDG, xHandleTaskLEDR;
 
-static inline void vhToggleLEDG(void)
+#define LEDG_PIN		(8)
+#define LEDR_PIN		(2)
+#define LEDG_PORT		(GPIOE)
+#define LEDR_PORT		(GPIOB)
+
+inline void LED_ToggleGreen(void)
 {
-	GPIOE->ODR ^= GPIO_ODR_ODR_8;
+	LEDG_PORT->ODR ^= (1 << LEDG_PIN);
 }
 
-static inline void vhToggleLEDR(void)
+inline void LED_ToggleRed(void)
 {
-	GPIOB->ODR ^= GPIO_ODR_ODR_2;
+	LEDR_PORT->ODR ^= (1 << LEDR_PIN);
 }
 
-static void vTaskLEDG(void * pvParameters)
+inline void LED_SetGreen(_Bool state)
 {
-	TickType_t xLastFlashTime;
-	// Read state of system counter
-	xLastFlashTime = xTaskGetTickCount();
-	// Task's infinite loop
-	for(;;)
-	{
-		// Delay 250ms
-		vTaskDelayUntil( &xLastFlashTime, 250/portTICK_PERIOD_MS );
-		// Change LED state
-		vhToggleLEDG();
-	}
-	/* Should never go there */
-	vTaskDelete(xHandleTaskLEDG);
+	LEDG_PORT->BSRR = state ? (1 << LEDG_PIN) : (1 << (LEDG_PIN + 16));
+}
+
+inline void LED_SetRed(_Bool state)
+{
+	LEDR_PORT->BSRR = state ? (1 << LEDR_PIN) : (1 << (LEDR_PIN + 16));
 }
 
 static void vTaskLEDR(void * pvParameters)
@@ -54,10 +52,10 @@ static void vTaskLEDR(void * pvParameters)
 	// Task's infinite loop
 	for(;;)
 	{
-		// Delay 500ms
-		vTaskDelayUntil( &xLastFlashTime, 500/portTICK_PERIOD_MS );
+		// Delay ms
+		vTaskDelayUntil( &xLastFlashTime, 1000/portTICK_PERIOD_MS );
 		// Change LED state
-		vhToggleLEDR();
+		LED_ToggleRed();
 	}
 	/* Should never go there */
 	vTaskDelete(xHandleTaskLEDR);
@@ -69,12 +67,11 @@ void Led_StartTasks(unsigned portBASE_TYPE uxPriority)
 	// Init
 	RCC->AHB2ENR |=  RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOEEN;
 	__DSB();
-	GPIO_PinConfig(GPIOB,2,GPIO_OUT_PP_2MHz);
-	GPIO_PinConfig(GPIOE,8,GPIO_OUT_PP_2MHz);
+	GPIO_PinConfig(LEDG_PORT,LEDG_PIN,GPIO_OUT_PP_2MHz);
+	GPIO_PinConfig(LEDR_PORT,LEDR_PIN,GPIO_OUT_PP_2MHz);
 
 	// Creating task for LED blinking
-	result = xTaskCreate(vTaskLEDG, "LEDG", LED_STACK_SIZE, NULL, uxPriority, &xHandleTaskLEDG);
-	result |= xTaskCreate(vTaskLEDR, "LEDR", LED_STACK_SIZE, NULL, uxPriority, &xHandleTaskLEDR);
+	result = xTaskCreate(vTaskLEDR, "LEDR", LED_STACK_SIZE, NULL, uxPriority, &xHandleTaskLEDR);
 
 	if(result == pdPASS)
 	{

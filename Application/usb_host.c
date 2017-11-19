@@ -10,7 +10,7 @@
 #include "usbh_core.h"
 #include "usbh_msc.h"
 
-#include "ui/display.h"
+#include "ui/leds.h"
 #include "FatFs/ffconf.h"
 #include "FatFs/ff.h"
 #include <stdbool.h>
@@ -114,6 +114,7 @@ static void USBH_TaskProcess(void)
 			ctx.disk_ready = false;
 			DBG_SIMPLE("USBH disconnection event");
 			f_mount(0, "", 0);
+			LED_SetGreen(false);
 			break;
 
 		case USB_HOST_READY:
@@ -125,6 +126,7 @@ static void USBH_TaskProcess(void)
 				FatFS_Test();
 			#endif
 				ctx.disk_ready = true;
+				LED_SetGreen(true);
 			}
 			break;
 
