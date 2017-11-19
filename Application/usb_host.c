@@ -113,13 +113,11 @@ static void USBH_TaskProcess(void)
 		case USB_HOST_DISCONNECT:
 			ctx.disk_ready = false;
 			DBG_SIMPLE("USBH disconnection event");
-			Display_SendText("USB DISCONNECTED");
 			f_mount(0, "", 0);
 			break;
 
 		case USB_HOST_READY:
 			DBG_SIMPLE("USBH host ready");
-			Display_SendText("USB READY");
 
 			if(f_mount(&ctx.fs, "", 1) == FR_OK)
 			{
@@ -132,7 +130,6 @@ static void USBH_TaskProcess(void)
 
 		case USB_HOST_START:
 			DBG_SIMPLE("USBH connection event");
-			Display_SendText("USB CONNECTED");
 			break;
 
 		default:

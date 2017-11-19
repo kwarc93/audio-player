@@ -292,36 +292,31 @@ void SSD1306_DrawHLine(uint8_t x, _Bool isSet)
     for(uint8_t x1=lcd_x; x1<x; x1++) SSD1306_SetPixel(x1, lcd_y, isSet);
 }
 
-void SSD1306_DrawRect(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, _Bool isSet)
+void SSD1306_DrawRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, _Bool fill)
 {
-	int height = y2;
-	int width = x2;
+	uint8_t w, h;
 
-	if(isSet == true){
-
-		for (int a = y1; a != height+y1; a++)
+	if(fill == true)
+	{
+		for (h = y; h != y+height; h++)
 		{
-			for (int b = x1; b != width+x1; b++ )
+			for (w = x; w != x+width; w++ )
 			{
-				SSD1306_SetPixel(b,a,true);
+				SSD1306_SetPixel(w,h,true);
 			}
 		}
 	}
 	else
 	{
-		for (int a = y1; a != height+y1; a++)
+		for(w=x; w<=x+width; w++)
 		{
-			for (int b = x1; b != width+x1; b++ )
-			{
-				if ((a == y1) || (a == height+y1-1) || (b == width+x1-1) || (b == x1))
-				{
-					SSD1306_SetPixel(b,a,true);
-				}
-				else
-				{
-					SSD1306_SetPixel(b,a,false);
-				}
-			}
+			SSD1306_SetPixel(w, y, true);
+			SSD1306_SetPixel(w, y+height, true);
+		}
+		for(h=y+1; h<y+height; h++)
+		{
+			SSD1306_SetPixel(x, h, true);
+			SSD1306_SetPixel(x+width, h, true);
 		}
 	}
 

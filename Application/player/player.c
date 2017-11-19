@@ -58,9 +58,9 @@ static struct player_context
 	uint8_t volume;
 	_Bool mute;
 
-	TaskHandle_t xHandleTaskPlayer;
-	QueueHandle_t qhPlayerState;
-	TimerHandle_t thPlayerTimer;
+	TaskHandle_t task;
+	QueueHandle_t queue;
+	TimerHandle_t timer;
 }player;
 
 // temporary data
@@ -90,7 +90,7 @@ static void vTimerCallback(TimerHandle_t xTimer)
 #endif
 }
 
-static void Player_TaskProcess(void)
+static void TaskProcess(void)
 {
 	if(!player.decoder.is_working() && player.state == PLAYER_PLAYING)
 	{
@@ -98,7 +98,7 @@ static void Player_TaskProcess(void)
 		// @ TODO: Play next song in folder
 	}
 
-	if(xQueueReceive(player.qhPlayerState, &player.command, 0))
+	if(xQueueReceive(player.queue, &player.command, 0))
 	{
 		switch(player.command)
 		{
@@ -158,11 +158,11 @@ static void vTaskPlayer(void * pvParameters)
 	// Task's infinite loop
 	for(;;)
 	{
-		Player_TaskProcess();
+		TaskProcess();
 		vTaskDelay(100);
 	}
 	/* Should never go there */
-	vTaskDelete(player.xHandleTaskPlayer);
+	vTaskDelete(player.task);
 }
 
 // +--------------------------------------------------------------------------
@@ -182,16 +182,16 @@ void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 	}
 
 	 // Create queue for player states
-	player.qhPlayerState = xQueueCreate(8, sizeof(enum player_commands));
+	player.queue = xQueueCreate(8, sizeof(enum player_commands));
 
 	// Create timer for printing CPU load
-	player.thPlayerTimer = xTimerCreate("TIMER", PLAYER_TIMER_PERIOD_MS/portTICK_PERIOD_MS, pdTRUE, (void*)0, vTimerCallback);
-	xTimerStart(player.thPlayerTimer, 1000);
+	player.timer = xTimerCreate("TIMER", PLAYER_TIMER_PERIOD_MS/portTICK_PERIOD_MS, pdTRUE, (void*)0, vTimerCallback);
+	xTimerStart(player.timer, 1000);
 
 	Player_SendCommand(PLAYER_INIT);
 
 	// Creating tasks
-	if(xTaskCreate(vTaskPlayer, "PLAYER", PLAYER_STACK_SIZE, NULL, uxPriority, &player.xHandleTaskPlayer) == pdPASS)
+	if(xTaskCreate(vTaskPlayer, "PLAYER", PLAYER_STACK_SIZE, NULL, uxPriority, &player.task) == pdPASS)
 	{
 		DBG_PRINTF("Task(s) started!");
 	}
@@ -199,7 +199,7 @@ void Player_StartTasks(unsigned portBASE_TYPE uxPriority)
 
 void Player_SendCommand(enum player_commands command)
 {
-	if(!xQueueSend(player.qhPlayerState, &command, 0))
+	if(!xQueueSend(player.queue, &command, 0))
 	{
 		// Error!
 		// Failed to send item to queue
@@ -230,7 +230,7 @@ void Player_Mute(_Bool state)
 	player.mute = state;
 	Player_SendCommand(PLAYER_MUTE);
 }
-// temporary function
+// temporary functions
 void Player_PlayNext(void)
 {
 	song_nr++;

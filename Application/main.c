@@ -14,6 +14,7 @@
 #include "ui/joystick.h"
 #include "usb_host.h"
 #include "player/player.h"
+#include "controller/controller.h"
 #include "tlsf/tlsf.h"
 
 #include "debug.h"
@@ -45,10 +46,11 @@ int main(void)
 	// Tasks startup
 	DBG_PRINTF("Starting tasks...");
 	Led_StartTasks(mainFLASH_TASK_PRIORITY);
-	Display_StartTasks(mainFLASH_TASK_PRIORITY + 1);
 	Joystick_StartTasks(mainFLASH_TASK_PRIORITY + 2);
 	USB_StartTasks(mainFLASH_TASK_PRIORITY);
-	Player_StartTasks(mainFLASH_TASK_PRIORITY + 1);
+	Controller_StartTasks(mainFLASH_TASK_PRIORITY + 1);
+	Player_StartTasks(mainFLASH_TASK_PRIORITY);
+	Display_StartTasks(mainFLASH_TASK_PRIORITY + 1);
 	// Scheduler startup
 	DBG_PRINTF("RTOS heap bytes left: %u", xPortGetFreeHeapSize());
 	DBG_PRINTF("Starting scheduler...");

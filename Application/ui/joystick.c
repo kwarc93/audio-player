@@ -11,8 +11,7 @@
 #include "FreeRTOS/timers.h"
 #include "FreeRTOS/semphr.h"
 #include "joystick.h"
-#include "ui/display.h"
-#include "player/player.h"
+#include "controller/controller.h"
 
 #include <stdbool.h>
 
@@ -47,47 +46,27 @@ static void vTaskJoystick(void *pvParameters)
 			{
 			case KEY_OK:
 				ClrKeyb( KBD_LOCK );
-				switch(Player_GetState())
-				{
-				case PLAYER_IDLE:
-				case PLAYER_STOPPED:
-					Player_SendCommand(PLAYER_PLAY);
-					break;
-				case PLAYER_PAUSED:
-					Player_SendCommand(PLAYER_RESUME);
-					break;
-				case PLAYER_PLAYING:
-					Player_SendCommand(PLAYER_PAUSE);
-					break;
-				default:
-					break;
-				}
+				Controller_SetUserAction(PRESS_OK);
 				DBG_PRINTF("Key OK");
 				break;
 			case KEY_UP:
 				ClrKeyb( KBD_LOCK );
-				if(bar_lvl < 4) Display_SendBarLevel(++bar_lvl);
-				Player_VolumeUp();
-				Display_SendText("VOL+");
+				Controller_SetUserAction(PRESS_UP);
 				DBG_PRINTF("Key UP");
 				break;
 			case KEY_DOWN:
 				ClrKeyb( KBD_LOCK );
-				if(bar_lvl > 0) Display_SendBarLevel(--bar_lvl);
-				Player_VolumeDown();
-				Display_SendText("VOL-");
+				Controller_SetUserAction(PRESS_DOWN);
 				DBG_PRINTF("Key DOWN");
 				break;
 			case KEY_LEFT:
 				ClrKeyb( KBD_LOCK );
-				Display_SendText("PREV");
-				Player_PlayPrev();
+				Controller_SetUserAction(PRESS_LEFT);
 				DBG_PRINTF("Key LEFT");
 				break;
 			case KEY_RIGHT:
 				ClrKeyb( KBD_LOCK );
-				Display_SendText("NEXT");
-				Player_PlayNext();
+				Controller_SetUserAction(PRESS_RIGHT);
 				DBG_PRINTF("Key RIGHT");
 				break;
 			default:
