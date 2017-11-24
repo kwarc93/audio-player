@@ -39,16 +39,16 @@
 .thumb
 .text
 
-    .global raac_MULSHIFT32
+    .global xmp3_MULSHIFT32
     .thumb_func
-    raac_MULSHIFT32:
+    xmp3_MULSHIFT32:
 	smull	r2, r0, r1, r0
 	BX lr
 
 
 
-	.global	raac_FASTABS
+	.global	xmp3_FASTABS
     .thumb_func
-    raac_FASTABS:
+    xmp3_FASTABS:
 	BX lr
 	.END

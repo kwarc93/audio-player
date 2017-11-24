@@ -39,6 +39,14 @@ static void vTaskDisplay(void * pvParameters)
 	// Read state of system counter
 	xLastFlashTime = xTaskGetTickCount();
 
+	// Display init screen
+	SSD1306_Clear(false);
+	SSD1306_DrawBitmap(0,0,image_data_play, false);
+	SSD1306_CpyDirtyPages();
+
+	vTaskDelay(1500);
+	Menu_Show();
+
 	// Task's infinite loop
 	for(;;)
 	{
@@ -67,14 +75,6 @@ void Display_StartTasks(unsigned portBASE_TYPE uxPriority)
 
 	 // Create queue for display text
 	qhDisplayText = xQueueCreate(1, sizeof(char*));
-
-	// Display init screen
-	SSD1306_Clear(false);
-	SSD1306_DrawBitmap(0,0,image_data_play, false);
-	SSD1306_CpyDirtyPages();
-
-	delay_ms(1000);
-	Menu_Show();
 
 	// Creating task for LCD
 	if(xTaskCreate(vTaskDisplay, "LCD", LCD_STACK_SIZE, NULL, uxPriority, &xHandleTaskDisplay) == pdPASS)

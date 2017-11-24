@@ -10,6 +10,16 @@
 #include "ssd1306/ssd1306.h"
 #include "FreeRTOS/FreeRTOS.h"
 #include "controller/controller.h"
+#include "filebrowser/file_browser.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+extern const uint8_t* const system8_array[];
+
+struct _menuitem* menu_items;
+struct fb_item* dir_items;
+uint8_t dir_items_cnt;
 
 //Prototypy funkcji obs³ugi wybranej pozycji menu
 void menu_music();
@@ -19,38 +29,65 @@ void menu_shutdown();
 void menu_music_play();
 
 extern const uint8_t image_data_off[];
-extern const uint8_t image_data_floppydisc[];
 extern const uint8_t image_data_headphones[];
 extern const uint8_t image_data_microphone[];
-extern const uint8_t image_data_plug[];
 extern const uint8_t image_data_tools[];
 extern const uint8_t image_data_arrowup[];
 
+// Main menu
+struct _menuitem  menu;
 
-struct _menuitem const menu;
-
-// Music menu text items (temporary, only for tests)
-struct _menuitem const s5_menu = {0, 0, "<back>", Menu_Back, &menu, 0, 0 };
-struct _menuitem const s4_menu = {0, 0, "flac_ex.flac", menu_music_play, &menu, 0, &s5_menu };
-struct _menuitem const s3_menu = {0, 0, "aac_ex.aac", menu_music_play, &menu, 0, &s4_menu };
-struct _menuitem const s2_menu = {0, 0, "mp3_ex.mp3", menu_music_play, &menu, 0, &s3_menu };
-struct _menuitem const s1_menu = {0, 0, "wav_ex.wav", menu_music_play, &menu, 0, &s2_menu };
 
 // Main menu graphical items
 struct _menuitem const menu3 = {"Shutdown", image_data_off, 0, menu_shutdown, &menu, 0, 0};
 struct _menuitem const menu2 = {"Settings", image_data_tools, 0, menu_settings, &menu, 0, &menu3};
 struct _menuitem const menu1 = {"Recorder", image_data_microphone, 0, menu_recorder, &menu, 0, &menu2};
 
-const struct _menuitem const menu = {"Music", image_data_headphones, 0, 0, 0, &s1_menu, &menu1};
-
-extern const uint8_t* const system8_array[];
+struct _menuitem  menu = {"Music", image_data_headphones, 0, menu_music, 0, 0, &menu1};
 
 void menu_music()
 {
-	SSD1306_Clear(false); //Wyczyœæ LCD
-	SSD1306_SetText(0, 0,"Music menu", system8_array, false);
-	SSD1306_CpyDirtyPages();
-	delay_ms(2000);
+	FB_DeleteItemsList(&dir_items, dir_items_cnt);
+
+	// Delete menu_items
+	if(menu_items)
+	{
+		free(menu_items);
+	}
+	if(!FB_CreateItemsList("0:", &dir_items, &dir_items_cnt))
+		return;
+
+	menu_items = (struct _menuitem*)malloc(sizeof(struct _menuitem) * dir_items_cnt + 1);
+	if(!menu_items)
+		return;
+	memset(menu_items, 0, sizeof(struct _menuitem) * dir_items_cnt + 1);
+
+	// Copy dir items names to menu items list
+	for(uint8_t idx = 0; idx < dir_items_cnt; idx++)
+	{
+		if(!dir_items[idx].is_dir)
+			menu_items[idx].menuitemfunc = menu_music_play;
+		else
+			menu_items[idx].menuitemfunc = menu_music;
+
+		menu_items[idx].next = &menu_items[idx + 1];
+
+		if(idx == 0)
+			menu_items[idx].parent = &menu;
+		else
+			menu_items[idx].parent = &menu_items[0];
+
+		menu_items[idx].text = dir_items[idx].name;
+	}
+
+	menu_items[dir_items_cnt].menuitemfunc = Menu_Back;
+	menu_items[dir_items_cnt].parent = &menu_items[0];
+	menu_items[dir_items_cnt].next = NULL;
+	menu_items[dir_items_cnt].text = "<back>";
+
+	// Now it has submenu
+	menu.submenu = &menu_items[0];
+
 }
 
 void menu_recorder()

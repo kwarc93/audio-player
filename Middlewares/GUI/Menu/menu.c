@@ -48,7 +48,7 @@ uint8_t Menu_GetMenuRows()
 	if(currMenuPtr->gfx)
 		rows =  LCD_HEIGHT / (currMenuPtr->gfx[1] + Menu_YBorder); //Wysokoœæ bitmapy
 	else if(currMenuPtr->text)
-		rows =  LCD_HEIGHT/(uintptr_t)menu_font[0];			// Wysokoœc cznionki
+		rows =  LCD_HEIGHT / (uintptr_t)menu_font[0];			// Wysokoœc cznionki
 
 	return rows;
 }
@@ -85,8 +85,8 @@ void Menu_ShowGfx()
 						Menu_GetMenuItem(currmenupos)->name, system8_array,false);
 			}
 			SSD1306_DrawBitmap(tx, ty, tmpmenuitem->gfx, false);     //Wyœwietl pozycjê menu
-			if(tmpmenuitem->submenu)
-				SSD1306_DrawBitmap(tx+bmp_width-image_data_directory[0], ty+bmp_height-image_data_directory[1], image_data_directory, false); //Zaznacz, ¿e mamy submenu
+//			if(tmpmenuitem->submenu)
+//				SSD1306_DrawBitmap(tx+bmp_width-image_data_directory[0], ty+bmp_height-image_data_directory[1], image_data_directory, false); //Zaznacz, ¿e mamy submenu
 
 			tmpmenuitem=tmpmenuitem->next;   //Kolejna pozycja menu
 			currmenupos++;
@@ -129,15 +129,51 @@ void Menu_Show()
 
 void Menu_SelectNext()
 {
-	menuindex=(menuindex + 1) % Menu_GetMenuItemsNo();     //Liczymy wszysko modulo liczba pozycji w menu
-	menufirstpos=Menu_GetMenuRows() * Menu_GetMenuCols() * (menuindex / (Menu_GetMenuRows() * Menu_GetMenuCols()));
+	if(currMenuPtr->gfx)
+	{
+		menuindex=(menuindex + 1) % Menu_GetMenuItemsNo();     //Liczymy wszysko modulo liczba pozycji w menu
+		menufirstpos=Menu_GetMenuRows() * Menu_GetMenuCols() * (menuindex / (Menu_GetMenuRows() * Menu_GetMenuCols()));
+	}
+	else if(currMenuPtr->text)
+	{
+		uint8_t no=Menu_GetMenuItemsNo();
+		menuindex++;
+		if(no > Menu_GetMenuRows())        //Czy liczba pozycji menu jest wiêksza ni¿ liczba wyœwietlanych pozycji?
+		{
+			int8_t dist;               //Odleg³oœæ pomiêdzy pierwsz¹ wyœwietlan¹ pozycj¹, a pozycj¹ podœwietlon¹
+			if(menuindex < menufirstpos) dist=no - menufirstpos + menuindex; //Jest zale¿na od tego, któa z pozycji jest wiêksza
+			else dist=menuindex-menufirstpos;
+			if(dist >= Menu_GetMenuRows()) menufirstpos++;  //Koniec ekranu, trzeba przewijaæ
+		}
+		menuindex%=no;     //Liczymy wszysko modulo liczba pozycji w menu
+		menufirstpos%=no;
+	}
 	Menu_Show();      //Wyœwietl menu
 }
 
 void Menu_SelectPrev()
 {
-	if(menuindex > 0) menuindex--; else menuindex=Menu_GetMenuItemsNo()-1;
-	menufirstpos=Menu_GetMenuRows() * Menu_GetMenuCols() * (menuindex / (Menu_GetMenuRows() * Menu_GetMenuCols()));
+	if(currMenuPtr->gfx)
+	{
+		if(menuindex > 0) menuindex--; else menuindex=Menu_GetMenuItemsNo()-1;
+		menufirstpos=Menu_GetMenuRows() * Menu_GetMenuCols() * (menuindex / (Menu_GetMenuRows() * Menu_GetMenuCols()));
+	}
+	else if(currMenuPtr->text)
+	{
+		if(menuindex > 0)
+		{
+			if(menuindex == menufirstpos) menufirstpos--;
+			menuindex--;               //Poprzedni element
+		}
+		else
+		{
+			if(menufirstpos == 0)
+			{
+				menuindex=Menu_GetMenuItemsNo()-1;  //Zawijamy menu
+				if(Menu_GetMenuItemsNo()>Menu_GetMenuRows()) menufirstpos=menuindex;  //Jeœli mamy mniej pozycji menu ni¿ linii na LCD to nie zmieniamy numeru pierwszej pozycji menu
+			} else menuindex=Menu_GetMenuItemsNo()-1;
+		}
+	}
 	Menu_Show();     //Wyœwietl menu
 }
 
@@ -151,10 +187,11 @@ void Menu_Back()
 void Menu_Click()
 {
 	const struct _menuitem *tmpmenuitem=Menu_GetMenuItem(menuindex);
-	const struct _menuitem *submenu=tmpmenuitem->submenu;
 
     menuitemfuncptr mfptr=tmpmenuitem->menuitemfunc;
 	if(mfptr) (*mfptr)();
+
+	const struct _menuitem *submenu=tmpmenuitem->submenu;
 	if(submenu)
 	 {
 	  currMenuPtr=submenu;

@@ -9,7 +9,7 @@
 #define CONTROLLER_H_
 
 
-#define CONTROLER_STACK_SIZE	TASK_STACK_BYTES(1 * 1024)
+#define CONTROLER_STACK_SIZE	TASK_STACK_BYTES(2 * 1024)
 
 enum user_action
 {
