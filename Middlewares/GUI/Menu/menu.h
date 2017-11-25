@@ -17,7 +17,7 @@ struct _menuitem
 	const struct _menuitem* next;
 };
 
-const struct _menuitem *Menu_GetCurrentMenuItem(void);
+struct _menuitem *Menu_GetCurrentMenuItem(void);
 void Menu_Show();
 void Menu_SelectNext();
 void Menu_SelectPrev();
@@ -26,7 +26,7 @@ void Menu_Back();
 
 extern struct _menuitem menu;		//Struktura menu
 
-#define Menu_YBorder 4                  //Ile miejsca zostawiæ wokó³ piktogramu - decyduje o ich rozstrzeleniu
+#define Menu_YBorder 4                  //Ile miejsca zostawiï¿½ wokï¿½ piktogramu - decyduje o ich rozstrzeleniu
 #define Menu_XBorder 4
 
 #endif
