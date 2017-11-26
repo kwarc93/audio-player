@@ -138,6 +138,10 @@ _Bool MP3_Decode(void)
 		case ERR_MP3_MAINDATA_UNDERFLOW:
 			// Do nothing - next call to decode will provide more maindata
 			break;
+		case ERR_MP3_INVALID_FRAMEHEADER:
+			decoder->buffers.in_ptr += 1;
+			decoder->buffers.in_bytes_left -= 1;
+			break;
 		case ERR_MP3_INDATA_UNDERFLOW:
 		case ERR_MP3_FREE_BITRATE_SYNC:
 		default:
