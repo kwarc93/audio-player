@@ -3,24 +3,23 @@
 #include <stddef.h>
 #include <string.h>
 
-extern const uint8_t image_data_directory[];        		//Symbol u�ywany do zaznaczenia pozycji z podmenu
+#define GFX_Y_BORDER 4
+#define GFX_X_BORDER 4
+
+extern const uint8_t image_data_directory[];
 extern const uint8_t* const system8_array[];
 
-static const struct _menuitem *currMenuPtr;   		    //Bie��ca pozycja menu
-static int8_t menuindex;                                    //Numer aktualnie wybrane pozycji menu
-static int8_t menufirstpos;                                 //Numer pozycji menu wy�wietlanej w g�rnym rz�dzie
+static const struct _menuitem *currMenuPtr;   		    // Current menu position
+static int8_t menuindex;                                    // Number of actual menu position
+static int8_t menufirstpos;                                 // Number of first menu position
 static const uint8_t* const* menu_font = system8_array;
 
-void Menu_Init(struct _menuitem* main_menu)
-{
-  currMenuPtr = main_menu;
-}
-
-uint8_t Menu_GetMenuItemsNo()            //Policz ile dane menu ma pozycji
+static uint8_t Menu_GetMenuItemsNo()
 {
   const struct _menuitem *tmpmenuitem=currMenuPtr;
   uint8_t index=0;
 
+  // Get number of current menu items
   while(tmpmenuitem)
     {
       tmpmenuitem=tmpmenuitem->next;
@@ -29,7 +28,7 @@ uint8_t Menu_GetMenuItemsNo()            //Policz ile dane menu ma pozycji
   return index;
 }
 
-const struct _menuitem *Menu_GetMenuItem(uint8_t index)
+static const struct _menuitem *Menu_GetMenuItem(uint8_t index)
 {
   const struct _menuitem *tmpmenuitem=currMenuPtr;
 
@@ -41,94 +40,98 @@ const struct _menuitem *Menu_GetMenuItem(uint8_t index)
   return tmpmenuitem;
 }
 
-struct _menuitem *Menu_GetCurrentMenuItem(void)
-{
-  return (struct _menuitem *)Menu_GetMenuItem(menuindex);
-}
-
-void Menu_SetCurrentMenuItem(struct _menuitem* menu_item)
-{
-  currMenuPtr = menu_item;
-  menuindex=0;
-  menufirstpos=0;
-}
-
-uint8_t Menu_GetMenuRows()
+static uint8_t Menu_GetMenuRows()
 {
   uint8_t rows = 0;
 
   if(currMenuPtr->gfx)
-    rows =  LCD_HEIGHT / (currMenuPtr->gfx[1] + Menu_YBorder); //Wysoko�� bitmapy
+    rows =  LCD_HEIGHT / (currMenuPtr->gfx[1] + GFX_Y_BORDER); // Bitmap height
   else if(currMenuPtr->text)
-    rows =  LCD_HEIGHT / (uintptr_t)menu_font[0];			// Wysoko�c cznionki
+    rows =  LCD_HEIGHT / (uintptr_t)menu_font[0];	// Font height
 
   return rows;
 }
 
-uint8_t Menu_GetMenuCols()
+static uint8_t Menu_GetMenuCols()
 {
-  return LCD_WIDTH / (menu.gfx[0] + Menu_XBorder);  //Szeroko�� bitmapy
+  return LCD_WIDTH / (currMenuPtr->gfx[0] + GFX_X_BORDER);  //Bitmap width
 }
 
-void Menu_ShowGfx()
+static void Menu_ShowGfx()
 {
   const struct _menuitem *tmpmenuitem=Menu_GetMenuItem(menufirstpos);
-  uint8_t bmp_height=menu.gfx[1];
-  uint8_t bmp_width=menu.gfx[0];
+  uint8_t bmp_height=tmpmenuitem->gfx[1];
+  uint8_t bmp_width=tmpmenuitem->gfx[0];
   uint8_t menuitemsno=Menu_GetMenuItemsNo();
   uint8_t currmenupos=0;
 
-  SSD1306_Clear(false); //Wyczy�� LCD
+  SSD1306_Clear(false);
 
-  uint8_t xspacing=(LCD_WIDTH - Menu_GetMenuCols() * (bmp_width + Menu_XBorder)) / (Menu_GetMenuCols() + 1);
-  uint8_t yspacing=(LCD_HEIGHT - Menu_GetMenuRows() * (bmp_height + Menu_YBorder)) / (Menu_GetMenuRows() + 1);
+  uint8_t xspacing=(LCD_WIDTH - Menu_GetMenuCols() * (bmp_width + GFX_X_BORDER)) / (Menu_GetMenuCols() + 1);
+  uint8_t yspacing=(LCD_HEIGHT - Menu_GetMenuRows() * (bmp_height + GFX_Y_BORDER)) / (Menu_GetMenuRows() + 1);
 
   for(uint8_t oy=0; oy < Menu_GetMenuRows(); oy++)
     {
       for(uint8_t ox=0; ox < Menu_GetMenuCols(); ox++)
 	{
-	  if(tmpmenuitem == NULL) break;           //Nie ma wi�ce pozycji menu - ko�czymy p�tl�
-	  uint8_t tx=ox * (bmp_width + Menu_XBorder) + (ox + 1) * xspacing + Menu_XBorder/2;
-	  uint8_t ty=oy * (bmp_height + Menu_YBorder) + (oy + 1) * yspacing + Menu_YBorder/2;
-	  if(menuindex == ((menufirstpos + currmenupos) % menuitemsno))              //Czy pod�wietli� dan� pozycje menu?
+	  if(tmpmenuitem == NULL) break; // If there is no more items - break
+
+	  uint8_t tx=ox * (bmp_width + GFX_X_BORDER) + (ox + 1) * xspacing + GFX_X_BORDER/2;
+	  uint8_t ty=oy * (bmp_height + GFX_Y_BORDER) + (oy + 1) * yspacing + GFX_Y_BORDER/2;
+
+	  if(menuindex == ((menufirstpos + currmenupos) % menuitemsno))
 	    {
+	      // Highlight current position
 	      SSD1306_DrawRect(tx-2, ty-2, bmp_width+3, bmp_height+3, false);
 	      SSD1306_SetText(LCD_WIDTH/2 - (strlen(Menu_GetMenuItem(currmenupos)->name)*6)/2, 54,
 			      Menu_GetMenuItem(currmenupos)->name, system8_array,false);
 	    }
-	  SSD1306_DrawBitmap(tx, ty, tmpmenuitem->gfx, false);     //Wy�wietl pozycj� menu
-	  //			if(tmpmenuitem->submenu)
-	  //				SSD1306_DrawBitmap(tx+bmp_width-image_data_directory[0], ty+bmp_height-image_data_directory[1], image_data_directory, false); //Zaznacz, �e mamy submenu
 
-	  tmpmenuitem=tmpmenuitem->next;   //Kolejna pozycja menu
+	  // Show menu position
+	  SSD1306_DrawBitmap(tx, ty, tmpmenuitem->gfx, false);
+
+	  // Indicates that this item has submenu
+	  //if(tmpmenuitem->submenu)
+	  //	SSD1306_DrawBitmap(tx+bmp_width-image_data_directory[0], ty+bmp_height-image_data_directory[1], image_data_directory, false);
+
+	  tmpmenuitem=tmpmenuitem->next;   // Next menu position
 	  currmenupos++;
 	}
     }
-  SSD1306_CpyDirtyPages();   //Od�wie� widok na LCD
+  SSD1306_CpyDirtyPages(); // Refresh LCD
 }
 
-void Menu_ShowTxt()
+static void Menu_ShowTxt()
 {
   const struct _menuitem *tmpmenuitem=Menu_GetMenuItem(menufirstpos);
   uint8_t font_height=(uintptr_t)menu_font[0];
   uint8_t menuitemsno=Menu_GetMenuItemsNo();
 
-  SSD1306_Clear(false); //Wyczy�� LCD
+  SSD1306_Clear(false);
 
   for(uint8_t i=0; i < Menu_GetMenuRows(); i++)
     {
-      _Bool invert=menuindex == ((menufirstpos + i) % menuitemsno);              //Czy pod�wietli� dan� pozycje menu
-      SSD1306_SetText(0, i * font_height, tmpmenuitem->text, menu_font, invert); //Wy�wietl pozycj� menu
+      _Bool invert = menuindex == ((menufirstpos + i) % menuitemsno); // Highlight current position?
+      SSD1306_SetText(0, i * font_height, tmpmenuitem->text, menu_font, invert);
+
+      // Indicates that this item has submenu
       if(tmpmenuitem->submenu)
-	SSD1306_SetText(LCD_WIDTH - 3 * font_height, i * font_height, ">>>", menu_font, invert); //Zaznacz, �e mamy submenu
+	SSD1306_SetText(LCD_WIDTH - 3 * font_height, i * font_height, ">>>", menu_font, invert);
+
       tmpmenuitem=tmpmenuitem->next;
-      if(tmpmenuitem == NULL)  //Koniec listy
+      if(tmpmenuitem == NULL)
 	{
-	  if(Menu_GetMenuItemsNo() > Menu_GetMenuRows()) tmpmenuitem=currMenuPtr; //Zawijamy list� je�li jest d�u�sza ni� liczba wy�wietlanych pozycji
-	  else break;   //lub ko�czymy, �eby unikn�� powtarzania element�w
+	  //End of list
+	  if(Menu_GetMenuItemsNo() > Menu_GetMenuRows()) tmpmenuitem=currMenuPtr; // Roll up list
+	  else break; // else end to aviod items repetition
 	}
     }
-  SSD1306_CpyDirtyPages();   //Od�wie� widok na LCD
+  SSD1306_CpyDirtyPages(); // Refresh LCD
+}
+
+void Menu_Init(struct _menuitem* main_menu)
+{
+  currMenuPtr = main_menu;
 }
 
 void Menu_Show()
@@ -211,4 +214,16 @@ void Menu_Click()
       menufirstpos=0;
     }
   Menu_Show();
+}
+
+struct _menuitem *Menu_GetCurrentMenuItem(void)
+{
+  return (struct _menuitem *)Menu_GetMenuItem(menuindex);
+}
+
+void Menu_SetCurrentMenuItem(struct _menuitem* menu_item)
+{
+  currMenuPtr = menu_item;
+  menuindex=0;
+  menufirstpos=0;
 }

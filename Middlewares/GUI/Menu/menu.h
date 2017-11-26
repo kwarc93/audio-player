@@ -8,13 +8,13 @@ typedef void (*menuitemfuncptr)();
 
 struct _menuitem
 {
-	const char* name;
-	const uint8_t* gfx;
-	char* text;
-	menuitemfuncptr menuitemfunc;
-	const struct _menuitem* parent;
-	const struct _menuitem* submenu;
-	const struct _menuitem* next;
+	const char* name;			// Name of item
+	const uint8_t* gfx;			// Pointer to intem bitmap
+	char* text;				// Pointer to item text
+	menuitemfuncptr menuitemfunc;		// Callback function (on click)
+	const struct _menuitem* parent; 	// Parent item
+	const struct _menuitem* submenu;	// Submenu item
+	const struct _menuitem* next;		// Next item
 };
 
 struct _menuitem *Menu_GetCurrentMenuItem(void);
@@ -26,10 +26,5 @@ void Menu_SelectNext();
 void Menu_SelectPrev();
 void Menu_Click();
 void Menu_Back();
-
-extern struct _menuitem menu;		//Struktura menu
-
-#define Menu_YBorder 4                  //Ile miejsca zostawi� wok� piktogramu - decyduje o ich rozstrzeleniu
-#define Menu_XBorder 4
 
 #endif

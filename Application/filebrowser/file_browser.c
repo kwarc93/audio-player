@@ -127,11 +127,11 @@ _Bool FB_CreateItemsList(char* path, struct fb_item** list, uint8_t* list_size)
 	{
 	  res = f_readdir(&dir, &fno);                    /* Read a directory item */
 	  if (res != FR_OK || fno.fname[0] == 0) break;   /* Break on error or end of dir */
-	  if (fno.fattrib & AM_DIR)	                    /* It is a directory */
+	  if (fno.fattrib & AM_DIR)	                  /* It is a directory */
 	    {
 	      (*list)[idx].is_dir = true;
 	    }
-	  else				                     		/* It is a file. */
+	  else				                    /* It is a file. */
 	    {
 	      (*list)[idx].is_dir = false;
 	    }
