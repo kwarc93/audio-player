@@ -11,7 +11,7 @@
 #include "FreeRTOS/task.h"
 #include "FreeRTOS/queue.h"
 #include "display.h"
-#include "Menu/menu.h"
+#include "ui/menu_manager.h"
 
 #include <string.h>
 #include <stdbool.h>
@@ -72,6 +72,8 @@ void Display_StartTasks(unsigned portBASE_TYPE uxPriority)
 {
 	// Init hardware
 	SSD1306_Init();
+
+	MenuManager_CreateMenu();
 
 	 // Create queue for display text
 	qhDisplayText = xQueueCreate(1, sizeof(char*));

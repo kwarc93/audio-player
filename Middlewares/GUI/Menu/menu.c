@@ -6,10 +6,15 @@
 extern const uint8_t image_data_directory[];        		//Symbol u�ywany do zaznaczenia pozycji z podmenu
 extern const uint8_t* const system8_array[];
 
-static const struct _menuitem *currMenuPtr=&menu;   		//Bie��ca pozycja menu
+static const struct _menuitem *currMenuPtr;   		    //Bie��ca pozycja menu
 static int8_t menuindex;                                    //Numer aktualnie wybrane pozycji menu
 static int8_t menufirstpos;                                 //Numer pozycji menu wy�wietlanej w g�rnym rz�dzie
 static const uint8_t* const* menu_font = system8_array;
+
+void Menu_Init(struct _menuitem* main_menu)
+{
+  currMenuPtr = main_menu;
+}
 
 uint8_t Menu_GetMenuItemsNo()            //Policz ile dane menu ma pozycji
 {
@@ -39,6 +44,13 @@ const struct _menuitem *Menu_GetMenuItem(uint8_t index)
 struct _menuitem *Menu_GetCurrentMenuItem(void)
 {
   return (struct _menuitem *)Menu_GetMenuItem(menuindex);
+}
+
+void Menu_SetCurrentMenuItem(struct _menuitem* menu_item)
+{
+  currMenuPtr = menu_item;
+  menuindex=0;
+  menufirstpos=0;
 }
 
 uint8_t Menu_GetMenuRows()
@@ -187,11 +199,11 @@ void Menu_Back()
 void Menu_Click()
 {
   const struct _menuitem *tmpmenuitem=Menu_GetMenuItem(menuindex);
+  const struct _menuitem *submenu=tmpmenuitem->submenu;
 
   menuitemfuncptr mfptr=tmpmenuitem->menuitemfunc;
   if(mfptr) (*mfptr)();
 
-  const struct _menuitem *submenu=tmpmenuitem->submenu;
   if(submenu)
     {
       currMenuPtr=submenu;

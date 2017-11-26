@@ -161,6 +161,7 @@ _Bool FB_DeleteItemsList(struct fb_item** list, uint8_t list_size)
     }
 
   free(*list);
+  *list = NULL;
 
   return true;
 }

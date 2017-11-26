@@ -18,6 +18,9 @@ struct _menuitem
 };
 
 struct _menuitem *Menu_GetCurrentMenuItem(void);
+void Menu_SetCurrentMenuItem(struct _menuitem* menu_item);
+
+void Menu_Init(struct _menuitem* main_menu);
 void Menu_Show();
 void Menu_SelectNext();
 void Menu_SelectPrev();
