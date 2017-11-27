@@ -82,12 +82,6 @@ static void vTimerCallback(TimerHandle_t xTimer)
 
 static void TaskProcess(void)
 {
-  if(!player.decoder.is_working() && player.state == PLAYER_PLAYING)
-    {
-      Player_SendCommand(PLAYER_STOP);
-      // @ TODO: Play next song in folder
-    }
-
   if(xQueueReceive(player.queue, &player.command, 0))
     {
       switch(player.command)

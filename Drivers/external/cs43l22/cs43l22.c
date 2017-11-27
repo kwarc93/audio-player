@@ -200,13 +200,14 @@ uint32_t CS43L22_Play(uint16_t DeviceAddr, uint16_t* pBuffer, uint16_t Size)
   if(Is_cs43l22_Stop == 1)
   {
     /* Enable the digital soft ramp */
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MISC_CTL, 0x06);
-
-    /* Enable Output device */
-    counter += CS43L22_SetMute(DeviceAddr, AUDIO_MUTE_OFF);
+//    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MISC_CTL, 0x06);
 
     /* Power on the Codec */
     counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x9E);
+
+    /* Unmute */
+//    counter += CS43L22_SetMute(DeviceAddr, AUDIO_MUTE_OFF);
+
     Is_cs43l22_Stop = 0;
   }
 
@@ -228,7 +229,7 @@ uint32_t CS43L22_Pause(uint16_t DeviceAddr)
   counter += CS43L22_SetMute(DeviceAddr, AUDIO_MUTE_ON);
 
   /* Put the Codec in Power save mode */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x01);
+//  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x01);
 
   return counter;
 }
@@ -251,7 +252,7 @@ uint32_t CS43L22_Resume(uint16_t DeviceAddr)
   counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, OutputDev);
 
   /* Exit the Power save mode */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x9E);
+//  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x9E);
 
   return counter;
 }
@@ -271,13 +272,13 @@ uint32_t CS43L22_Stop(uint16_t DeviceAddr, uint32_t CodecPdwnMode)
   uint32_t counter = 0;
 
   /* Mute the output first */
-  counter += CS43L22_SetMute(DeviceAddr, AUDIO_MUTE_ON);
+//  counter += CS43L22_SetMute(DeviceAddr, AUDIO_MUTE_ON);
 
   /* Disable the digital soft ramp */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MISC_CTL, 0x04);
+//  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MISC_CTL, 0x04);
 
   /* Power down the DAC and the speaker (PMDAC and PMSPK bits)*/
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x9F);
+//  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x9F);
 
   Is_cs43l22_Stop = 1;
   return counter;

@@ -9,7 +9,7 @@ typedef void (*menuitemfuncptr)();
 struct _menuitem
 {
 	const char* name;			// Name of item
-	const uint8_t* gfx;			// Pointer to intem bitmap
+	const uint8_t* gfx;			// Pointer to item bitmap
 	char* text;				// Pointer to item text
 	menuitemfuncptr menuitemfunc;		// Callback function (on click)
 	const struct _menuitem* parent; 	// Parent item

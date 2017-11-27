@@ -281,14 +281,8 @@ _Bool FLAC_Init(struct audio_decoder* main_decoder)
 	FLAC__stream_decoder_set_md5_checking(FLACDecoder, false);
 
 	// Find metadata to know blocksize of FLAC file and then allocate proper output buffer size
-	if(f_open(&decoder->song.file, decoder->song.info.fname, FA_READ) == FR_OK)
-	{
-		FLAC__stream_decoder_process_until_end_of_metadata(FLACDecoder);
-		FLAC__stream_decoder_flush(FLACDecoder);
-		f_close(&decoder->song.file);
-	}
-	else
-		return false;
+	FLAC__stream_decoder_process_until_end_of_metadata(FLACDecoder);
+	FLAC__stream_decoder_flush(FLACDecoder);
 
 	// Allocate audio buffers
 	decoder->buffers.out_size = 4 * block_size * sizeof(*decoder->buffers.out);

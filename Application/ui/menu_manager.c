@@ -1,9 +1,3 @@
-/*
- * menudef.c
- *
- * Created: 2013-08-20 13:05:36
- *  Author: tmf
- */
 
 #include "misc.h"
 #include "Menu/menu.h"
@@ -17,12 +11,11 @@
 
 extern const uint8_t* const system8_array[];
 
-struct _menuitem* menu_music;
-struct _menuitem* menu_items_parent;
-struct fb_item* dir_items;
-uint8_t dir_items_cnt;
+static struct _menuitem* menu_music;
+static struct fb_item* dir_items;
+static uint8_t dir_items_cnt;
 
-//Prototypy funkcji obs�ugi wybranej pozycji menu
+
 static void menu_music_create();
 static void menu_music_back();
 static void menu_music_play();
@@ -31,8 +24,6 @@ static void menu_music_delete();
 static void menu_recorder();
 static void menu_settings();
 static void menu_shutdown();
-
-
 
 extern const uint8_t image_data_off[];
 extern const uint8_t image_data_headphones[];
@@ -43,12 +34,19 @@ extern const uint8_t image_data_arrowup[];
 // Current graphical menu
 struct _menuitem  menu;
 
+// Forward menu declarations
+static struct _menuitem const settings_menu0;
 
-// Main constant menu graphical items
-struct _menuitem const menu3 = {"Shutdown", image_data_off, 0, menu_shutdown, &menu, 0, 0};
-struct _menuitem const menu2 = {"Settings", image_data_tools, 0, menu_settings, &menu, 0, &menu3};
-struct _menuitem const menu1 = {"Recorder", image_data_microphone, 0, menu_recorder, &menu, 0, &menu2};
-struct _menuitem const menu0 = {"Music", image_data_headphones, 0, menu_music_create, 0, 0, &menu1};
+// Constant main menu graphical items
+static struct _menuitem const menu3 = {"Shutdown", image_data_off, 0, menu_shutdown, &menu, 0, 0};
+static struct _menuitem const menu2 = {"Settings", image_data_tools, 0, 0, &menu, &settings_menu0, &menu3};
+static struct _menuitem const menu1 = {"Recorder", image_data_microphone, 0, menu_recorder, &menu, 0, &menu2};
+static struct _menuitem const menu0 = {"Music", image_data_headphones, 0, menu_music_create, 0, 0, &menu1};
+
+// Constant settings submenu
+static struct _menuitem const settings_menu2 = {"<back>", 0, "<back>", Menu_Back, &settings_menu0, 0, 0};
+static struct _menuitem const settings_menu1 = {"LCD contrast", 0, "LCD contrast", 0, &settings_menu0, 0, &settings_menu2};
+static struct _menuitem const settings_menu0 = {"Equalizer", 0, "Equalizer", 0, &menu, 0, &settings_menu1};
 
 static void menu_music_create()
 {
@@ -120,7 +118,7 @@ static void menu_music_back()
 
 static void menu_recorder()
 {
-  SSD1306_Clear(false); //Wyczy�� LCD
+  SSD1306_Clear(false);
   SSD1306_SetText(0, 0,"Recorder menu", system8_array, false);
   SSD1306_CpyDirtyPages();
   delay_ms(2000);
@@ -128,7 +126,7 @@ static void menu_recorder()
 
 static void menu_settings()
 {
-  SSD1306_Clear(false); //Wyczy�� LCD
+  SSD1306_Clear(false);
   SSD1306_SetText(0, 0,"Settings menu", system8_array, false);
   SSD1306_CpyDirtyPages();
   delay_ms(2000);
