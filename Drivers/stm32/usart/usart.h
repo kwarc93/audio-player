@@ -30,15 +30,15 @@ char USART_TxCB[USART_TX_CB_SIZE];				// USART tx circular buffer
 /* DMA 1 Channel 7 Transfer Complete Flag */
 volatile _Bool DMA1C7_TC;
 
-void USART_Init(void);
-void USART_Tx(char data);
-void USART_TxDMA(void *src, uint8_t length);
-char USART_Rx(void);
-char USART_RxBufferRead(void);
-void USART_TxString(char *s);
+void USART_Init( void );
+void USART_Tx( char data );
+void USART_TxDMA( void *src, uint8_t length );
+char USART_Rx( void );
+char USART_RxBufferRead( void );
+void USART_TxString( char *s );
 
-void USART_Parse(char c);
-void USART_DecodeMessage(char id, int32_t data);
-void USART_ProcessCommand(uint32_t cmd);
+void USART_Parse( char c );
+void USART_DecodeMessage( char id, int32_t data );
+void USART_ProcessCommand( uint32_t cmd );
 
 #endif /* USART_H_ */

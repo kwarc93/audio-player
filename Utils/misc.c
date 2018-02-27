@@ -26,43 +26,45 @@
 #if 0
 #pragma GCC push_options
 #pragma GCC optimize ("O3")
-static inline void delayUS_DWT(uint32_t us) {
+static inline void delayUS_DWT(uint32_t us)
+{
 	volatile uint32_t cycles = (CPU_CLOCK/1000000L)*us;
 	volatile uint32_t start = DWT->CYCCNT;
-	do  {
-	} while(DWT->CYCCNT - start < cycles);
+	do
+	{
+	}while(DWT->CYCCNT - start < cycles);
 }
 #pragma GCC pop_options
 #endif
 
 static uint32_t primask;
 
-void delay_us(uint32_t t)
+void delay_us( uint32_t t )
 {
-	DELAY_US_ASM(t);
+	DELAY_US_ASM( t );
 }
 
-void delay_ms(uint32_t t)
+void delay_ms( uint32_t t )
 {
-	DELAY_US_ASM(t*1000UL);
+	DELAY_US_ASM( t*1000UL );
 }
 
-_Bool is_in_handler_mode(void)
+_Bool is_in_handler_mode( void )
 {
-  return __get_IPSR() != 0;
+	return __get_IPSR() != 0;
 }
 
-void disable_interrupts(void)
+void disable_interrupts( void )
 {
 	__disable_irq();
 }
 
-void enable_interrupts(void)
+void enable_interrupts( void )
 {
 	__enable_irq();
 }
 
-void enter_critical(void)
+void enter_critical( void )
 {
 #ifdef USE_FREERTOS
 	portENTER_CRITICAL();
@@ -72,22 +74,22 @@ void enter_critical(void)
 #endif
 }
 
-void exit_critical(void)
+void exit_critical( void )
 {
 #ifdef USE_FREERTOS
 	portEXIT_CRITICAL();
 #else
-	if(!primask)
+	if( !primask )
 		enable_interrupts();
 #endif
 }
 
-__attribute__((always_inline)) inline void nop(void)
+__attribute__((always_inline)) inline void nop( void )
 {
 	asm volatile ("MOV R0, R0");
 }
 
-void sleep_deep(void)
+void sleep_deep( void )
 {
 	// Sleep deep
 	PWR->CR1 |= PWR_CR1_LPMS_SHUTDOWN;
@@ -96,10 +98,10 @@ void sleep_deep(void)
 
 char* mystrcat( char* dest, char* src )
 {
-     while (*dest) dest++;
-     while ((*dest++ = *src++));
-     return --dest;
+	while( *dest )
+		dest++;
+	while( (*dest++ = *src++) )
+		;
+	return --dest;
 }
-
-
 

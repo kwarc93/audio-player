@@ -40,7 +40,6 @@
 #define AUDIO_MUTE_ON                 1
 #define AUDIO_MUTE_OFF                0
 
-
 /** CS43L22 Registers  ***/
 #define   CS43L22_REG_ID                  0x01
 #define   CS43L22_REG_POWER_CTL1          0x02
@@ -85,58 +84,59 @@
 /****************************** REGISTER MAPPING ******************************/
 /******************************************************************************/
 /**
-  * @brief  CS43L22 ID
-  */
+ * @brief  CS43L22 ID
+ */
 #define  CS43L22_ID            0xE0
 #define  CS43L22_ID_MASK       0xF8
 /**
-  * @brief Chip ID Register: Chip I.D. and Revision Register
-  *  Read only register
-  *  Default value: 0x01
-  *  [7:3] CHIPID[4:0]: I.D. code for the CS43L22.
-  *        Default value: 11100b
-  *  [2:0] REVID[2:0]: CS43L22 revision level.
-  *        Default value:
-  *        000 - Rev A0
-  *        001 - Rev A1
-  *        010 - Rev B0
-  *        011 - Rev B1
-  */
+ * @brief Chip ID Register: Chip I.D. and Revision Register
+ *  Read only register
+ *  Default value: 0x01
+ *  [7:3] CHIPID[4:0]: I.D. code for the CS43L22.
+ *        Default value: 11100b
+ *  [2:0] REVID[2:0]: CS43L22 revision level.
+ *        Default value:
+ *        000 - Rev A0
+ *        001 - Rev A1
+ *        010 - Rev B0
+ *        011 - Rev B1
+ */
 #define CS43L22_CHIPID_ADDR    0x01
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /** @defgroup CS43L22_Exported_Macros
-  * @{
-  */
+ * @{
+ */
 #define AUDIO_RESET_PORT		GPIOE
 #define AUDIO_RESET_PIN			3
 /**
-  * @}
-  */
+ * @}
+ */
 
 /** @defgroup CS43L22_Exported_Functions
-  * @{
-  */
+ * @{
+ */
 
 /*------------------------------------------------------------------------------
-                           Audio Codec functions
-------------------------------------------------------------------------------*/
+ Audio Codec functions
+ ------------------------------------------------------------------------------*/
 /* High Layer codec functions */
-uint32_t CS43L22_Init(uint16_t DeviceAddr, uint16_t OutputDevice, uint8_t Volume, uint32_t AudioFreq);
-void     CS43L22_DeInit(void);
-uint32_t CS43L22_ReadID(uint16_t DeviceAddr);
-uint32_t CS43L22_Beep(uint16_t DeviceAddr);
-uint32_t CS43L22_Play(uint16_t DeviceAddr, uint16_t* pBuffer, uint16_t Size);
-uint32_t CS43L22_Pause(uint16_t DeviceAddr);
-uint32_t CS43L22_Resume(uint16_t DeviceAddr);
-uint32_t CS43L22_Stop(uint16_t DeviceAddr, uint32_t Cmd);
-uint32_t CS43L22_SetVolume(uint16_t DeviceAddr, uint8_t Volume);
-uint32_t CS43L22_SetFrequency(uint16_t DeviceAddr, uint32_t AudioFreq);
-uint32_t CS43L22_SetMute(uint16_t DeviceAddr, uint32_t Cmd);
-uint32_t CS43L22_SetOutputMode(uint16_t DeviceAddr, uint8_t Output);
-uint32_t CS43L22_Reset(uint16_t DeviceAddr);
+uint32_t CS43L22_Init( uint16_t DeviceAddr, uint16_t OutputDevice, uint8_t Volume,
+		uint32_t AudioFreq );
+void CS43L22_DeInit( void );
+uint32_t CS43L22_ReadID( uint16_t DeviceAddr );
+uint32_t CS43L22_Beep( uint16_t DeviceAddr );
+uint32_t CS43L22_Play( uint16_t DeviceAddr, uint16_t* pBuffer, uint16_t Size );
+uint32_t CS43L22_Pause( uint16_t DeviceAddr );
+uint32_t CS43L22_Resume( uint16_t DeviceAddr );
+uint32_t CS43L22_Stop( uint16_t DeviceAddr, uint32_t Cmd );
+uint32_t CS43L22_SetVolume( uint16_t DeviceAddr, uint8_t Volume );
+uint32_t CS43L22_SetFrequency( uint16_t DeviceAddr, uint32_t AudioFreq );
+uint32_t CS43L22_SetMute( uint16_t DeviceAddr, uint32_t Cmd );
+uint32_t CS43L22_SetOutputMode( uint16_t DeviceAddr, uint8_t Output );
+uint32_t CS43L22_Reset( uint16_t DeviceAddr );
 
 #endif /* EXTERNAL_CS43L22_CS43L22_H_ */

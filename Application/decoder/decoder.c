@@ -45,9 +45,9 @@ static struct audio_decoder decoder;
 // +--------------------------------------------------------------------------
 // | @ Private functions
 // +--------------------------------------------------------------------------
-static void init(char* filename);
-static void deinit(void);
-static void vTaskDecoder(void * pvParameters);
+static void init( char* filename );
+static void deinit( void );
+static void vTaskDecoder( void * pvParameters );
 
 // Helper functions
 // ---------------------------------------------------------------------------
@@ -55,268 +55,266 @@ static void vTaskDecoder(void * pvParameters);
  * @param 	File extension
  * @retval	None
  */
-void set_audio_format(const char* file_ext)
+void set_audio_format( const char* file_ext )
 {
-  if(!strcmp(file_ext, "wav"))
-    decoder.format = WAVE;
-  else if(!strcmp(file_ext, "mp3"))
-    decoder.format = MP3;
-  else if(!strcmp(file_ext, "flac"))
-    decoder.format = FLAC;
-  else if(!strcmp(file_ext, "aac"))
-    decoder.format = AAC;
-  else if(!strcmp(file_ext, "mp4"))
-    decoder.format = MP4;
-  else if(!strcmp(file_ext, "m4a"))
-    decoder.format = M4A;
-  else
-    decoder.format = UNSUPPORTED;
+	if( !strcmp( file_ext, "wav" ) )
+		decoder.format = WAVE;
+	else if( !strcmp( file_ext, "mp3" ) )
+		decoder.format = MP3;
+	else if( !strcmp( file_ext, "flac" ) )
+		decoder.format = FLAC;
+	else if( !strcmp( file_ext, "aac" ) )
+		decoder.format = AAC;
+	else if( !strcmp( file_ext, "mp4" ) )
+		decoder.format = MP4;
+	else if( !strcmp( file_ext, "m4a" ) )
+		decoder.format = M4A;
+	else
+		decoder.format = UNSUPPORTED;
 }
 
 // Decoding functions
 // --------------------------------------------------------------------------
-static _Bool decode(void)
+static _Bool decode( void )
 {
-  _Bool result = false;
+	_Bool result = false;
 
-  if(!decoder.initialized)
-    return false;
+	if( !decoder.initialized )
+		return false;
 
-  switch(decoder.format)
-  {
-    case WAVE:
-      result = WAVE_Decode();
-      break;
+	switch( decoder.format )
+	{
+	case WAVE:
+		result = WAVE_Decode();
+		break;
 
-    case MP3:
-      result = MP3_Decode();
-      break;
+	case MP3:
+		result = MP3_Decode();
+		break;
 
-    case FLAC:
-      result = FLAC_Decode();
-      break;
+	case FLAC:
+		result = FLAC_Decode();
+		break;
 
-    case AAC:
-    case MP4:
-    case M4A:
-      result = AAC_Decode();
-      break;
+	case AAC:
+	case MP4:
+	case M4A:
+		result = AAC_Decode();
+		break;
 
-    default:
-      result = false;
-      break;
-  }
+	default:
+		result = false;
+		break;
+	}
 
-  return result;
+	return result;
 }
 
 // Decoder task
 // ---------------------------------------------------------------------------
-static void vTaskDecoder(void * pvParameters)
+static void vTaskDecoder( void * pvParameters )
 {
-  _Bool result = true;
+	_Bool result = true;
 
-  I2S_StartDMA(decoder.buffers.out, decoder.buffers.out_size / sizeof(*decoder.buffers.out));
-  decoder.working = true;
+	I2S_StartDMA( decoder.buffers.out, decoder.buffers.out_size / sizeof(*decoder.buffers.out) );
+	decoder.working = true;
 
-  for(;;)
-    {
-      // Wait for decoder to be initialized
-      while(!decoder.initialized)	vTaskDelay(5);
-
-      if(xSemaphoreTake(decoder.shI2SEvent, portMAX_DELAY) == pdTRUE)
+	for( ;; )
 	{
-	  if(!result)
-	    break;
-	  result = decode();
+		// Wait for decoder to be initialized
+		while( !decoder.initialized )
+			vTaskDelay( 5 );
+
+		if( xSemaphoreTake(decoder.shI2SEvent, portMAX_DELAY) == pdTRUE )
+		{
+			if( !result )
+				break;
+			result = decode();
+		}
 	}
-    }
 
-
-  deinit();
-
-  vSemaphoreDelete(decoder.shI2SEvent);
-  vTaskDelete(decoder.xHandleTaskDecoder);
+	deinit();
 }
 
-static _Bool init_task(void)
+static _Bool init_task( void )
 {
-  // Create and take binary semaphore
-  vSemaphoreCreateBinary(decoder.shI2SEvent);
-  xSemaphoreTake(decoder.shI2SEvent, 0);
+	// Create and take binary semaphore
+	vSemaphoreCreateBinary( decoder.shI2SEvent );
+	xSemaphoreTake( decoder.shI2SEvent, 0 );
 
-  // Creating tasks
-  if(xTaskCreate(vTaskDecoder, "DECODER", DECODER_STACK_SIZE, NULL, mainFLASH_TASK_PRIORITY + 2, &decoder.xHandleTaskDecoder) == pdPASS)
-    {
-      DBG_PRINTF("Task(s) started!");
-      return true;
-    }
+	// Creating tasks
+	if( xTaskCreate( vTaskDecoder, "DECODER", DECODER_STACK_SIZE, NULL, mainFLASH_TASK_PRIORITY + 2,
+			&decoder.xHandleTaskDecoder ) == pdPASS )
+	{
+		DBG_PRINTF( "Task(s) started!" );
+		return true;
+	}
 
-  return false;
+	return false;
 }
 
 // Interface functions
 // ---------------------------------------------------------------------------
-static void init(char* filename)
+static void init( char* filename )
 {
-  _Bool result;
+	_Bool result;
 
-  if(decoder.initialized)
-    deinit();
+	if( decoder.initialized )
+		deinit();
 
-  // Clear structure
-  memset(&decoder, 0, sizeof(decoder));
+	// Clear structure
+	memset( &decoder, 0, sizeof(decoder) );
 
-  // Get file information to structure
-  if(f_stat(filename, &decoder.song.info) != FR_OK)
-    return;
+	// Get file information to structure
+	if( f_stat( filename, &decoder.song.info ) != FR_OK )
+		return;
 
-  if(f_open(&decoder.song.file, (const TCHAR*)&decoder.song.info.fname, FA_READ) != FR_OK)
-    return;
+	if( f_open( &decoder.song.file, (const TCHAR*) &decoder.song.info.fname, FA_READ ) != FR_OK )
+		return;
 
-  // Set audio format based on file extension
-  set_audio_format(FB_GetFileExtension(filename));
+	// Set audio format based on file extension
+	set_audio_format( FB_GetFileExtension( filename ) );
 
-  // Init proper decoder based on audio format
-  switch(decoder.format)
-  {
-    case WAVE:
-      result = WAVE_Init(&decoder);
-      break;
-    case MP3:
-      result = MP3_Init(&decoder);
-      break;
-    case FLAC:
-      result = FLAC_Init(&decoder);
-      break;
-    case AAC:
-    case MP4:
-    case M4A:
-      result = AAC_Init(&decoder);
-      break;
-    default:
-      DBG_PRINTF("Unsupported format!");
-      result = false;
-      return;
-  }
+	// Init proper decoder based on audio format
+	switch( decoder.format )
+	{
+	case WAVE:
+		result = WAVE_Init( &decoder );
+		break;
+	case MP3:
+		result = MP3_Init( &decoder );
+		break;
+	case FLAC:
+		result = FLAC_Init( &decoder );
+		break;
+	case AAC:
+	case MP4:
+	case M4A:
+		result = AAC_Init( &decoder );
+		break;
+	default:
+		DBG_PRINTF( "Unsupported format!" );
+		result = false;
+		return;
+	}
 
-  if(!result)
-    return;
+	if( !result )
+		return;
 
-  // Clear audio buffers
-  memset(decoder.buffers.in, 0, decoder.buffers.in_size);
-  memset(decoder.buffers.out, 0, decoder.buffers.out_size);
+	// Clear audio buffers
+	memset( decoder.buffers.in, 0, decoder.buffers.in_size );
+	memset( decoder.buffers.out, 0, decoder.buffers.out_size );
 
-  decoder.buffers.in_ptr = decoder.buffers.in;
-  decoder.buffers.out_ptr = decoder.buffers.out;
+	decoder.buffers.in_ptr = decoder.buffers.in;
+	decoder.buffers.out_ptr = decoder.buffers.out;
 
-  if(!init_task())
-    return;
+	if( !init_task() )
+		return;
 
-  // Decoder initialized
-  DBG_PRINTF("Decoding file: %s", filename);
-  decoder.initialized = true;
+	// Decoder initialized
+	DBG_PRINTF( "Decoding file: %s", filename );
+	decoder.initialized = true;
 
 }
 
-static void deinit(void)
+static void deinit( void )
 {
-  // Cleanup
-  if(decoder.working)
-    {
-      I2S_StopDMA();
-      f_close(&decoder.song.file);
-      vSemaphoreDelete(decoder.shI2SEvent);
-      vTaskDelete(decoder.xHandleTaskDecoder);
-    }
+	// Cleanup
+	if( decoder.working )
+	{
+		decoder.working = false;
 
-  // Deinit actual decoder
-  switch(decoder.format)
-  {
-    case WAVE:
-      WAVE_Deinit();
-      break;
+		I2S_StopDMA();
+		f_close( &decoder.song.file );
+		vSemaphoreDelete( decoder.shI2SEvent );
+		vTaskDelete( decoder.xHandleTaskDecoder );
+	}
 
-    case MP3:
-      MP3_Deinit();
-      break;
+	// Deinit actual decoder
+	switch( decoder.format )
+	{
+	case WAVE:
+		WAVE_Deinit();
+		break;
 
-    case FLAC:
-      FLAC_Deinit();
-      break;
+	case MP3:
+		MP3_Deinit();
+		break;
 
-    case AAC:
-    case MP4:
-    case M4A:
-      AAC_Deinit();
-      break;
+	case FLAC:
+		FLAC_Deinit();
+		break;
 
-    default:
-      return;
-  }
+	case AAC:
+	case MP4:
+	case M4A:
+		AAC_Deinit();
+		break;
 
-  // Clear structure
-  memset(&decoder, 0, sizeof(decoder));
+	default:
+		return;
+	}
 
-  // Decoder deinitialized
-  DBG_PRINTF("Decoder stopped");
-  decoder.initialized = false;
+	// Decoder deinitialized
+	DBG_PRINTF( "Decoder stopped" );
+	decoder.initialized = false;
 }
 
-static void pause(void)
+static void pause( void )
 {
-  if(!decoder.initialized)
-    return;
+	if( !decoder.initialized )
+		return;
 
-  I2S_PauseDMA();
+	I2S_PauseDMA();
 }
 
-static void resume(void)
+static void resume( void )
 {
-  if(!decoder.initialized)
-    return;
+	if( !decoder.initialized )
+		return;
 
-  I2S_ResumeDMA();
+	I2S_ResumeDMA();
 }
 
-static _Bool is_working(void)
+static _Bool is_working( void )
 {
-  return decoder.working;
+	return decoder.working;
 }
 // +--------------------------------------------------------------------------
 // | @ Public functions
 // +--------------------------------------------------------------------------
-_Bool Decoder_InitInterface(struct decoder_if* interface)
+_Bool Decoder_InitInterface( struct decoder_if* interface )
 {
-  if(!interface)
-    return false;
+	if( !interface )
+		return false;
 
-  interface->start = init;
-  interface->stop = deinit;
-  interface->pause = pause;
-  interface->resume = resume;
-  interface->is_working = is_working;
+	interface->start = init;
+	interface->stop = deinit;
+	interface->pause = pause;
+	interface->resume = resume;
+	interface->is_working = is_working;
 
-  return true;
+	return true;
 }
 // +--------------------------------------------------------------------------
 // | @ Interrupt handlers
 // +--------------------------------------------------------------------------
-void I2S_HalfTransferCallback(void)
+void I2S_HalfTransferCallback( void )
 {
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-  decoder.buffers.out_ptr = &decoder.buffers.out[0];
-  xSemaphoreGiveFromISR(decoder.shI2SEvent, &xHigherPriorityTaskWoken);
-  portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+	decoder.buffers.out_ptr = &decoder.buffers.out[0];
+	xSemaphoreGiveFromISR( decoder.shI2SEvent, &xHigherPriorityTaskWoken );
+	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 
 }
 
-void I2S_TransferCompleteCallback(void)
+void I2S_TransferCompleteCallback( void )
 {
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-  decoder.buffers.out_ptr = &decoder.buffers.out[decoder.buffers.out_size / (sizeof(int16_t)*2)];
-  xSemaphoreGiveFromISR(decoder.shI2SEvent, &xHigherPriorityTaskWoken);
-  portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+	decoder.buffers.out_ptr =
+			&decoder.buffers.out[decoder.buffers.out_size / (sizeof(int16_t) * 2)];
+	xSemaphoreGiveFromISR( decoder.shI2SEvent, &xHigherPriorityTaskWoken );
+	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 }

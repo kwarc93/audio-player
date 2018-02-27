@@ -13,7 +13,7 @@
 #define VOLUME_CONVERT(Volume)    (((Volume) > 100) ? 100:((uint8_t)(((Volume) * 255) / 100)))
 
 /* Uncomment this line to enable verifying data sent to codec after each write
-   operation (for debug purpose) */
+ operation (for debug purpose) */
 #if !defined (VERIFY_WRITTENDATA)
 //#define VERIFY_WRITTENDATA
 #endif /* VERIFY_WRITTENDATA */
@@ -27,479 +27,474 @@ static uint8_t Is_cs43l22_Stop = 1;
 volatile uint8_t OutputDev = 0;
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /** @defgroup CS43L22_Function_Prototypes
-  * @{
-  */
+ * @{
+ */
 /* CS43L22 IO functions */
-static uint8_t 	 CODEC_IO_Write(uint8_t Addr, uint8_t Reg, uint8_t Value);
-static void      CS43L22_IO_Init(void);
-static void      CS43L22_IO_DeInit(void);
-static void      CS43L22_IO_Write(uint8_t Addr, uint8_t Reg, uint8_t Value);
-static uint8_t   CS43L22_IO_Read(uint8_t Addr, uint8_t Reg);
-static void 	 CS43L22_IO_Delay(uint32_t Delay);
+static uint8_t CODEC_IO_Write( uint8_t Addr, uint8_t Reg, uint8_t Value );
+static void CS43L22_IO_Init( void );
+static void CS43L22_IO_DeInit( void );
+static void CS43L22_IO_Write( uint8_t Addr, uint8_t Reg, uint8_t Value );
+static uint8_t CS43L22_IO_Read( uint8_t Addr, uint8_t Reg );
+static void CS43L22_IO_Delay( uint32_t Delay );
 
 /* Audio codec power on/off macro definition */
 #define AUDIO_IO_POWER_OFF()      (AUDIO_RESET_PORT->BSRR = GPIO_BRR_BR_3)
 #define AUDIO_IO_POWER_ON()       (AUDIO_RESET_PORT->BSRR = GPIO_BSRR_BS_3)
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /** @defgroup CS43L22_Private_Functions
-  * @{
-  */
+ * @{
+ */
 
 /**
-  * @brief Initializes the audio codec and the control interface.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @param OutputDevice: can be CS43L22_OUTPUT_SPEAKER, CS43L22_OUTPUT_HEADPHONE,
-  *                       CS43L22_OUTPUT_BOTH or CS43L22_OUTPUT_AUTO .
-  * @param Volume: Initial volume level (from 0 (Mute) to 100 (Max))
-  * @retval 0 if correct communication, else wrong communication
-  */
-uint32_t CS43L22_Init(uint16_t DeviceAddr, uint16_t OutputDevice, uint8_t Volume, uint32_t AudioFreq)
+ * @brief Initializes the audio codec and the control interface.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @param OutputDevice: can be CS43L22_OUTPUT_SPEAKER, CS43L22_OUTPUT_HEADPHONE,
+ *                       CS43L22_OUTPUT_BOTH or CS43L22_OUTPUT_AUTO .
+ * @param Volume: Initial volume level (from 0 (Mute) to 100 (Max))
+ * @retval 0 if correct communication, else wrong communication
+ */
+uint32_t CS43L22_Init( uint16_t DeviceAddr, uint16_t OutputDevice, uint8_t Volume,
+		uint32_t AudioFreq )
 {
-  uint32_t counter = 0;
+	uint32_t counter = 0;
 
-  /* Initialize the Control interface of the Audio Codec */
-  CS43L22_IO_Init();
+	/* Initialize the Control interface of the Audio Codec */
+	CS43L22_IO_Init();
 
-  /* Keep Codec powered OFF */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x01);
+	/* Keep Codec powered OFF */
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_POWER_CTL1, 0x01 );
 
-  /*Save Output device for mute ON/OFF procedure*/
-  switch (OutputDevice)
-  {
-  case CS43L22_OUTPUT_SPEAKER:
-    OutputDev = 0xFA;
-    break;
+	/*Save Output device for mute ON/OFF procedure*/
+	switch( OutputDevice )
+	{
+	case CS43L22_OUTPUT_SPEAKER:
+		OutputDev = 0xFA;
+		break;
 
-  case CS43L22_OUTPUT_HEADPHONE:
-    OutputDev = 0xAF;
-    break;
+	case CS43L22_OUTPUT_HEADPHONE:
+		OutputDev = 0xAF;
+		break;
 
-  case CS43L22_OUTPUT_BOTH:
-    OutputDev = 0xAA;
-    break;
+	case CS43L22_OUTPUT_BOTH:
+		OutputDev = 0xAA;
+		break;
 
-  case CS43L22_OUTPUT_AUTO:
-    OutputDev = 0x05;
-    break;
+	case CS43L22_OUTPUT_AUTO:
+		OutputDev = 0x05;
+		break;
 
-  default:
-    OutputDev = 0x05;
-    break;
-  }
+	default:
+		OutputDev = 0x05;
+		break;
+	}
 
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, OutputDev);
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_POWER_CTL2, OutputDev );
 
-  /* Clock configuration: Auto detection */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_CLOCKING_CTL, 0x81);
+	/* Clock configuration: Auto detection */
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_CLOCKING_CTL, 0x81 );
 
-  /* Set the Slave Mode and the audio Standard */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_INTERFACE_CTL1, CODEC_STANDARD);
+	/* Set the Slave Mode and the audio Standard */
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_INTERFACE_CTL1, CODEC_STANDARD );
 
-  /* Set the Master volume */
-  counter += CS43L22_SetVolume(DeviceAddr, Volume);
+	/* Set the Master volume */
+	counter += CS43L22_SetVolume( DeviceAddr, Volume );
 
-  /* If the Speaker is enabled, set the Mono mode and volume attenuation level */
-  if(OutputDevice != CS43L22_OUTPUT_HEADPHONE)
-  {
-    /* Set the Speaker Mono mode */
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_PLAYBACK_CTL2, 0x06);
+	/* If the Speaker is enabled, set the Mono mode and volume attenuation level */
+	if( OutputDevice != CS43L22_OUTPUT_HEADPHONE )
+	{
+		/* Set the Speaker Mono mode */
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_PLAYBACK_CTL2, 0x06 );
 
-    /* Set the Speaker attenuation level */
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_SPEAKER_A_VOL, 0x00);
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_SPEAKER_B_VOL, 0x00);
-  }
+		/* Set the Speaker attenuation level */
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_SPEAKER_A_VOL, 0x00 );
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_SPEAKER_B_VOL, 0x00 );
+	}
 
-  /* NOTE: Additional configuration for the CODEC. These configurations are done to reduce
-  the time needed for the Codec to power off. If these configurations are removed,
-  then a long delay should be added between powering off the Codec and switching
-  off the I2S peripheral MCLK clock (which is the operating clock for Codec).
-  If this delay is not inserted, then the codec will not shut down properly and
-  it results in high noise after shut down. */
+	/* NOTE: Additional configuration for the CODEC. These configurations are done to reduce
+	 the time needed for the Codec to power off. If these configurations are removed,
+	 then a long delay should be added between powering off the Codec and switching
+	 off the I2S peripheral MCLK clock (which is the operating clock for Codec).
+	 If this delay is not inserted, then the codec will not shut down properly and
+	 it results in high noise after shut down. */
 
-  /* Enable the analog soft ramp */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_ANALOG_ZC_SR_SETT, 0x0F);
-  /* Enable the digital soft ramp and digital zero crossing */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MISC_CTL, 0x07);
-  /* Disable the limiter attack level */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_LIMIT_CTL1, 0x00);
-  /* Adjust Bass and Treble levels to 0dB */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_TONE_CTL, 0x88);
-  /* Adjust PCM volume level to 0dB */
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_PCMA_VOL, 0x00);
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_PCMB_VOL, 0x00);
+	/* Enable the analog soft ramp */
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_ANALOG_ZC_SR_SETT, 0x0F );
+	/* Enable the digital soft ramp and digital zero crossing */
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_MISC_CTL, 0x07 );
+	/* Disable the limiter attack level */
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_LIMIT_CTL1, 0x00 );
+	/* Adjust Bass and Treble levels to 0dB */
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_TONE_CTL, 0x88 );
+	/* Adjust PCM volume level to 0dB */
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_PCMA_VOL, 0x00 );
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_PCMB_VOL, 0x00 );
 
-  /* Return communication control value */
-  return counter;
+	/* Return communication control value */
+	return counter;
 }
 
 /**
-  * @brief  Deinitializes the audio codec.
-  * @param  None
-  * @retval  None
-  */
-void CS43L22_DeInit(void)
+ * @brief  Deinitializes the audio codec.
+ * @param  None
+ * @retval  None
+ */
+void CS43L22_DeInit( void )
 {
-  /* Deinitialize Audio Codec interface */
-  CS43L22_IO_DeInit();
+	/* Deinitialize Audio Codec interface */
+	CS43L22_IO_DeInit();
 }
 
 /**
-  * @brief  Get the CS43L22 ID.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @retval The CS43L22 ID
-  */
-uint32_t CS43L22_ReadID(uint16_t DeviceAddr)
+ * @brief  Get the CS43L22 ID.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @retval The CS43L22 ID
+ */
+uint32_t CS43L22_ReadID( uint16_t DeviceAddr )
 {
-  uint8_t Value;
+	uint8_t Value;
 
-  Value = CS43L22_IO_Read(DeviceAddr, CS43L22_CHIPID_ADDR);
-  Value = (Value & CS43L22_ID_MASK);
+	Value = CS43L22_IO_Read( DeviceAddr, CS43L22_CHIPID_ADDR );
+	Value = (Value & CS43L22_ID_MASK);
 
-  return((uint32_t) Value);
+	return ((uint32_t) Value);
 }
 
 /**
-  * @brief  Plays beep signal once.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @retval 0 if correct communication, else wrong communication
-  */
-uint32_t CS43L22_Beep(uint16_t DeviceAddr)
+ * @brief  Plays beep signal once.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @retval 0 if correct communication, else wrong communication
+ */
+uint32_t CS43L22_Beep( uint16_t DeviceAddr )
 {
 	uint32_t counter = 0;
 
 	/* Disable beep */
-	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_TONE_CFG, 0x00);
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_BEEP_TONE_CFG, 0x00 );
 	/* Beep frequency: ~888Hz (A5) and on-time: ~0.5s */
-	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_FREQ_ON_TIME, 0x61);
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_BEEP_FREQ_ON_TIME, 0x61 );
 	/* Beep off-time duration: ~1,23s and volume: -6dB */
-	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_VOL_OFF_TIME, 0x00);
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_BEEP_VOL_OFF_TIME, 0x00 );
 	/* Enable single beep tone */
-	counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_BEEP_TONE_CFG, 0x40);
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_BEEP_TONE_CFG, 0x40 );
 
 	return counter;
 }
 
 /**
-  * @brief Start the audio Codec play feature.
-  * @note For this codec no Play options are required.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @retval 0 if correct communication, else wrong communication
-  */
-uint32_t CS43L22_Play(uint16_t DeviceAddr, uint16_t* pBuffer, uint16_t Size)
+ * @brief Start the audio Codec play feature.
+ * @note For this codec no Play options are required.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @retval 0 if correct communication, else wrong communication
+ */
+uint32_t CS43L22_Play( uint16_t DeviceAddr, uint16_t* pBuffer, uint16_t Size )
 {
-  uint32_t counter = 0;
+	uint32_t counter = 0;
 
-  if(Is_cs43l22_Stop == 1)
-  {
-    /* Enable the digital soft ramp */
+	if( Is_cs43l22_Stop == 1 )
+	{
+		/* Enable the digital soft ramp */
 //    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MISC_CTL, 0x06);
+		/* Power on the Codec */
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_POWER_CTL1, 0x9E );
 
-    /* Power on the Codec */
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x9E);
-
-    /* Unmute */
+		/* Unmute */
 //    counter += CS43L22_SetMute(DeviceAddr, AUDIO_MUTE_OFF);
+		Is_cs43l22_Stop = 0;
+	}
 
-    Is_cs43l22_Stop = 0;
-  }
-
-  /* Return communication control value */
-  return counter;
+	/* Return communication control value */
+	return counter;
 }
 
 /**
-  * @brief Pauses playing on the audio codec.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @retval 0 if correct communication, else wrong communication
-  */
-uint32_t CS43L22_Pause(uint16_t DeviceAddr)
+ * @brief Pauses playing on the audio codec.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @retval 0 if correct communication, else wrong communication
+ */
+uint32_t CS43L22_Pause( uint16_t DeviceAddr )
 {
-  uint32_t counter = 0;
+	uint32_t counter = 0;
 
-  /* Pause the audio file playing */
-  /* Mute the output first */
-  counter += CS43L22_SetMute(DeviceAddr, AUDIO_MUTE_ON);
+	/* Pause the audio file playing */
+	/* Mute the output first */
+	counter += CS43L22_SetMute( DeviceAddr, AUDIO_MUTE_ON );
 
-  /* Put the Codec in Power save mode */
+	/* Put the Codec in Power save mode */
 //  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x01);
-
-  return counter;
+	return counter;
 }
 
 /**
-  * @brief Resumes playing on the audio codec.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @retval 0 if correct communication, else wrong communication
-  */
-uint32_t CS43L22_Resume(uint16_t DeviceAddr)
+ * @brief Resumes playing on the audio codec.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @retval 0 if correct communication, else wrong communication
+ */
+uint32_t CS43L22_Resume( uint16_t DeviceAddr )
 {
-  uint32_t counter = 0;
-  volatile uint32_t index = 0x00;
-  /* Resumes the audio file playing */
-  /* Unmute the output first */
-  counter += CS43L22_SetMute(DeviceAddr, AUDIO_MUTE_OFF);
+	uint32_t counter = 0;
+	volatile uint32_t index = 0x00;
+	/* Resumes the audio file playing */
+	/* Unmute the output first */
+	counter += CS43L22_SetMute( DeviceAddr, AUDIO_MUTE_OFF );
 
-  for(index = 0x00; index < 0xFF; index++);
+	for( index = 0x00; index < 0xFF; index++ )
+		;
 
-  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, OutputDev);
+	counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_POWER_CTL2, OutputDev );
 
-  /* Exit the Power save mode */
+	/* Exit the Power save mode */
 //  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x9E);
-
-  return counter;
+	return counter;
 }
 
 /**
-  * @brief Stops audio Codec playing. It powers down the codec.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @param CodecPdwnMode: selects the  power down mode.
-  *          - CODEC_PDWN_HW: Physically power down the codec. When resuming from this
-  *                           mode, the codec is set to default configuration
-  *                           (user should re-Initialize the codec in order to
-  *                            play again the audio stream).
-  * @retval 0 if correct communication, else wrong communication
-  */
-uint32_t CS43L22_Stop(uint16_t DeviceAddr, uint32_t CodecPdwnMode)
+ * @brief Stops audio Codec playing. It powers down the codec.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @param CodecPdwnMode: selects the  power down mode.
+ *          - CODEC_PDWN_HW: Physically power down the codec. When resuming from this
+ *                           mode, the codec is set to default configuration
+ *                           (user should re-Initialize the codec in order to
+ *                            play again the audio stream).
+ * @retval 0 if correct communication, else wrong communication
+ */
+uint32_t CS43L22_Stop( uint16_t DeviceAddr, uint32_t CodecPdwnMode )
 {
-  uint32_t counter = 0;
+	uint32_t counter = 0;
 
-  /* Mute the output first */
+	/* Mute the output first */
 //  counter += CS43L22_SetMute(DeviceAddr, AUDIO_MUTE_ON);
-
-  /* Disable the digital soft ramp */
+	/* Disable the digital soft ramp */
 //  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MISC_CTL, 0x04);
-
-  /* Power down the DAC and the speaker (PMDAC and PMSPK bits)*/
+	/* Power down the DAC and the speaker (PMDAC and PMSPK bits)*/
 //  counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL1, 0x9F);
-
-  Is_cs43l22_Stop = 1;
-  return counter;
+	Is_cs43l22_Stop = 1;
+	return counter;
 }
 
 /**
-  * @brief Sets higher or lower the codec volume level.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @param Volume: a byte value from 0 to 255 (refer to codec registers
-  *         description for more details).
-  * @retval 0 if correct communication, else wrong communication
-  */
-uint32_t CS43L22_SetVolume(uint16_t DeviceAddr, uint8_t Volume)
+ * @brief Sets higher or lower the codec volume level.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @param Volume: a byte value from 0 to 255 (refer to codec registers
+ *         description for more details).
+ * @retval 0 if correct communication, else wrong communication
+ */
+uint32_t CS43L22_SetVolume( uint16_t DeviceAddr, uint8_t Volume )
 {
-  uint32_t counter = 0;
-  uint8_t convertedvol = VOLUME_CONVERT(Volume);
+	uint32_t counter = 0;
+	uint8_t convertedvol = VOLUME_CONVERT( Volume );
 
-  if(Volume > 0xE6)
-  {
-    /* Set the Master volume */
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MASTER_A_VOL, convertedvol - 0xE7);
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MASTER_B_VOL, convertedvol - 0xE7);
-  }
-  else
-  {
-    /* Set the Master volume */
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MASTER_A_VOL, convertedvol + 0x19);
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MASTER_B_VOL, convertedvol + 0x19);
-  }
+	if( Volume > 0xE6 )
+	{
+		/* Set the Master volume */
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_MASTER_A_VOL, convertedvol - 0xE7 );
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_MASTER_B_VOL, convertedvol - 0xE7 );
+	}
+	else
+	{
+		/* Set the Master volume */
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_MASTER_A_VOL, convertedvol + 0x19 );
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_MASTER_B_VOL, convertedvol + 0x19 );
+	}
 
-  return counter;
+	return counter;
 }
 
 /**
-  * @brief Sets new frequency.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @param AudioFreq: Audio frequency used to play the audio stream.
-  * @retval 0 if correct communication, else wrong communication
-  */
-uint32_t CS43L22_SetFrequency(uint16_t DeviceAddr, uint32_t AudioFreq)
+ * @brief Sets new frequency.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @param AudioFreq: Audio frequency used to play the audio stream.
+ * @retval 0 if correct communication, else wrong communication
+ */
+uint32_t CS43L22_SetFrequency( uint16_t DeviceAddr, uint32_t AudioFreq )
 {
-  return 0;
+	return 0;
 }
 
 /**
-  * @brief Enables or disables the mute feature on the audio codec.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @param Cmd: AUDIO_MUTE_ON to enable the mute or AUDIO_MUTE_OFF to disable the
-  *             mute mode.
-  * @retval 0 if correct communication, else wrong communication
-  */
-uint32_t CS43L22_SetMute(uint16_t DeviceAddr, uint32_t Cmd)
+ * @brief Enables or disables the mute feature on the audio codec.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @param Cmd: AUDIO_MUTE_ON to enable the mute or AUDIO_MUTE_OFF to disable the
+ *             mute mode.
+ * @retval 0 if correct communication, else wrong communication
+ */
+uint32_t CS43L22_SetMute( uint16_t DeviceAddr, uint32_t Cmd )
 {
-  uint32_t counter = 0;
+	uint32_t counter = 0;
 
-  /* Set the Mute mode */
-  if(Cmd == AUDIO_MUTE_ON)
-  {
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, 0xFF);
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_HEADPHONE_A_VOL, 0x01);
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_HEADPHONE_B_VOL, 0x01);
-  }
-  else /* AUDIO_MUTE_OFF Disable the Mute */
-  {
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_HEADPHONE_A_VOL, 0x00);
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_HEADPHONE_B_VOL, 0x00);
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, OutputDev);
-  }
-  return counter;
+	/* Set the Mute mode */
+	if( Cmd == AUDIO_MUTE_ON )
+	{
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_POWER_CTL2, 0xFF );
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_HEADPHONE_A_VOL, 0x01 );
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_HEADPHONE_B_VOL, 0x01 );
+	}
+	else /* AUDIO_MUTE_OFF Disable the Mute */
+	{
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_HEADPHONE_A_VOL, 0x00 );
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_HEADPHONE_B_VOL, 0x00 );
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_POWER_CTL2, OutputDev );
+	}
+	return counter;
 }
 
 /**
-  * @brief Switch dynamically (while audio file is played) the output target
-  *         (speaker or headphone).
-  * @note This function modifies a global variable of the audio codec driver: OutputDev.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @param Output: specifies the audio output target: CS43L22_OUTPUT_SPEAKER,
-  *         CS43L22_OUTPUT_HEADPHONE, CS43L22_OUTPUT_BOTH or CS43L22_OUTPUT_AUTO
-  * @retval 0 if correct communication, else wrong communication
-  */
-uint32_t CS43L22_SetOutputMode(uint16_t DeviceAddr, uint8_t Output)
+ * @brief Switch dynamically (while audio file is played) the output target
+ *         (speaker or headphone).
+ * @note This function modifies a global variable of the audio codec driver: OutputDev.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @param Output: specifies the audio output target: CS43L22_OUTPUT_SPEAKER,
+ *         CS43L22_OUTPUT_HEADPHONE, CS43L22_OUTPUT_BOTH or CS43L22_OUTPUT_AUTO
+ * @retval 0 if correct communication, else wrong communication
+ */
+uint32_t CS43L22_SetOutputMode( uint16_t DeviceAddr, uint8_t Output )
 {
-  uint32_t counter = 0;
+	uint32_t counter = 0;
 
-  switch (Output)
-  {
-    case CS43L22_OUTPUT_SPEAKER:
-      counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, 0xFA); /* SPK always ON & HP always OFF */
-      OutputDev = 0xFA;
-      break;
+	switch( Output )
+	{
+	case CS43L22_OUTPUT_SPEAKER:
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_POWER_CTL2, 0xFA ); /* SPK always ON & HP always OFF */
+		OutputDev = 0xFA;
+		break;
 
-    case CS43L22_OUTPUT_HEADPHONE:
-      counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, 0xAF); /* SPK always OFF & HP always ON */
-      OutputDev = 0xAF;
-      break;
+	case CS43L22_OUTPUT_HEADPHONE:
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_POWER_CTL2, 0xAF ); /* SPK always OFF & HP always ON */
+		OutputDev = 0xAF;
+		break;
 
-    case CS43L22_OUTPUT_BOTH:
-      counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, 0xAA); /* SPK always ON & HP always ON */
-      OutputDev = 0xAA;
-      break;
+	case CS43L22_OUTPUT_BOTH:
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_POWER_CTL2, 0xAA ); /* SPK always ON & HP always ON */
+		OutputDev = 0xAA;
+		break;
 
-    case CS43L22_OUTPUT_AUTO:
-      counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, 0x05); /* Detect the HP or the SPK automatically */
-      OutputDev = 0x05;
-      break;
+	case CS43L22_OUTPUT_AUTO:
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_POWER_CTL2, 0x05 ); /* Detect the HP or the SPK automatically */
+		OutputDev = 0x05;
+		break;
 
-    default:
-      counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_POWER_CTL2, 0x05); /* Detect the HP or the SPK automatically */
-      OutputDev = 0x05;
-      break;
-  }
-  return counter;
+	default:
+		counter += CODEC_IO_Write( DeviceAddr, CS43L22_REG_POWER_CTL2, 0x05 ); /* Detect the HP or the SPK automatically */
+		OutputDev = 0x05;
+		break;
+	}
+	return counter;
 }
 
 /**
-  * @brief Resets cs43l22 registers.
-  * @param DeviceAddr: Device address on communication Bus.
-  * @retval 0 if correct communication, else wrong communication
-  */
-uint32_t CS43L22_Reset(uint16_t DeviceAddr)
+ * @brief Resets cs43l22 registers.
+ * @param DeviceAddr: Device address on communication Bus.
+ * @retval 0 if correct communication, else wrong communication
+ */
+uint32_t CS43L22_Reset( uint16_t DeviceAddr )
 {
-  return 0;
+	return 0;
 }
 
 /********************************* LINK AUDIO *********************************/
 /**
-  * @brief  Initializes Audio low level.
-  * @retval None
-  */
-static void CS43L22_IO_Init(void)
+ * @brief  Initializes Audio low level.
+ * @retval None
+ */
+static void CS43L22_IO_Init( void )
 {
 
-  /* Enable Reset GPIO Clock */
-  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
-  __DSB();
+	/* Enable Reset GPIO Clock */
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
+	__DSB();
 
-  /* Audio reset pin configuration */
-  GPIO_PinConfig(AUDIO_RESET_PORT, AUDIO_RESET_PIN, GPIO_OUT_PP_2MHz);
+	/* Audio reset pin configuration */
+	GPIO_PinConfig( AUDIO_RESET_PORT, AUDIO_RESET_PIN, GPIO_OUT_PP_2MHz );
 
-  /* I2C bus init */
-  I2C_Init();
+	/* I2C bus init */
+	I2C_Init();
 
-  /* I2S bus init */
-  I2S_Init();
+	/* I2S bus init */
+	I2S_Init();
 
-  /* Power Down the codec */
-  AUDIO_IO_POWER_OFF();
+	/* Power Down the codec */
+	AUDIO_IO_POWER_OFF();
 
-  /* wait for a delay to insure registers erasing */
-  CS43L22_IO_Delay(5);
+	/* wait for a delay to insure registers erasing */
+	CS43L22_IO_Delay( 5 );
 
-  /* Power on the codec */
-  AUDIO_IO_POWER_ON();
+	/* Power on the codec */
+	AUDIO_IO_POWER_ON();
 
-  /* wait for a delay to insure registers erasing */
-  CS43L22_IO_Delay(5);
+	/* wait for a delay to insure registers erasing */
+	CS43L22_IO_Delay( 5 );
 }
 
 /**
-  * @brief  Deinitializes Audio low level.
-  * @retval None
-  */
-static void CS43L22_IO_DeInit(void)
+ * @brief  Deinitializes Audio low level.
+ * @retval None
+ */
+static void CS43L22_IO_DeInit( void )
 {
 // @ TODO
 }
 
 /**
-  * @brief  Writes a single data.
-  * @param  Addr: I2C address
-  * @param  Reg: Reg address
-  * @param  Value: Data to be written
-  * @retval None
-  */
-static void CS43L22_IO_Write(uint8_t Addr, uint8_t Reg, uint8_t Value)
+ * @brief  Writes a single data.
+ * @param  Addr: I2C address
+ * @param  Reg: Reg address
+ * @param  Value: Data to be written
+ * @retval None
+ */
+static void CS43L22_IO_Write( uint8_t Addr, uint8_t Reg, uint8_t Value )
 {
-	I2C_WriteReg(Addr, Reg, &Value, 1);
+	I2C_WriteReg( Addr, Reg, &Value, 1 );
 }
 
 /**
-  * @brief  Reads a single data.
-  * @param  Addr: I2C address
-  * @param  Reg: Reg address
-  * @retval Data to be read
-  */
-static uint8_t CS43L22_IO_Read(uint8_t Addr, uint8_t Reg)
+ * @brief  Reads a single data.
+ * @param  Addr: I2C address
+ * @param  Reg: Reg address
+ * @retval Data to be read
+ */
+static uint8_t CS43L22_IO_Read( uint8_t Addr, uint8_t Reg )
 {
 	uint8_t Read_Value = 0;
 
-	I2C_ReadReg(Addr, Reg, &Read_Value, 1);
+	I2C_ReadReg( Addr, Reg, &Read_Value, 1 );
 
 	return Read_Value;
 }
 
 /**
-  * @brief  AUDIO Codec delay
-  * @param  Delay: Delay in ms
-  * @retval None
-  */
-static void CS43L22_IO_Delay(uint32_t Delay)
+ * @brief  AUDIO Codec delay
+ * @param  Delay: Delay in ms
+ * @retval None
+ */
+static void CS43L22_IO_Delay( uint32_t Delay )
 {
-  delay_ms(Delay);
+	delay_ms( Delay );
 }
 
 /**
-  * @brief  Writes/Read a single data.
-  * @param  Addr: I2C address
-  * @param  Reg: Reg address
-  * @param  Value: Data to be written
-  * @retval None
-  */
-static uint8_t CODEC_IO_Write(uint8_t Addr, uint8_t Reg, uint8_t Value)
+ * @brief  Writes/Read a single data.
+ * @param  Addr: I2C address
+ * @param  Reg: Reg address
+ * @param  Value: Data to be written
+ * @retval None
+ */
+static uint8_t CODEC_IO_Write( uint8_t Addr, uint8_t Reg, uint8_t Value )
 {
-  uint32_t result = 0;
+	uint32_t result = 0;
 
-  CS43L22_IO_Write(Addr, Reg, Value);
+	CS43L22_IO_Write( Addr, Reg, Value );
 
 #ifdef VERIFY_WRITTENDATA
-  /* Verify that the data has been correctly written */
-  result = (CS43L22_IO_Read(Addr, Reg) == Value) ? 0 : 1;
+	/* Verify that the data has been correctly written */
+	result = (CS43L22_IO_Read(Addr, Reg) == Value) ? 0 : 1;
 #endif /* VERIFY_WRITTENDATA */
 
-  return result;
+	return result;
 }

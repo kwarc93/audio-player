@@ -5,8 +5,6 @@
  *      Author: Kwarc
  */
 
-
-
 // +--------------------------------------------------------------------------
 // | @ Includes
 // +--------------------------------------------------------------------------
@@ -49,50 +47,51 @@ static struct audio_decoder* decoder;
  * @param 	Number of unprocessed bytes left in input buffer
  * @retval	Number of bytes filled to input buffer
  */
-static uint32_t refill_inbuffer(uint32_t bytes_left)
+static uint32_t refill_inbuffer( uint32_t bytes_left )
 {
 	UINT bytes_read = 0;
 	UINT bytes_to_read = decoder->buffers.in_size - bytes_left;
 
 	// Move unprocessed bytes to beginning of input buffer
-	decoder->buffers.in_ptr = memmove(decoder->buffers.in, decoder->buffers.in_ptr, bytes_left);
+	decoder->buffers.in_ptr = memmove( decoder->buffers.in, decoder->buffers.in_ptr, bytes_left );
 
-	decoder->song.result = f_read(&decoder->song.file, decoder->buffers.in + bytes_left, bytes_to_read, &bytes_read);
+	decoder->song.result = f_read( &decoder->song.file, decoder->buffers.in + bytes_left,
+			bytes_to_read, &bytes_read );
 
-	if(decoder->song.result != FR_OK || !bytes_read)
+	if( decoder->song.result != FR_OK || !bytes_read )
 		return 0;
 
 	// Zero-pad last old bytes
-	if (bytes_read < bytes_to_read)
-		memset(decoder->buffers.in + bytes_left + bytes_read, 0, bytes_to_read - bytes_read);
+	if( bytes_read < bytes_to_read )
+		memset( decoder->buffers.in + bytes_left + bytes_read, 0, bytes_to_read - bytes_read );
 
 	return bytes_read;
 }
 // +--------------------------------------------------------------------------
 // | @ Public functions
 // +--------------------------------------------------------------------------
-_Bool AAC_Init(struct audio_decoder* main_decoder)
+_Bool AAC_Init( struct audio_decoder* main_decoder )
 {
 	decoder = main_decoder;
 	hAACDecoder = AACInitDecoder();
 
-	if(!hAACDecoder)
+	if( !hAACDecoder )
 		return false;
 
 	// Allocate audio buffers
 	decoder->buffers.in_size = DECODER_IN_BUFFER_LEN * sizeof(*decoder->buffers.in);
 	decoder->buffers.out_size = DECODER_OUT_BUFFER_LEN * sizeof(*decoder->buffers.out);
 
-	decoder->buffers.in = malloc(decoder->buffers.in_size);
-	decoder->buffers.out = malloc(decoder->buffers.out_size);
+	decoder->buffers.in = malloc( decoder->buffers.in_size );
+	decoder->buffers.out = malloc( decoder->buffers.out_size );
 
-	if(!decoder->buffers.in || !decoder->buffers.out)
+	if( !decoder->buffers.in || !decoder->buffers.out )
 		return false;
 
 	return true;
 }
 
-_Bool AAC_Decode(void)
+_Bool AAC_Decode( void )
 {
 	int error = 0;
 	int offset = 0;
@@ -100,12 +99,12 @@ _Bool AAC_Decode(void)
 
 	do
 	{
-		if(decoder->buffers.in_bytes_left < 2 * AAC_MAINBUF_SIZE)
+		if( decoder->buffers.in_bytes_left < 2 * AAC_MAINBUF_SIZE )
 		{
 			int bytes_filled;
 
-			bytes_filled = refill_inbuffer(decoder->buffers.in_bytes_left);
-			if(!bytes_filled)
+			bytes_filled = refill_inbuffer( decoder->buffers.in_bytes_left );
+			if( !bytes_filled )
 			{
 				decoder->buffers.in_bytes_left = 0;
 				frame_decoded = false;
@@ -115,10 +114,10 @@ _Bool AAC_Decode(void)
 			decoder->buffers.in_bytes_left += bytes_filled;
 		}
 
-		if(decoder->format == AAC)
+		if( decoder->format == AAC )
 		{
-			offset = AACFindSyncWord(decoder->buffers.in_ptr, decoder->buffers.in_bytes_left);
-			if(offset < 0)
+			offset = AACFindSyncWord( decoder->buffers.in_ptr, decoder->buffers.in_bytes_left );
+			if( offset < 0 )
 			{
 				decoder->buffers.in_bytes_left = 0;
 				continue;
@@ -128,12 +127,13 @@ _Bool AAC_Decode(void)
 			decoder->buffers.in_bytes_left -= offset;
 		}
 
-		error = AACDecode(hAACDecoder, &decoder->buffers.in_ptr, (int*)&decoder->buffers.in_bytes_left, decoder->buffers.out_ptr);
+		error = AACDecode( hAACDecoder, &decoder->buffers.in_ptr,
+				(int*) &decoder->buffers.in_bytes_left, decoder->buffers.out_ptr );
 
-		switch(error)
+		switch( error )
 		{
 		case ERR_AAC_NONE:
-			AACGetLastFrameInfo(hAACDecoder, &hAACFrameInfo);
+			AACGetLastFrameInfo( hAACDecoder, &hAACFrameInfo );
 			frame_decoded = true;
 			break;
 		case ERR_AAC_INDATA_UNDERFLOW:
@@ -145,16 +145,16 @@ _Bool AAC_Decode(void)
 		}
 
 	}
-	while(!frame_decoded);
+	while( !frame_decoded );
 
 	return frame_decoded;
 }
 
-_Bool AAC_Deinit(void)
+_Bool AAC_Deinit( void )
 {
-	AACFreeDecoder(hAACDecoder);
-	free(decoder->buffers.in);
-	free(decoder->buffers.out);
+	AACFreeDecoder( hAACDecoder );
+	free( decoder->buffers.in );
+	free( decoder->buffers.out );
 
 	return true;
 }

@@ -11,7 +11,6 @@
 #define LCD_STACK_SIZE TASK_STACK_BYTES(1024)
 
 void Display_StartTasks(unsigned portBASE_TYPE uxPriority);
-void Display_SendText(char* txt);
-
+void Display_SendText( char* txt );
 
 #endif /* UI_DISPLAY_H_ */

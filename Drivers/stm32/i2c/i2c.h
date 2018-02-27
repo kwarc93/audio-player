@@ -19,9 +19,9 @@
 #define I2Cx_USE_TIMEOUT		0
 #define I2Cx_TIMEOUT_MS			10
 
-void I2C_Init(void);
-void I2C_Write(uint8_t address, uint8_t* data, uint32_t length);
-void I2C_WriteReg(uint8_t address, uint8_t reg_address, uint8_t* data, uint8_t length);
-void I2C_ReadReg(uint8_t address, uint8_t reg_addr, uint8_t* data, uint8_t length);
+void I2C_Init( void );
+void I2C_Write( uint8_t address, uint8_t* data, uint32_t length );
+void I2C_WriteReg( uint8_t address, uint8_t reg_address, uint8_t* data, uint8_t length );
+void I2C_ReadReg( uint8_t address, uint8_t reg_addr, uint8_t* data, uint8_t length );
 
 #endif /* STM32_I2C_I2C_H_ */

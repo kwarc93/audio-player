@@ -72,70 +72,68 @@
 /* Private variables ---------------------------------------------------------*/
 
 /**
-  @verbatim
-================================================================================
-                              GLASS LCD MAPPING
-================================================================================
-LCD allows to display informations on six 14-segment Digits and 4 bars:
+ @verbatim
+ ================================================================================
+ GLASS LCD MAPPING
+ ================================================================================
+ LCD allows to display informations on six 14-segment Digits and 4 bars:
 
-  1       2       3       4       5       6
------   -----   -----   -----   -----   -----
-|\|/| o |\|/| o |\|/| o |\|/| o |\|/|   |\|/|   BAR3
--- --   -- --   -- --   -- --   -- --   -- --   BAR2
-|/|\| o |/|\| o |/|\| o |/|\| o |/|\|   |/|\|   BAR1
------ * ----- * ----- * ----- * -----   -----   BAR0
+ 1       2       3       4       5       6
+ -----   -----   -----   -----   -----   -----
+ |\|/| o |\|/| o |\|/| o |\|/| o |\|/|   |\|/|   BAR3
+ -- --   -- --   -- --   -- --   -- --   -- --   BAR2
+ |/|\| o |/|\| o |/|\| o |/|\| o |/|\|   |/|\|   BAR1
+ ----- * ----- * ----- * ----- * -----   -----   BAR0
 
-LCD segment mapping:
---------------------
-  -----A-----        _
-  |\   |   /|   COL |_|
-  F H  J  K B
-  |  \ | /  |        _
-  --G-- --M--   COL |_|
-  |  / | \  |
-  E Q  P  N C
-  |/   |   \|        _
-  -----D-----   DP  |_|
+ LCD segment mapping:
+ --------------------
+ -----A-----        _
+ |\   |   /|   COL |_|
+ F H  J  K B
+ |  \ | /  |        _
+ --G-- --M--   COL |_|
+ |  / | \  |
+ E Q  P  N C
+ |/   |   \|        _
+ -----D-----   DP  |_|
 
  An LCD character coding is based on the following matrix:
-COM           0   1   2     3
-SEG(n)      { E , D , P ,   N   }
-SEG(n+1)    { M , C , COL , DP  }
-SEG(23-n-1) { B , A , K ,   J   }
-SEG(23-n)   { G , F , Q ,   H   }
-with n positive odd number.
+ COM           0   1   2     3
+ SEG(n)      { E , D , P ,   N   }
+ SEG(n+1)    { M , C , COL , DP  }
+ SEG(23-n-1) { B , A , K ,   J   }
+ SEG(23-n)   { G , F , Q ,   H   }
+ with n positive odd number.
 
  The character 'A' for example is:
-  -------------------------------
-LSB   { 1 , 0 , 0 , 0   }
-      { 1 , 1 , 0 , 0   }
-      { 1 , 1 , 0 , 0   }
-MSB   { 1 , 1 , 0 , 0   }
-      -------------------
-  'A' =  F    E   0   0 hexa
+ -------------------------------
+ LSB   { 1 , 0 , 0 , 0   }
+ { 1 , 1 , 0 , 0   }
+ { 1 , 1 , 0 , 0   }
+ MSB   { 1 , 1 , 0 , 0   }
+ -------------------
+ 'A' =  F    E   0   0 hexa
 
-  @endverbatim
+ @endverbatim
  */
 
 /* Constant table for cap characters 'A' --> 'Z' */
-static const uint16_t CapLetterMap[26]=
+static const uint16_t CapLetterMap[26] =
 {
-		/* A      B      C      D      E      F      G      H      I  */
-		0xFE00, 0x6714, 0x1D00, 0x4714, 0x9D00, 0x9C00, 0x3F00, 0xFA00, 0x0014,
-		/* J      K      L      M      N      O      P      Q      R  */
-		0x5300, 0x9841, 0x1900, 0x5A48, 0x5A09, 0x5F00, 0xFC00, 0x5F01, 0xFC01,
-		/* S      T      U      V      W      X      Y      Z  */
-		0xAF00, 0x0414, 0x5b00, 0x18C0, 0x5A81, 0x00C9, 0x0058, 0x05C0
-};
+/* A      B      C      D      E      F      G      H      I  */
+0xFE00, 0x6714, 0x1D00, 0x4714, 0x9D00, 0x9C00, 0x3F00, 0xFA00, 0x0014,
+/* J      K      L      M      N      O      P      Q      R  */
+0x5300, 0x9841, 0x1900, 0x5A48, 0x5A09, 0x5F00, 0xFC00, 0x5F01, 0xFC01,
+/* S      T      U      V      W      X      Y      Z  */
+0xAF00, 0x0414, 0x5b00, 0x18C0, 0x5A81, 0x00C9, 0x0058, 0x05C0 };
 
 /* Constant table for number '0' --> '9' */
-static const uint16_t NumberMap[10]=
+static const uint16_t NumberMap[10] =
 {
-		/* 0      1      2      3      4      5      6      7      8      9  */
-		0x5F00,0x4200,0xF500,0x6700,0xEa00,0xAF00,0xBF00,0x04600,0xFF00,0xEF00
-};
+/* 0      1      2      3      4      5      6      7      8      9  */
+0x5F00, 0x4200, 0xF500, 0x6700, 0xEa00, 0xAF00, 0xBF00, 0x04600, 0xFF00, 0xEF00 };
 
-static uint32_t Digit[4];     /* Digit frame buffer */
+static uint32_t Digit[4]; /* Digit frame buffer */
 
 /* LCD BAR status: To save the bar setting after writing in LCD RAM memory */
 static uint8_t LCDBar = BARLEVEL_FULL;
@@ -147,8 +145,8 @@ static uint8_t LCDBar = BARLEVEL_FULL;
 /** @defgroup STM32L476G_DISCOVERY_LCD_Private_Functions Private Functions
  * @{
  */
-static void ConvertChar(uint8_t* ch, _Bool dot, _Bool colon);
-static void WriteChar(uint8_t* ch, _Bool dot, _Bool colon, LCD_Digit_t position);
+static void ConvertChar( uint8_t* ch, _Bool dot, _Bool colon );
+static void WriteChar( uint8_t* ch, _Bool dot, _Bool colon, LCD_Digit_t position );
 
 /**
  * @}
@@ -162,7 +160,7 @@ static void WriteChar(uint8_t* ch, _Bool dot, _Bool colon, LCD_Digit_t position)
  * @brief  Initialize the LCD GLASS relative GPIO port IOs and LCD peripheral.
  * @retval None
  */
-void LCD_Init(void)
+void LCD_Init( void )
 {
 	/* 1. GPIO INIT */
 
@@ -175,49 +173,48 @@ void LCD_Init(void)
 	//   SEG3 = PB13    SEG9  = PC7      SEG15 = PD14    SEG21 = PB0
 	//   SEG4 = PB15    SEG10 = PA15     SEG16 = PD12    SEG22 = PC4
 	//   SEG5 = PD9     SEG11 = PB4      SEG17 = PD10    SEG23 = PA6
-
 	// Enable GPIO clocks
-	RCC->AHB2ENR |=  RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN |
-					 RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN;
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN |
+	RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN;
 	// Configure pins
-	GPIO_PortConfig(GPIOA, LCD_GPIO_BANKA_PINS, GPIO_AF11_PP_2MHz);
-	GPIO_PortConfig(GPIOB, LCD_GPIO_BANKB_PINS, GPIO_AF11_PP_2MHz);
-	GPIO_PortConfig(GPIOC, LCD_GPIO_BANKC_PINS, GPIO_AF11_PP_2MHz);
-	GPIO_PortConfig(GPIOD, LCD_GPIO_BANKD_PINS, GPIO_AF11_PP_2MHz);
+	GPIO_PortConfig( GPIOA, LCD_GPIO_BANKA_PINS, GPIO_AF11_PP_2MHz );
+	GPIO_PortConfig( GPIOB, LCD_GPIO_BANKB_PINS, GPIO_AF11_PP_2MHz );
+	GPIO_PortConfig( GPIOC, LCD_GPIO_BANKC_PINS, GPIO_AF11_PP_2MHz );
+	GPIO_PortConfig( GPIOD, LCD_GPIO_BANKD_PINS, GPIO_AF11_PP_2MHz );
 
 	/* 2. CLOCK INIT */
 	// Enable write access to Backup domain
-	if ( (RCC->APB1ENR1 & RCC_APB1ENR1_PWREN) == 0)
+	if( (RCC->APB1ENR1 & RCC_APB1ENR1_PWREN) == 0 )
 	{
 		RCC->APB1ENR1 |= RCC_APB1ENR1_PWREN;	// Power interface clock enable
 	}
 	__DSB();  // Delay after an RCC peripheral clock enabling
 
 	// Select LSE as RTC clock soucre
-	if ( (PWR->CR1 & PWR_CR1_DBP) == 0)
+	if( (PWR->CR1 & PWR_CR1_DBP) == 0 )
 	{
-		PWR->CR1  |= PWR_CR1_DBP;				  			// Enable write access to Backup domain
-		while((PWR->CR1 & PWR_CR1_DBP) == 0);  	// Wait for Backup domain Write protection disable
+		PWR->CR1 |= PWR_CR1_DBP;				  	// Enable write access to Backup domain
+		while( (PWR->CR1 & PWR_CR1_DBP) == 0 );	  	// Wait for Backup domain Write protection disable
 	}
 
 	// Reset LSEON and LSEBYP bits before configuring the LSE
 	RCC->BDCR &= ~(RCC_BDCR_LSEON | RCC_BDCR_LSEBYP);
 
 	// RTC Clock selection can be changed only if the Backup Domain is reset
-	RCC->BDCR |=  RCC_BDCR_BDRST;
+	RCC->BDCR |= RCC_BDCR_BDRST;
 	RCC->BDCR &= ~RCC_BDCR_BDRST;
 
 	// Note from STM32L4 Reference Manual:
 	// RTC/LCD Clock:  (1) LSE is in the Backup domain. (2) HSE and LSI are not.
-	while((RCC->BDCR & RCC_BDCR_LSERDY) == 0)
+	while( (RCC->BDCR & RCC_BDCR_LSERDY) == 0 )
 	{  // Wait until LSE clock ready
 		RCC->BDCR |= RCC_BDCR_LSEON;
 	}
 
 	// Select LSE as RTC clock source
 	// BDCR = Backup Domain Control Register
-	RCC->BDCR	&= ~RCC_BDCR_RTCSEL;	  // RTCSEL[1:0]: 00 = No Clock, 01 = LSE, 10 = LSI, 11 = HSE
-	RCC->BDCR	|= RCC_BDCR_RTCSEL_0;   // Select LSE as RTC clock
+	RCC->BDCR &= ~RCC_BDCR_RTCSEL;	  // RTCSEL[1:0]: 00 = No Clock, 01 = LSE, 10 = LSI, 11 = HSE
+	RCC->BDCR |= RCC_BDCR_RTCSEL_0;   // Select LSE as RTC clock
 
 	RCC->APB1ENR1 &= ~RCC_APB1ENR1_PWREN;	// Power interface clock disable
 
@@ -233,9 +230,9 @@ void LCD_Init(void)
 	LCD->CR &= ~LCD_CR_LCDEN;
 
 	LCD->FCR = 0;
-	LCD->FCR |= LCD_PRESCALER_1  | LCD_DIVIDER_31 | LCD_BLINKFREQUENCY_DIV32 |
-			    LCD_DEADTIME_0 | LCD_PULSEONDURATION_4 | LCD_CONTRASTLEVEL_5;
-	while(!(LCD->SR & LCD_SR_FCRSR));
+	LCD->FCR |= LCD_PRESCALER_1 | LCD_DIVIDER_31 | LCD_BLINKFREQUENCY_DIV32 |
+	LCD_DEADTIME_0 | LCD_PULSEONDURATION_4 | LCD_CONTRASTLEVEL_5;
+	while( !(LCD->SR & LCD_SR_FCRSR) );
 
 	LCD->CR = 0;
 	LCD->CR |= LCD_DUTY_1_4 | LCD_BIAS_1_3;
@@ -244,9 +241,9 @@ void LCD_Init(void)
 	LCD->CR |= LCD_CR_LCDEN;
 
 	/* Wait Until the LCD is enabled */
-	while(!(LCD->SR & LCD_SR_ENS));
+	while( !(LCD->SR & LCD_SR_ENS) );
 	/*!< Wait Until the LCD Booster is ready */
-	while(!(LCD->SR & LCD_SR_RDY));
+	while( !(LCD->SR & LCD_SR_RDY) );
 
 	LCD_ClearAll();
 }
@@ -272,10 +269,10 @@ void LCD_Init(void)
  *     @arg LCD_BLINKFREQUENCY_DIV1024: The Blink frequency = fLcd/1024
  * @retval None
  */
-void LCD_BlinkConfig(uint32_t BlinkMode, uint32_t BlinkFrequency)
+void LCD_BlinkConfig( uint32_t BlinkMode, uint32_t BlinkFrequency )
 {
-	MODIFY_REG(LCD->FCR, (LCD_FCR_BLINKF | LCD_FCR_BLINK), ((BlinkMode) | (BlinkFrequency)));
-	while(!(LCD->SR & LCD_SR_FCRSR));
+	MODIFY_REG( LCD->FCR, (LCD_FCR_BLINKF | LCD_FCR_BLINK), ((BlinkMode) | (BlinkFrequency)) );
+	while( !(LCD->SR & LCD_SR_FCRSR) );
 
 }
 
@@ -293,11 +290,10 @@ void LCD_BlinkConfig(uint32_t BlinkMode, uint32_t BlinkFrequency)
  *     @arg LCD_CONTRASTLEVEL_7: Maximum Voltage = 3.51V
  * @retval None
  */
-void LCD_Contrast(uint32_t Contrast)
+void LCD_Contrast( uint32_t Contrast )
 {
-	MODIFY_REG(LCD->FCR, LCD_FCR_CC, (Contrast));
-	while(!(LCD->SR & LCD_SR_FCRSR));
-
+	MODIFY_REG( LCD->FCR, LCD_FCR_CC, (Contrast) );
+	while( !(LCD->SR & LCD_SR_FCRSR) );
 }
 
 /**
@@ -310,11 +306,11 @@ void LCD_Contrast(uint32_t Contrast)
  *     @arg BAR0: LCD GLASS Bar 3
  * @retval None
  */
-void LCD_DisplayBar(LCD_BarSeg_t BarId, _Bool state)
+void LCD_DisplayBar( LCD_BarSeg_t BarId, _Bool state )
 {
 	uint32_t position = 0;
 	// Wait for Update Display Request Bit
-	while ((LCD->SR & LCD_SR_UDR) != 0);
+	while( (LCD->SR & LCD_SR_UDR) != 0 );
 
 	// Bar 0: COM3, LCD_SEG11 -> MCU_LCD_SEG8
 	// Bar 1: COM2, LCD_SEG11 -> MCU_LCD_SEG8
@@ -322,10 +318,10 @@ void LCD_DisplayBar(LCD_BarSeg_t BarId, _Bool state)
 	// Bar 3: COM2, LCD_SEG9 -> MCU_LCD_SEG25
 
 	/* Check which bar is selected */
-	while ((BarId) >> position)
+	while( (BarId) >> position )
 	{
 		/* Check if current bar is selected */
-		switch(BarId & (1 << position))
+		switch( BarId & (1 << position) )
 		{
 		/* Bar 0 */
 		case LCD_BAR_0:
@@ -372,40 +368,40 @@ void LCD_DisplayBar(LCD_BarSeg_t BarId, _Bool state)
  *     @arg BATTERYLEVEL_FULL: LCD GLASS Battery Full
  * @retval None
  */
-void LCD_DisplayBarLevel(LCD_BattLevel_t BarLevel)
+void LCD_DisplayBarLevel( LCD_BattLevel_t BarLevel )
 {
-	switch (BarLevel)
+	switch( BarLevel )
 	{
 	/* BATTERYLEVEL_OFF */
 	case BARLEVEL_OFF:
-		LCD_DisplayBar(LCD_BAR_0 | LCD_BAR_1 | LCD_BAR_2 | LCD_BAR_3, false);
+		LCD_DisplayBar( LCD_BAR_0 | LCD_BAR_1 | LCD_BAR_2 | LCD_BAR_3, false );
 		LCDBar = BARLEVEL_OFF;
 		break;
 
 		/* BARLEVEL 1/4 */
 	case BARLEVEL_1_4:
-		LCD_DisplayBar(LCD_BAR_0, true);
-		LCD_DisplayBar(LCD_BAR_1 | LCD_BAR_2 | LCD_BAR_3, false);
+		LCD_DisplayBar( LCD_BAR_0, true );
+		LCD_DisplayBar( LCD_BAR_1 | LCD_BAR_2 | LCD_BAR_3, false );
 		LCDBar = BARLEVEL_1_4;
 		break;
 
 		/* BARLEVEL 1/2 */
 	case BARLEVEL_1_2:
-		LCD_DisplayBar(LCD_BAR_0 | LCD_BAR_1, true);
-		LCD_DisplayBar(LCD_BAR_2 | LCD_BAR_3, false);
+		LCD_DisplayBar( LCD_BAR_0 | LCD_BAR_1, true );
+		LCD_DisplayBar( LCD_BAR_2 | LCD_BAR_3, false );
 		LCDBar = BARLEVEL_1_2;
 		break;
 
 		/* Battery Level 3/4 */
 	case BARLEVEL_3_4:
-		LCD_DisplayBar(LCD_BAR_0 | LCD_BAR_1 | LCD_BAR_2, true);
-		LCD_DisplayBar(LCD_BAR_3, false);
+		LCD_DisplayBar( LCD_BAR_0 | LCD_BAR_1 | LCD_BAR_2, true );
+		LCD_DisplayBar( LCD_BAR_3, false );
 		LCDBar = BARLEVEL_3_4;
 		break;
 
 		/* BATTERYLEVEL_FULL */
 	case BARLEVEL_FULL:
-		LCD_DisplayBar(LCD_BAR_0 | LCD_BAR_1 | LCD_BAR_2 | LCD_BAR_3, true);
+		LCD_DisplayBar( LCD_BAR_0 | LCD_BAR_1 | LCD_BAR_2 | LCD_BAR_3, true );
 		LCDBar = BARLEVEL_FULL;
 		break;
 
@@ -435,9 +431,9 @@ void LCD_DisplayBarLevel(LCD_BattLevel_t BarLevel)
  * @note   Required preconditions: The LCD should be cleared before to start the
  *         write operation.
  */
-void LCD_DisplayChar(uint8_t* ch, _Bool dot, _Bool colon, LCD_Digit_t position)
+void LCD_DisplayChar( uint8_t* ch, _Bool dot, _Bool colon, LCD_Digit_t position )
 {
-	WriteChar(ch, dot, colon, position);
+	WriteChar( ch, dot, colon, position );
 
 	// Update the LCD display
 	LCD->SR |= LCD_SR_UDR;
@@ -448,15 +444,15 @@ void LCD_DisplayChar(uint8_t* ch, _Bool dot, _Bool colon, LCD_Digit_t position)
  * @param  ptr: Pointer to string to display on the LCD Glass.
  * @retval None
  */
-void LCD_DisplayString(uint8_t* ptr)
+void LCD_DisplayString( uint8_t* ptr )
 {
 	LCD_Digit_t position = LCD_DIGIT_1;
 
 	/* Send the string character by character on lCD */
-	while ((*ptr != 0) & (position <= LCD_DIGIT_6))
+	while( (*ptr != 0) & (position <= LCD_DIGIT_6) )
 	{
 		/* Write one character on LCD */
-		WriteChar(ptr, false, false, position);
+		WriteChar( ptr, false, false, position );
 
 		/* Point on the next character */
 		ptr++;
@@ -469,17 +465,16 @@ void LCD_DisplayString(uint8_t* ptr)
 	LCD->SR |= LCD_SR_UDR;
 }
 
-
 /**
  * @brief  Clear the whole LCD RAM buffer.
  * @retval None
  */
-void LCD_ClearAll(void)
+void LCD_ClearAll( void )
 {
 	// Wait until LCD ready */
-	while ((LCD->SR & LCD_SR_UDR) != 0); // Wait for Update Display Request Bit
+	while( (LCD->SR & LCD_SR_UDR) != 0 ) ; // Wait for Update Display Request Bit
 
-	for (uint8_t counter = 0; counter < 16; counter++)
+	for( uint8_t counter = 0; counter < 16; counter++ )
 	{
 		LCD->RAM[counter] = 0;
 	}
@@ -492,9 +487,9 @@ void LCD_ClearAll(void)
  * @brief  Clear only text field.
  * @retval None
  */
-void LCD_ClearText(void)
+void LCD_ClearText( void )
 {
-	LCD_DisplayString((uint8_t*)"      ");
+	LCD_DisplayString( (uint8_t*) "      " );
 }
 
 /**
@@ -505,39 +500,40 @@ void LCD_ClearText(void)
  * @note   Required preconditions: The LCD should be cleared before to start the
  *         write operation.
  */
-void LCD_ScrollSentence(uint8_t* ptr, _Bool reset)
+void LCD_ScrollSentence( uint8_t* ptr, _Bool reset )
 {
 	static uint8_t nbrchar = 0;
 	uint8_t sizestr = 0;
 	uint8_t* ptr1;
 	uint8_t str[6] = "";
 
-	if(ptr == 0)
+	if( ptr == 0 )
 	{
 		return;
 	}
 
-	if(reset)
+	if( reset )
 	{
 		nbrchar = 0;
 	}
 
 	/* To calculate end of string */
-	for(ptr1 = ptr, sizestr = 0; *ptr1 != 0; sizestr++, ptr1++);
+	for( ptr1 = ptr, sizestr = 0; *ptr1 != 0; sizestr++, ptr1++ )
+		;
 
 	ptr1 = ptr;
 
 	/* To shift the string for scrolling display*/
-	for(uint8_t idx = 0; idx < 6; idx++)
+	for( uint8_t idx = 0; idx < 6; idx++ )
 	{
-		*(str+idx) = *(ptr1+((nbrchar+idx)%sizestr));
+		*(str + idx) = *(ptr1 + ((nbrchar + idx) % sizestr));
 	}
 
-	LCD_DisplayString(str);
+	LCD_DisplayString( str );
 
 	nbrchar++;
 
-	if(nbrchar >= sizestr)
+	if( nbrchar >= sizestr )
 	{
 		nbrchar = 0;
 	}
@@ -552,7 +548,6 @@ void LCD_ScrollSentence(uint8_t* ptr, _Bool reset)
  * @{
  */
 
-
 /**
  * @brief  Convert an ascii char to the a LCD Digit.
  * @param  Char: a char to display.
@@ -563,14 +558,14 @@ void LCD_ScrollSentence(uint8_t* ptr, _Bool reset)
  *         This parameter can be: DOUBLEPOINT_OFF or DOUBLEPOINT_ON.
  * @retval None
  */
-static void ConvertChar(uint8_t* ch, _Bool point, _Bool colon)
+static void ConvertChar( uint8_t* ch, _Bool point, _Bool colon )
 {
-	uint16_t c = 0 ;
+	uint16_t c = 0;
 	uint8_t loop = 0, index = 0;
 
-	switch (*ch)
+	switch( *ch )
 	{
-	case ' ' :
+	case ' ':
 		c = 0x00;
 		break;
 
@@ -578,51 +573,51 @@ static void ConvertChar(uint8_t* ch, _Bool point, _Bool colon)
 		c = C_STAR;
 		break;
 
-	case '(' :
+	case '(':
 		c = C_OPENPARMAP;
 		break;
 
-	case ')' :
+	case ')':
 		c = C_CLOSEPARMAP;
 		break;
 
-	case 'd' :
+	case 'd':
 		c = C_DMAP;
 		break;
 
-	case 'm' :
+	case 'm':
 		c = C_MMAP;
 		break;
 
-	case 'n' :
+	case 'n':
 		c = C_NMAP;
 		break;
 
-	case 'µ' :
+	case 'ï¿½':
 		c = C_UMAP;
 		break;
 
-	case '-' :
+	case '-':
 		c = C_MINUS;
 		break;
 
-	case '+' :
+	case '+':
 		c = C_PLUS;
 		break;
 
-	case '/' :
+	case '/':
 		c = C_SLATCH;
 		break;
 
-	case '°' :
+	case 'ï¿½':
 		c = C_PERCENT_1;
 		break;
-	case '%' :
+	case '%':
 		c = C_PERCENT_2;
 		break;
-	case 255 :
+	case 255:
 		c = C_FULL;
-		break ;
+		break;
 
 	case '0':
 	case '1':
@@ -639,12 +634,12 @@ static void ConvertChar(uint8_t* ch, _Bool point, _Bool colon)
 
 	default:
 		/* The character Char is one letter in upper case*/
-		if ( (*ch < ASCII_CHAR_LEFT_OPEN_BRACKET) && (*ch > ASCII_CHAR_AT_SYMBOL) )
+		if( (*ch < ASCII_CHAR_LEFT_OPEN_BRACKET) && (*ch > ASCII_CHAR_AT_SYMBOL) )
 		{
 			c = CapLetterMap[*ch - 'A'];
 		}
 		/* The character Char is one letter in lower case*/
-		if ( (*ch < ASCII_CHAR_LEFT_OPEN_BRACE) && ( *ch > ASCII_CHAR_APOSTROPHE) )
+		if( (*ch < ASCII_CHAR_LEFT_OPEN_BRACE) && (*ch > ASCII_CHAR_APOSTROPHE) )
 		{
 			c = CapLetterMap[*ch - 'a'];
 		}
@@ -652,18 +647,18 @@ static void ConvertChar(uint8_t* ch, _Bool point, _Bool colon)
 	}
 
 	/* Set the Digital point can be displayed if the point is on */
-	if (point)
+	if( point )
 	{
 		c |= 0x0002;
 	}
 
 	/* Set the "COL" segment in the character that can be displayed if the colon is on */
-	if (colon)
+	if( colon )
 	{
 		c |= 0x0020;
 	}
 
-	for (loop = 12,index=0 ;index < 4; loop -= 4,index++)
+	for( loop = 12, index = 0; index < 4; loop -= 4, index++ )
 	{
 		Digit[index] = (c >> loop) & 0x0f; /*To isolate the less significant Digit */
 	}
@@ -680,77 +675,89 @@ static void ConvertChar(uint8_t* ch, _Bool point, _Bool colon)
  * @param  Position: position in the LCD of the character to write [1:6]
  * @retval None
  */
-static void WriteChar(uint8_t* ch, _Bool dot, _Bool colon, LCD_Digit_t position)
+static void WriteChar( uint8_t* ch, _Bool dot, _Bool colon, LCD_Digit_t position )
 {
 	// Wait for Update Display Request Bit
-	while ((LCD->SR & LCD_SR_UDR));
+	while( (LCD->SR & LCD_SR_UDR) );
 
 	/* To convert displayed character in segment in array Digit */
-	ConvertChar(ch, dot, colon);
+	ConvertChar( ch, dot, colon );
 
-	switch (position)
+	switch( position )
 	{
 	/* Position 1 on LCD (Digit1)*/
 	case LCD_DIGIT_1:
-		LCD->RAM[0] &= ~( 1U << 4 | 1U << 23 | 1U << 22 | 1U << 3 );
-		LCD->RAM[2] &= ~( 1U << 4 | 1U << 23 | 1U << 22 | 1U << 3 );
-		LCD->RAM[4] &= ~( 1U << 4 | 1U << 23 | 1U << 22 | 1U << 3 );
-		LCD->RAM[6] &= ~( 1U << 4 | 1U << 23 | 1U << 22 | 1U << 3 );
+		LCD->RAM[0] &= ~(1U << 4 | 1U << 23 | 1U << 22 | 1U << 3);
+		LCD->RAM[2] &= ~(1U << 4 | 1U << 23 | 1U << 22 | 1U << 3);
+		LCD->RAM[4] &= ~(1U << 4 | 1U << 23 | 1U << 22 | 1U << 3);
+		LCD->RAM[6] &= ~(1U << 4 | 1U << 23 | 1U << 22 | 1U << 3);
 		/* 1G 1B 1M 1E */
-		LCD->RAM[0] |= ((Digit[0] & 0x1) << 4) | (((Digit[0] & 0x2) >> 1) << 23) | (((Digit[0] & 0x4) >> 2) << 22) | (((Digit[0] & 0x8) >> 3) << 3);
+		LCD->RAM[0] |= ((Digit[0] & 0x1) << 4) | (((Digit[0] & 0x2) >> 1) << 23)
+				| (((Digit[0] & 0x4) >> 2) << 22) | (((Digit[0] & 0x8) >> 3) << 3);
 		/* 1F 1A 1C 1D  */
-		LCD->RAM[2] |= ((Digit[1] & 0x1) << 4) | (((Digit[1] & 0x2) >> 1) << 23) | (((Digit[1] & 0x4) >> 2) << 22) | (((Digit[1] & 0x8) >> 3) << 3);
+		LCD->RAM[2] |= ((Digit[1] & 0x1) << 4) | (((Digit[1] & 0x2) >> 1) << 23)
+				| (((Digit[1] & 0x4) >> 2) << 22) | (((Digit[1] & 0x8) >> 3) << 3);
 		/* 1Q 1K 1Col 1P  */
-		LCD->RAM[4] |= ((Digit[2] & 0x1) << 4) | (((Digit[2] & 0x2) >> 1) << 23) | (((Digit[2] & 0x4) >> 2) << 22) | (((Digit[2] & 0x8) >> 3) << 3);
+		LCD->RAM[4] |= ((Digit[2] & 0x1) << 4) | (((Digit[2] & 0x2) >> 1) << 23)
+				| (((Digit[2] & 0x4) >> 2) << 22) | (((Digit[2] & 0x8) >> 3) << 3);
 		/* 1H 1J 1DP 1N  */
-		LCD->RAM[6] |= ((Digit[3] & 0x1) << 4) | (((Digit[3] & 0x2) >> 1) << 23) | (((Digit[3] & 0x4) >> 2) << 22) | (((Digit[3] & 0x8) >> 3) << 3);
+		LCD->RAM[6] |= ((Digit[3] & 0x1) << 4) | (((Digit[3] & 0x2) >> 1) << 23)
+				| (((Digit[3] & 0x4) >> 2) << 22) | (((Digit[3] & 0x8) >> 3) << 3);
 
 		break;
 
 		/* Position 2 on LCD (Digit2)*/
 	case LCD_DIGIT_2:
-		LCD->RAM[0] &= ~( 1U << 6 | 1U << 13 | 1U << 12 | 1U << 5 );
-		LCD->RAM[2] &= ~( 1U << 6 | 1U << 13 | 1U << 12 | 1U << 5 );
-		LCD->RAM[4] &= ~( 1U << 6 | 1U << 13 | 1U << 12 | 1U << 5 );
-		LCD->RAM[6] &= ~( 1U << 6 | 1U << 13 | 1U << 12 | 1U << 5 );
+		LCD->RAM[0] &= ~(1U << 6 | 1U << 13 | 1U << 12 | 1U << 5);
+		LCD->RAM[2] &= ~(1U << 6 | 1U << 13 | 1U << 12 | 1U << 5);
+		LCD->RAM[4] &= ~(1U << 6 | 1U << 13 | 1U << 12 | 1U << 5);
+		LCD->RAM[6] &= ~(1U << 6 | 1U << 13 | 1U << 12 | 1U << 5);
 		/* 2G 2B 2M 2E */
-		LCD->RAM[0] |= ((Digit[0] & 0x1) << 6) | (((Digit[0] & 0x2) >> 1) << 13) | (((Digit[0] & 0x4) >> 2) << 12) | (((Digit[0] & 0x8) >> 3) << 5);
+		LCD->RAM[0] |= ((Digit[0] & 0x1) << 6) | (((Digit[0] & 0x2) >> 1) << 13)
+				| (((Digit[0] & 0x4) >> 2) << 12) | (((Digit[0] & 0x8) >> 3) << 5);
 		/* 2F 2A 2C 2D  */
-		LCD->RAM[2] |= ((Digit[1] & 0x1) << 6) | (((Digit[1] & 0x2) >> 1) << 13) | (((Digit[1] & 0x4) >> 2) << 12) | (((Digit[1] & 0x8) >> 3) << 5);
+		LCD->RAM[2] |= ((Digit[1] & 0x1) << 6) | (((Digit[1] & 0x2) >> 1) << 13)
+				| (((Digit[1] & 0x4) >> 2) << 12) | (((Digit[1] & 0x8) >> 3) << 5);
 		/* 2Q 2K 2Col 2P  */
-		LCD->RAM[4] |= ((Digit[2] & 0x1) << 6) | (((Digit[2] & 0x2) >> 1) << 13) | (((Digit[2] & 0x4) >> 2) << 12) | (((Digit[2] & 0x8) >> 3) << 5);
+		LCD->RAM[4] |= ((Digit[2] & 0x1) << 6) | (((Digit[2] & 0x2) >> 1) << 13)
+				| (((Digit[2] & 0x4) >> 2) << 12) | (((Digit[2] & 0x8) >> 3) << 5);
 		/* 2H 2J 2DP 2N  */
-		LCD->RAM[6] |= ((Digit[3] & 0x1) << 6) | (((Digit[3] & 0x2) >> 1) << 13) | (((Digit[3] & 0x4) >> 2) << 12) | (((Digit[3] & 0x8) >> 3) << 5);
+		LCD->RAM[6] |= ((Digit[3] & 0x1) << 6) | (((Digit[3] & 0x2) >> 1) << 13)
+				| (((Digit[3] & 0x4) >> 2) << 12) | (((Digit[3] & 0x8) >> 3) << 5);
 
 		break;
 
 		/* Position 3 on LCD (Digit3)*/
 	case LCD_DIGIT_3:
-		LCD->RAM[0] &= ~( 1U << 15 | 1U << 29 | 1U << 28 | 1U << 14 );
-		LCD->RAM[2] &= ~( 1U << 15 | 1U << 29 | 1U << 28 | 1U << 14 );
-		LCD->RAM[4] &= ~( 1U << 15 | 1U << 29 | 1U << 28 | 1U << 14 );
-		LCD->RAM[6] &= ~( 1U << 15 | 1U << 29 | 1U << 28 | 1U << 14 );
+		LCD->RAM[0] &= ~(1U << 15 | 1U << 29 | 1U << 28 | 1U << 14);
+		LCD->RAM[2] &= ~(1U << 15 | 1U << 29 | 1U << 28 | 1U << 14);
+		LCD->RAM[4] &= ~(1U << 15 | 1U << 29 | 1U << 28 | 1U << 14);
+		LCD->RAM[6] &= ~(1U << 15 | 1U << 29 | 1U << 28 | 1U << 14);
 		/* 3G 3B 3M 3E */
-		LCD->RAM[0] |= ((Digit[0] & 0x1) << 15) | (((Digit[0] & 0x2) >> 1) << 29) | (((Digit[0] & 0x4) >> 2) << 28) | (((Digit[0] & 0x8) >> 3) << 14);
+		LCD->RAM[0] |= ((Digit[0] & 0x1) << 15) | (((Digit[0] & 0x2) >> 1) << 29)
+				| (((Digit[0] & 0x4) >> 2) << 28) | (((Digit[0] & 0x8) >> 3) << 14);
 		/* 3F 3A 3C 3D */
-		LCD->RAM[2] |= ((Digit[1] & 0x1) << 15) | (((Digit[1] & 0x2) >> 1) << 29) | (((Digit[1] & 0x4) >> 2) << 28) | (((Digit[1] & 0x8) >> 3) << 14);
+		LCD->RAM[2] |= ((Digit[1] & 0x1) << 15) | (((Digit[1] & 0x2) >> 1) << 29)
+				| (((Digit[1] & 0x4) >> 2) << 28) | (((Digit[1] & 0x8) >> 3) << 14);
 		/* 3Q 3K 3Col 3P  */
-		LCD->RAM[4] |= ((Digit[2] & 0x1) << 15) | (((Digit[2] & 0x2) >> 1) << 29) | (((Digit[2] & 0x4) >> 2) << 28) | (((Digit[2] & 0x8) >> 3) << 14);
+		LCD->RAM[4] |= ((Digit[2] & 0x1) << 15) | (((Digit[2] & 0x2) >> 1) << 29)
+				| (((Digit[2] & 0x4) >> 2) << 28) | (((Digit[2] & 0x8) >> 3) << 14);
 		/* 3H 3J 3DP  3N  */
-		LCD->RAM[6] |= ((Digit[3] & 0x1) << 15) | (((Digit[3] & 0x2) >> 1) << 29) | (((Digit[3] & 0x4) >> 2) << 28) | (((Digit[3] & 0x8) >> 3) << 14);
+		LCD->RAM[6] |= ((Digit[3] & 0x1) << 15) | (((Digit[3] & 0x2) >> 1) << 29)
+				| (((Digit[3] & 0x4) >> 2) << 28) | (((Digit[3] & 0x8) >> 3) << 14);
 
 		break;
 
 		/* Position 4 on LCD (Digit4)*/
 	case LCD_DIGIT_4:
-		LCD->RAM[0] &= ~( 1U << 31 | 1U << 30);
-		LCD->RAM[1] &= ~( 1U << 1 | 1U << 0 );
-		LCD->RAM[2] &= ~( 1U << 31 | 1U << 30);
-		LCD->RAM[3] &= ~( 1U << 1 | 1U << 0 );
-		LCD->RAM[4] &= ~( 1U << 31 | 1U << 30);
-		LCD->RAM[5] &= ~( 1U << 1 | 1U << 0 );
-		LCD->RAM[6] &= ~( 1U << 31 | 1U << 30);
-		LCD->RAM[7] &= ~( 1U << 1 | 1U << 0 );
+		LCD->RAM[0] &= ~(1U << 31 | 1U << 30);
+		LCD->RAM[1] &= ~(1U << 1 | 1U << 0);
+		LCD->RAM[2] &= ~(1U << 31 | 1U << 30);
+		LCD->RAM[3] &= ~(1U << 1 | 1U << 0);
+		LCD->RAM[4] &= ~(1U << 31 | 1U << 30);
+		LCD->RAM[5] &= ~(1U << 1 | 1U << 0);
+		LCD->RAM[6] &= ~(1U << 31 | 1U << 30);
+		LCD->RAM[7] &= ~(1U << 1 | 1U << 0);
 		/* 4G 4B 4M 4E */
 		LCD->RAM[0] |= ((Digit[0] & 0x1) << 31) | (((Digit[0] & 0x8) >> 3) << 30);
 		LCD->RAM[1] |= (((Digit[0] & 0x2) >> 1) << 1) | (((Digit[0] & 0x4) >> 2) << 0);
@@ -768,14 +775,14 @@ static void WriteChar(uint8_t* ch, _Bool dot, _Bool colon, LCD_Digit_t position)
 		/* Position 5 on LCD (Digit5)*/
 	case LCD_DIGIT_5:
 
-		LCD->RAM[0] &= ~( 1U << 25 | 1U << 24);
-		LCD->RAM[1] &= ~( 1U << 3 | 1U << 2 );
-		LCD->RAM[2] &= ~( 1U << 25 | 1U << 24);
-		LCD->RAM[3] &= ~( 1U << 3 | 1U << 2 );
-		LCD->RAM[4] &= ~( 1U << 24 );
-		LCD->RAM[5] &= ~( 1U << 3 | 1U << 2 );
-		LCD->RAM[6] &= ~( 1U << 24 );
-		LCD->RAM[7] &= ~( 1U << 3 | 1U << 2 );
+		LCD->RAM[0] &= ~(1U << 25 | 1U << 24);
+		LCD->RAM[1] &= ~(1U << 3 | 1U << 2);
+		LCD->RAM[2] &= ~(1U << 25 | 1U << 24);
+		LCD->RAM[3] &= ~(1U << 3 | 1U << 2);
+		LCD->RAM[4] &= ~(1U << 24);
+		LCD->RAM[5] &= ~(1U << 3 | 1U << 2);
+		LCD->RAM[6] &= ~(1U << 24);
+		LCD->RAM[7] &= ~(1U << 3 | 1U << 2);
 		/* 5G 5B 5M 5E */
 		LCD->RAM[0] |= (((Digit[0] & 0x2) >> 1) << 25) | (((Digit[0] & 0x4) >> 2) << 24);
 		LCD->RAM[1] |= ((Digit[0] & 0x1) << 3) | (((Digit[0] & 0x8) >> 3) << 2);
@@ -792,18 +799,22 @@ static void WriteChar(uint8_t* ch, _Bool dot, _Bool colon, LCD_Digit_t position)
 
 		/* Position 6 on LCD (Digit6)*/
 	case LCD_DIGIT_6:
-		LCD->RAM[0] &= ~( 1U << 17 | 1U << 8 | 1U << 9 | 1U << 26 );
-		LCD->RAM[2] &= ~( 1U << 17 | 1U << 8 | 1U << 9 | 1U << 26 );
-		LCD->RAM[4] &= ~( 1U << 17 | 1U << 9 | 1U << 26 );
-		LCD->RAM[6] &= ~( 1U << 17 | 1U << 9 | 1U << 26 );
+		LCD->RAM[0] &= ~(1U << 17 | 1U << 8 | 1U << 9 | 1U << 26);
+		LCD->RAM[2] &= ~(1U << 17 | 1U << 8 | 1U << 9 | 1U << 26);
+		LCD->RAM[4] &= ~(1U << 17 | 1U << 9 | 1U << 26);
+		LCD->RAM[6] &= ~(1U << 17 | 1U << 9 | 1U << 26);
 		/* 6G 6B 6M 6E */
-		LCD->RAM[0] |= ((Digit[0] & 0x1) << 17) | (((Digit[0] & 0x2) >> 1) << 8) | (((Digit[0] & 0x4) >> 2) << 9) | (((Digit[0] & 0x8) >> 3) << 26);
+		LCD->RAM[0] |= ((Digit[0] & 0x1) << 17) | (((Digit[0] & 0x2) >> 1) << 8)
+				| (((Digit[0] & 0x4) >> 2) << 9) | (((Digit[0] & 0x8) >> 3) << 26);
 		/* 6F 6A 6C 6D */
-		LCD->RAM[2] |= ((Digit[1] & 0x1) << 17) | (((Digit[1] & 0x2) >> 1) << 8) | (((Digit[1] & 0x4) >> 2) << 9) | (((Digit[1] & 0x8) >> 3) << 26);
+		LCD->RAM[2] |= ((Digit[1] & 0x1) << 17) | (((Digit[1] & 0x2) >> 1) << 8)
+				| (((Digit[1] & 0x4) >> 2) << 9) | (((Digit[1] & 0x8) >> 3) << 26);
 		/* 6Q 6K 6Col 6P  */
-		LCD->RAM[4] |= ((Digit[2] & 0x1) << 17) | (((Digit[2] & 0x2) >> 1) << 8) | (((Digit[2] & 0x4) >> 2) << 9) | (((Digit[2] & 0x8) >> 3) << 26);
+		LCD->RAM[4] |= ((Digit[2] & 0x1) << 17) | (((Digit[2] & 0x2) >> 1) << 8)
+				| (((Digit[2] & 0x4) >> 2) << 9) | (((Digit[2] & 0x8) >> 3) << 26);
 		/* 6H 6J 6DP  6N  */
-		LCD->RAM[6] |= ((Digit[3] & 0x1) << 17) | (((Digit[3] & 0x2) >> 1) << 8) | (((Digit[3] & 0x4) >> 2) << 9) | (((Digit[3] & 0x8) >> 3) << 26);
+		LCD->RAM[6] |= ((Digit[3] & 0x1) << 17) | (((Digit[3] & 0x2) >> 1) << 8)
+				| (((Digit[3] & 0x4) >> 2) << 9) | (((Digit[3] & 0x8) >> 3) << 26);
 		break;
 
 	default:

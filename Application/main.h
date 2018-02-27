@@ -44,11 +44,8 @@
  */
 typedef enum
 {
-	STATUS_OK = 0,
-	STATUS_ERROR = 1,
-	STATUS_TIMEOUT = 2
-}
-status_t;
+	STATUS_OK = 0, STATUS_ERROR = 1, STATUS_TIMEOUT = 2
+} status_t;
 /**
  * @}
  */

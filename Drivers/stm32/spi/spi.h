@@ -36,9 +36,9 @@
 #define __SPI_ENABLE(__HANDLE__)	SET_BIT((__HANDLE__)->CR1,SPI_CR1_SPE)
 #define __SPI_DISABLE(__HANDLE__)	CLEAR_BIT((__HANDLE__)->CR1,SPI_CR1_SPE)
 
-void	SPI_Init(void);
-uint8_t SPIx_ReadWrite(uint8_t);
-void SPIx_Write(uint8_t data);
-uint8_t SPIx_Read(void);
+void SPI_Init( void );
+uint8_t SPIx_ReadWrite( uint8_t );
+void SPIx_Write( uint8_t data );
+uint8_t SPIx_Read( void );
 
 #endif /* SPI_H_ */

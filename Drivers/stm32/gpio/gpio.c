@@ -6,26 +6,26 @@
  */
 
 /******************************************************************************
-* chip: STM32F4x
-* compiler: arm-none-eabi-gcc (GNU Tools for ARM Embedded Processors) 4.6.2
-* 	20110921 (release) [ARM/embedded-4_6-branch revision 182083]
-*
-* prefix: gpio_
-*
-* available global functions:
-* 	void gpio_init(void)
-* 	void gpio_pin_cfg(GPIO_TypeDef *port_ptr, uint32_t pin, uint32_t configuration)
-*
-* available local functions:
-*
-* available interrupt handlers:
-******************************************************************************/
+ * chip: STM32F4x
+ * compiler: arm-none-eabi-gcc (GNU Tools for ARM Embedded Processors) 4.6.2
+ * 	20110921 (release) [ARM/embedded-4_6-branch revision 182083]
+ *
+ * prefix: gpio_
+ *
+ * available global functions:
+ * 	void gpio_init(void)
+ * 	void gpio_pin_cfg(GPIO_TypeDef *port_ptr, uint32_t pin, uint32_t configuration)
+ *
+ * available local functions:
+ *
+ * available interrupt handlers:
+ ******************************************************************************/
 
 /*
-+=============================================================================+
-| includes
-+=============================================================================+
-*/
+ +=============================================================================+
+ | includes
+ +=============================================================================+
+ */
 
 #include <stdint.h>
 
@@ -36,10 +36,10 @@
 #include "gpio/gpio.h"
 
 /*
-+=============================================================================+
-| local definitions
-+=============================================================================+
-*/
+ +=============================================================================+
+ | local definitions
+ +=============================================================================+
+ */
 
 #define GPIO_GET_MODER(combination)			(((combination) & 0xF) >> 0)
 #define GPIO_GET_OTYPER(combination)		(((combination) & 0xF0) >> 4)
@@ -47,56 +47,56 @@
 #define GPIO_GET_PUPDR(combination)			(((combination) & 0xF000) >> 12)
 #define GPIO_GET_AFR(combination)			(((combination) & 0xF0000) >> 16)
 /*
-+=============================================================================+
-| module variables
-+=============================================================================+
-*/
+ +=============================================================================+
+ | module variables
+ +=============================================================================+
+ */
 
 /*
-+=============================================================================+
-| local functions' declarations
-+=============================================================================+
-*/
+ +=============================================================================+
+ | local functions' declarations
+ +=============================================================================+
+ */
 
 /*
-+=============================================================================+
-| global functions
-+=============================================================================+
-*/
+ +=============================================================================+
+ | global functions
+ +=============================================================================+
+ */
 
 /*------------------------------------------------------------------------*//**
-* \brief GPIO port initialization.
-* \details Enables selected pins in pin_mask on port.
-*//*-------------------------------------------------------------------------*/
+ * \brief GPIO port initialization.
+ * \details Enables selected pins in pin_mask on port.
+ *//*-------------------------------------------------------------------------*/
 
-void GPIO_PortConfig(GPIO_TypeDef *port_ptr, uint32_t pin_mask, uint32_t configuration)
+void GPIO_PortConfig( GPIO_TypeDef *port_ptr, uint32_t pin_mask, uint32_t configuration )
 {
-	for (uint32_t pin = 0; pin < 16; pin++)
+	for( uint32_t pin = 0; pin < 16; pin++ )
 	{
-	    if (pin_mask & (1 << pin))
-	    {
-	        GPIO_PinConfig(port_ptr, pin, configuration);
-	    }
+		if( pin_mask & (1 << pin) )
+		{
+			GPIO_PinConfig( port_ptr, pin, configuration );
+		}
 	}
 }
 
 /*------------------------------------------------------------------------*//**
-* \brief Configures pin.
-* \details Configures one pin in one port.
-*
-* \param [in] port_ptr points to the configuration structure of desired port
-* \param [in] pin selects one pin, [0; 15]
-* \param [in] configuration is a combined value of MODER, OTYPER, OSPEEDR,
-* PUPDR and AFRx register bitfields, allowed values
-* {GPIO_IN_FLOATING, GPIO_IN_PULL_UP, GPIO_IN_PULL_DOWN,
-* GPIO_OUT_{PP, OD}_{2MHz, 25MHz, 50MHz, 100MHz},
-* GPIO_OUT_{PP, OD}_{2MHz, 25MHz, 50MHz, 100MHz}_{PULL_UP, PULL_DOWN},
-* GPIO_[AF0; AF15]_{PP, OD}_{2MHz, 25MHz, 50MHz, 100MHz},
-* GPIO_[AF0; AF15]_{PP, OD}_{2MHz, 25MHz, 50MHz, 100MHz}_{PULL_UP, PULL_DOWN},
-* GPIO_ANALOG}
-*//*-------------------------------------------------------------------------*/
+ * \brief Configures pin.
+ * \details Configures one pin in one port.
+ *
+ * \param [in] port_ptr points to the configuration structure of desired port
+ * \param [in] pin selects one pin, [0; 15]
+ * \param [in] configuration is a combined value of MODER, OTYPER, OSPEEDR,
+ * PUPDR and AFRx register bitfields, allowed values
+ * {GPIO_IN_FLOATING, GPIO_IN_PULL_UP, GPIO_IN_PULL_DOWN,
+ * GPIO_OUT_{PP, OD}_{2MHz, 25MHz, 50MHz, 100MHz},
+ * GPIO_OUT_{PP, OD}_{2MHz, 25MHz, 50MHz, 100MHz}_{PULL_UP, PULL_DOWN},
+ * GPIO_[AF0; AF15]_{PP, OD}_{2MHz, 25MHz, 50MHz, 100MHz},
+ * GPIO_[AF0; AF15]_{PP, OD}_{2MHz, 25MHz, 50MHz, 100MHz}_{PULL_UP, PULL_DOWN},
+ * GPIO_ANALOG}
+ *//*-------------------------------------------------------------------------*/
 
-void GPIO_PinConfig(GPIO_TypeDef *port_ptr, uint32_t pin, uint32_t configuration)
+void GPIO_PinConfig( GPIO_TypeDef *port_ptr, uint32_t pin, uint32_t configuration )
 {
 	uint32_t moder, otyper, ospeedr, pupdr, afr, afrx;
 
@@ -120,7 +120,7 @@ void GPIO_PinConfig(GPIO_TypeDef *port_ptr, uint32_t pin, uint32_t configuration
 	pupdr |= (GPIO_GET_PUPDR(configuration) << (pin * 2));	// apply new setting
 	port_ptr->PUPDR = pupdr;				// save back
 
-	if (pin < 8)							// determine which AFR register should be used
+	if( pin < 8 )							// determine which AFR register should be used
 		afrx = 0;							// AFRL - pins [0; 7]
 	else
 	{
@@ -136,17 +136,17 @@ void GPIO_PinConfig(GPIO_TypeDef *port_ptr, uint32_t pin, uint32_t configuration
 }
 
 /*
-+=============================================================================+
-| local functions
-+=============================================================================+
-*/
+ +=============================================================================+
+ | local functions
+ +=============================================================================+
+ */
 
 /*
-+=============================================================================+
-| ISRs
-+=============================================================================+
-*/
+ +=============================================================================+
+ | ISRs
+ +=============================================================================+
+ */
 
 /******************************************************************************
-* END OF FILE
-******************************************************************************/
+ * END OF FILE
+ ******************************************************************************/

@@ -27,22 +27,19 @@ enum player_commands
 
 enum player_state
 {
-	PLAYER_IDLE = 0,
-	PLAYER_PLAYING,
-	PLAYER_PAUSED,
-	PLAYER_STOPPED
+	PLAYER_IDLE = 0, PLAYER_PLAYING, PLAYER_PAUSED, PLAYER_STOPPED
 };
 
 void Player_StartTasks(unsigned portBASE_TYPE uxPriority);
-void Player_SendCommand(enum player_commands command);
-enum player_state Player_GetState(void);
-void Player_SetSongName(char* name);
+void Player_SendCommand( enum player_commands command );
+enum player_state Player_GetState( void );
+void Player_SetSongName( char* name );
 
-void Player_VolumeUp(void);
-void Player_VolumeDown(void);
-void Player_Mute(_Bool state);
+void Player_VolumeUp( void );
+void Player_VolumeDown( void );
+void Player_Mute( _Bool state );
 
-void Player_PlayNext(void);
-void Player_PlayPrev(void);
+void Player_PlayNext( void );
+void Player_PlayPrev( void );
 
 #endif /* APP_PLAYER_H_ */

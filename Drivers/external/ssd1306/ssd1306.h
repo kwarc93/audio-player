@@ -45,18 +45,17 @@
 #define LCD_SET_PAGE_ADDR	0x22
 
 void SSD1306_Init();
-void SSD1306_SetPixel(uint8_t x, uint8_t y, _Bool isSet);
+void SSD1306_SetPixel( uint8_t x, uint8_t y, _Bool isSet );
 void SSD1306_CpyFramebuffer();
 void SSD1306_CpyDirtyPages();
-void SSD1306_Clear(_Bool color);
-void SSD1306_MoveTo(uint8_t x, uint8_t y);
-void SSD1306_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, _Bool isSet);
-void SSD1306_DrawHLine(uint8_t x, _Bool isSet);
-void SSD1306_DrawRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, _Bool fill);
-void SSD1306_Circle(uint8_t cx, uint8_t cy , uint8_t radius, uint8_t attrs);
-void SSD1306_SetText(uint8_t x, uint8_t y, const char *tekst, const uint8_t * const font[], _Bool invert);
-void SSD1306_DrawBitmap(uint8_t x, uint8_t y, const uint8_t image[], _Bool invert);
-
-
+void SSD1306_Clear( _Bool color );
+void SSD1306_MoveTo( uint8_t x, uint8_t y );
+void SSD1306_DrawLine( uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, _Bool isSet );
+void SSD1306_DrawHLine( uint8_t x, _Bool isSet );
+void SSD1306_DrawRect( uint8_t x, uint8_t y, uint8_t width, uint8_t height, _Bool fill );
+void SSD1306_Circle( uint8_t cx, uint8_t cy, uint8_t radius, uint8_t attrs );
+void SSD1306_SetText( uint8_t x, uint8_t y, const char *tekst, const uint8_t * const font[],
+		_Bool invert );
+void SSD1306_DrawBitmap( uint8_t x, uint8_t y, const uint8_t image[], _Bool invert );
 
 #endif /*SSD1306_H_*/

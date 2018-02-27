@@ -53,18 +53,14 @@ ClrKeyb( int lock );
 unsigned int
 GetKeys( void );
 
-
 unsigned int
 KeysTime( void );
-
 
 unsigned int
 IsKeyPressed( unsigned int mask );
 
-
 unsigned int
 IsKey( unsigned int mask );
-
 
 void
 KeybLock( void );

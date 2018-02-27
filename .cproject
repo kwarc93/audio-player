@@ -47,28 +47,28 @@
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.1598205618" name="Float ABI" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi" useByScannerDiscovery="true" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.hard" valueType="enumerated"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.unit.328302616" name="FPU Type" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.unit" useByScannerDiscovery="true" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.unit.fpv4spd16" valueType="enumerated"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.570979070" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
-							<builder buildPath="${workspace_loc:/STM32L476-MP3}/Debug" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="ilg.gnuarmeclipse.managedbuild.cross.builder.595489357" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
+							<builder buildPath="${workspace_loc:/audio_player}/Debug" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="ilg.gnuarmeclipse.managedbuild.cross.builder.595489357" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
 							<tool command="${cross_prefix}${cross_c}${cross_suffix}" commandLinePattern="${COMMAND} ${cross_toolchain_flags} ${FLAGS} -c ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.29680531" name="GNU ARM Cross Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.450350338" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths.1535924383" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths" useByScannerDiscovery="true" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Device\ST\STM32L4xx\Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Application}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/external}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/stm32}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FatFs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FLACDecoder/FLAC}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FreeRTOS}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/GUI}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/MP3Decoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Utils}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Application}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/external}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/stm32}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FatFs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FLACDecoder/FLAC}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FreeRTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/GUI}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/MP3Decoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs.249790352" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs" useByScannerDiscovery="true" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="ARM"/>
@@ -84,22 +84,22 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.845629453" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="true" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Device\ST\STM32L4xx\Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Application}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/external}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/stm32}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FatFs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FLACDecoder/FLAC}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FreeRTOS}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/GUI}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/MP3Decoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Utils}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Application}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/external}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/stm32}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FatFs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FLACDecoder/FLAC}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FreeRTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/GUI}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/MP3Decoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1472422875" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="true" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32L476xx"/>
@@ -115,22 +115,22 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.849129411" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="true" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Device\ST\STM32L4xx\Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Application}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/external}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/stm32}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FatFs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FLACDecoder/FLAC}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FreeRTOS}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/GUI}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/MP3Decoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Utils}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Application}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/external}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/stm32}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FatFs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FLACDecoder/FLAC}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FreeRTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/GUI}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/MP3Decoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs.1576354825" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs" useByScannerDiscovery="true" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="ARM"/>
@@ -249,29 +249,29 @@
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.unit.199182002" name="FPU Type" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.unit" useByScannerDiscovery="true" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.unit.fpv4spd16" valueType="enumerated"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.nomoveloopinvariants.161927267" name="Disable loop invariant move (-fno-move-loop-invariants)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.nomoveloopinvariants" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.1849661355" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
-							<builder buildPath="${workspace_loc:/STM32L476-MP3}/Release" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="ilg.gnuarmeclipse.managedbuild.cross.builder.686958203" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
+							<builder buildPath="${workspace_loc:/audio_player}/Release" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="ilg.gnuarmeclipse.managedbuild.cross.builder.686958203" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
 							<tool errorParsers="org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.706783619" name="GNU ARM Cross Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.1928547557" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths.1346379093" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths" useByScannerDiscovery="true" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Device\ST\STM32L4xx\Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Application}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/external}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/stm32}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FatFs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FLACDecoder/FLAC}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FreeRTOS}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/GUI}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/MP3Decoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Utils}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/MP3Decoder/real}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Application}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/external}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/stm32}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FatFs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FLACDecoder/FLAC}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FreeRTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/GUI}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/MP3Decoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/MP3Decoder/real}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs.295836170" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs" useByScannerDiscovery="true" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="ARM"/>
@@ -287,23 +287,23 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.232016805" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="true" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Device\ST\STM32L4xx\Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Application}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/external}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/stm32}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FatFs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FLACDecoder/FLAC}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FreeRTOS}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/GUI}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/MP3Decoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Utils}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/MP3Decoder/real}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Application}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/external}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/stm32}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FatFs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FLACDecoder/FLAC}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FreeRTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/GUI}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/MP3Decoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/MP3Decoder/real}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.2043258330" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="true" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32L476xx"/>
@@ -319,23 +319,23 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.1580789824" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="true" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Device\ST\STM32L4xx\Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Kwarc\STM32Cube\Repository\STM32Cube_FW_L4_V1.8.0\Drivers\CMSIS\Include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Application}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/external}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Drivers/stm32}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/AACDecoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FatFs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FLACDecoder/FLAC}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/FreeRTOS}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/GUI}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/MP3Decoder/pub}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Utils}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/MP3Decoder/real}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32L476-MP3/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Application}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/external}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Drivers/stm32}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/AACDecoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FatFs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FLACDecoder/FLAC}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/FreeRTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/GUI}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/MP3Decoder/pub}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Class/MSC/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/MP3Decoder/real}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/audio_player/Middlewares/STM32_USB_Host_Library/Core/Inc}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs.1006800766" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs" useByScannerDiscovery="true" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="ARM"/>
@@ -409,15 +409,15 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="STM32L476-MP3.ilg.gnuarmeclipse.managedbuild.cross.target.elf.912185886" name="Executable" projectType="ilg.gnuarmeclipse.managedbuild.cross.target.elf"/>
+		<project id="audio_player.ilg.gnuarmeclipse.managedbuild.cross.target.elf.912185886" name="Executable" projectType="ilg.gnuarmeclipse.managedbuild.cross.target.elf"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug">
-			<resource resourceType="PROJECT" workspacePath="/STM32L476-MP3"/>
+			<resource resourceType="PROJECT" workspacePath="/audio_player"/>
 		</configuration>
 		<configuration configurationName="Release">
-			<resource resourceType="PROJECT" workspacePath="/STM32L476-MP3"/>
+			<resource resourceType="PROJECT" workspacePath="/audio_player"/>
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>

@@ -8,8 +8,6 @@
 #ifndef UI_MENU_MANAGER_H_
 #define UI_MENU_MANAGER_H_
 
-
-void MenuManager_CreateMenu(void);
-
+void MenuManager_CreateMenu( void );
 
 #endif /* UI_MENU_MANAGER_H_ */

@@ -22,7 +22,7 @@ static char debug_buffer[USART_TX_CB_SIZE];
 static SemaphoreHandle_t shMutexUSART;
 #endif
 
-void Debug_Init(void)
+void Debug_Init( void )
 {
 	USART_Init();
 #ifdef USE_FREERTOS
@@ -32,32 +32,32 @@ void Debug_Init(void)
 #endif
 }
 
-void Debug_Simple(const char* msg)
+void Debug_Simple( const char* msg )
 {
-	USART_TxDMA((void*)msg, strlen(msg));
-	USART_TxDMA("\r\n", 2);
+	USART_TxDMA( (void*) msg, strlen( msg ) );
+	USART_TxDMA( "\r\n", 2 );
 }
 
-void Debug_Printf(const char* fmt, ...)
+void Debug_Printf( const char* fmt, ... )
 {
 	va_list args;
 #ifdef USE_FREERTOS
 	if(xSemaphoreTake(shMutexUSART, 10))
 	{
 #endif
-		enter_critical();
+	enter_critical();
 
-		va_start(args, fmt);
-		vsnprintf(debug_buffer, sizeof(debug_buffer), fmt, args);
-		va_end(args);
+	va_start( args, fmt );
+	vsnprintf( debug_buffer, sizeof(debug_buffer), fmt, args );
+	va_end( args );
 
-		exit_critical();
+	exit_critical();
 
-		USART_TxDMA(debug_buffer, strlen(debug_buffer));
-		USART_TxDMA("\r\n", 2);
+	USART_TxDMA( debug_buffer, strlen( debug_buffer ) );
+	USART_TxDMA( "\r\n", 2 );
 
 #ifdef USE_FREERTOS
-		xSemaphoreGive(shMutexUSART);
-	}
+	xSemaphoreGive(shMutexUSART);
+}
 #endif
 }

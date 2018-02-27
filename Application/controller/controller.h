@@ -8,7 +8,6 @@
 #ifndef CONTROLLER_H_
 #define CONTROLLER_H_
 
-
 #define CONTROLER_STACK_SIZE	TASK_STACK_BYTES(2 * 1024)
 
 enum user_action
@@ -30,7 +29,7 @@ enum menu_action
 };
 
 void Controller_StartTasks(unsigned portBASE_TYPE uxPriority);
-void Controller_SetUserAction(enum user_action action);
-void Controller_SetMenuAction(enum menu_action action, char* txt);
+void Controller_SetUserAction( enum user_action action );
+void Controller_SetMenuAction( enum menu_action action, char* txt );
 
 #endif /* CONTROLLER_H_ */

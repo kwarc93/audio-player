@@ -10,7 +10,6 @@
 //
 //***********************************************************************
 
-
 #include <keyboard/keyb.h>
 #include "gpio/gpio.h"
 
@@ -50,7 +49,7 @@ static unsigned int arTime;
 // ***********************************************************************
 
 // ***********************************************************************
-static unsigned char arIndex ;
+static unsigned char arIndex;
 // Wewnętrzna zmienna indeksująca tablicę z kolejnymi czasami autorepetycji
 // ***********************************************************************
 
@@ -61,25 +60,18 @@ static unsigned char keyblock;
 // zostaje zablokowana do momentu zwolnienia wszystkich klawiszy.   
 // ***********************************************************************
 
-
-
-
-
 // ***********************************************************************
 // Domyślna tablica z kolejnymi czasami autorepetycji. Ostatnia pozycja różna
 // od zera jest czasem autorepetycji nieskończonej. Ilość pozycji dowolna,
 // ostatnia pozycja musi być równa 0;
 static const unsigned short DefaultAutoRepeatTab[] =
 {
-   KEY_PERIOD_30MS,
-   KEY_PERIOD_1S,
-   KEY_PERIOD_100MS,
-   0
-};
+KEY_PERIOD_30MS,
+KEY_PERIOD_1S,
+KEY_PERIOD_100MS, 0 };
 
-static unsigned short 
-    * volatile _art = (unsigned short *)DefaultAutoRepeatTab,
-    * volatile art = (unsigned short *)DefaultAutoRepeatTab;
+static unsigned short * volatile _art = (unsigned short *) DefaultAutoRepeatTab, * volatile art =
+		(unsigned short *) DefaultAutoRepeatTab;
 
 // ***********************************************************************
 // Funkcja dostarczająca surowy stan klawiatury.
@@ -87,97 +79,90 @@ static unsigned short
 // będzie wywoływana z przerwania to funkcja GetKeybSample() musi
 // trwać jak najkrócej
 // ***********************************************************************
-static unsigned int inline
-GetKeybSample( void )
+static unsigned int inline GetKeybSample( void )
 {
-   return (KEY_PORT->IDR & KEY_MASK);
+	return (KEY_PORT->IDR & KEY_MASK);
 }
-
 
 // ***********************************************************************
 // Funkcja wywoływana z jakiegos przerwania w tym przypadku co 10ms
 // ***********************************************************************
-void
-KeybProc( void )
+void KeybProc( void )
 {
-   unsigned int realKeybSt;
+	unsigned int realKeybSt;
 
-   // Pobranie stanu klawiszy
-   realKeybSt = GetKeybSample();
-   
-   // Sprawdzenie czy stan sie zmienił
-   if( prevKeybSt != realKeybSt)
-   {
-      // Stan sie zmienił więc resetowanie klawiatury i wyjście z funkcji
-      ClrKeyb(KBD_NOLOCK);      
-      return;
-   }
+	// Pobranie stanu klawiszy
+	realKeybSt = GetKeybSample();
 
-   // Sprawdzenie czy brak naciśniętych klawiszy lub klawiatura zablokowana
-   if( !realKeybSt || keyblock)
-   {
-      // Ponowne sprawdzenie czy brak nacisniętych klawiszy
-      // Jeśli tak to odblokowanie klawiatury
-      if( !realKeybSt ) keyblock = 0;
-      return;
-   }
-      // Zwiekszenie licznika czasu klawiatury
-    keytime++;
-      // Zachowanie stanu klawiszy
-    keys = realKeybSt;
-      
-      // Obsługa autorepetycji
-      // Sprawdzenie czy licznik czsu klawiatury osiągnął czas następnej
-      // autorepetycji
-    if( keytime >= arTime)
-    {
-         // Zwiększenie licznika autorepetycji
-      keycnt++;
-         // Obliczenie kolejnego czasu autorepetycji
+	// Sprawdzenie czy stan sie zmienił
+	if( prevKeybSt != realKeybSt )
+	{
+		// Stan sie zmienił więc resetowanie klawiatury i wyjście z funkcji
+		ClrKeyb( KBD_NOLOCK );
+		return;
+	}
 
-      _art = art;
-      if( _art[ arIndex + 1 ]) arIndex++;
-      arTime += _art[ arIndex ];      
-    }
+	// Sprawdzenie czy brak naciśniętych klawiszy lub klawiatura zablokowana
+	if( !realKeybSt || keyblock )
+	{
+		// Ponowne sprawdzenie czy brak nacisniętych klawiszy
+		// Jeśli tak to odblokowanie klawiatury
+		if( !realKeybSt )
+			keyblock = 0;
+		return;
+	}
+	// Zwiekszenie licznika czasu klawiatury
+	keytime++;
+	// Zachowanie stanu klawiszy
+	keys = realKeybSt;
+
+	// Obsługa autorepetycji
+	// Sprawdzenie czy licznik czsu klawiatury osiągnął czas następnej
+	// autorepetycji
+	if( keytime >= arTime )
+	{
+		// Zwiększenie licznika autorepetycji
+		keycnt++;
+		// Obliczenie kolejnego czasu autorepetycji
+
+		_art = art;
+		if( _art[arIndex + 1] )
+			arIndex++;
+		arTime += _art[arIndex];
+	}
 }
-
-
 
 // ***********************************************************************
 // Funkcja zwraca stan klawiszy do programu jeśli licznik autorepetycji
 // rózny od zera
 // ***********************************************************************
-unsigned int
-GetKeys( void )
+unsigned int GetKeys( void )
 {
-   if( keycnt )
-   {
+	if( keycnt )
+	{
 //	   __asm volatile ("CPSID I");
-      keycnt--;        					// Jeśli funkcja KeybProc() będzie wywoływana
+		keycnt--;        					// Jeśli funkcja KeybProc() będzie wywoływana
 //      __asm volatile ("CPSIE I");   	// z przerwania to ta instrukcja musi być wykonana
-                       	   	   	    	// atomowo.
-      return keys;
-   }
-   return 0;
+		// atomowo.
+		return keys;
+	}
+	return 0;
 }
-
 
 // ***********************************************************************
 // Funkcja zwraca czas wciskania aktualnej kombinacji klawiszy
 // ***********************************************************************
-unsigned int
-KeysTime( void )
+unsigned int KeysTime( void )
 {
-    return keytime;
+	return keytime;
 }
 
 // ***********************************************************************
 // Funkcja zwraca stan klawiszy zgodnie z podana maską jako argument funkcji
 // ***********************************************************************
-unsigned int
-IsKeyPressed( unsigned int mask )
+unsigned int IsKeyPressed( unsigned int mask )
 {
-    return keys & mask;
+	return keys & mask;
 }
 
 // ***********************************************************************
@@ -185,16 +170,14 @@ IsKeyPressed( unsigned int mask )
 // argument funkcji, jest brany pod uwage licznik autorepetycji
 // Ale pobranie stanu klawiwszy nie zminiejsza licznika autorepetycji
 // ***********************************************************************
-unsigned int
-IsKey( unsigned int mask )
+unsigned int IsKey( unsigned int mask )
 {
-    if(keycnt)
-    {
-       return keys & mask ;
-    }
-    return 0;
+	if( keycnt )
+	{
+		return keys & mask;
+	}
+	return 0;
 }
-
 
 // ***********************************************************************
 // Funkcja resetuje stan klawiatury. Jako parametr należy podać stałą
@@ -203,56 +186,51 @@ IsKey( unsigned int mask )
 // ClrKeyb() musi być wykonana atomowo.
 // ***********************************************************************
 
-void
-ClrKeyb( int lock )
+void ClrKeyb( int lock )
 {
-    prevKeybSt = GetKeybSample();
-    keys = 0;
-    keytime = 0;
-    keycnt = 0;
-    arIndex = 0;
-    arTime = _art[0];
-    if( lock ) keyblock = 1;
+	prevKeybSt = GetKeybSample();
+	keys = 0;
+	keytime = 0;
+	keycnt = 0;
+	arIndex = 0;
+	arTime = _art[0];
+	if( lock )
+		keyblock = 1;
 }
-
 
 // ***********************************************************************
 // Funkcja blokuje klawiaturę. Odblokowanie następuje po zwolnieniu
 // wszystkich klawiszy.
 // ***********************************************************************
-void
-KeybLock( void )
+void KeybLock( void )
 {
-   keyblock = 1;
+	keyblock = 1;
 }
-
 
 // ***********************************************************************
 // Funkcja podmienia tablicę z międzyczasami autorepetycji. Nowa tablica
 // powinna być zgodna z wcześniej opisanym formatem
 // ***********************************************************************
-void
-KeybSetAutoRepeatTimes( unsigned short * AutoRepeatTab )
+void KeybSetAutoRepeatTimes( unsigned short * AutoRepeatTab )
 {
-    if( AutoRepeatTab == KBD_DEFAULT_ART )
-        art = (unsigned short *)DefaultAutoRepeatTab;
-    else
-        art = AutoRepeatTab;
+	if( AutoRepeatTab == KBD_DEFAULT_ART )
+		art = (unsigned short *) DefaultAutoRepeatTab;
+	else
+		art = AutoRepeatTab;
 }
 
 // ***********************************************************************
 // Funkcja inicjalizująca piny jako wejścia (ZALEŻNA OD SPRZĘTU!)
 // ***********************************************************************
-void
-KeybInit( void )
+void KeybInit( void )
 {
 	/* Enable GPIOA clocks */
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
 	__DSB();
 
-	GPIO_PinConfig(KEY_PORT,KEY_1,GPIO_IN_FLOATING);		// OK
-	GPIO_PinConfig(KEY_PORT,KEY_2,GPIO_IN_PULL_DOWN);		// LEFT
-	GPIO_PinConfig(KEY_PORT,KEY_3,GPIO_IN_PULL_DOWN);		// DOWN
-	GPIO_PinConfig(KEY_PORT,KEY_4,GPIO_IN_PULL_DOWN);		// RIGHT
-	GPIO_PinConfig(KEY_PORT,KEY_5,GPIO_IN_PULL_DOWN);		// UP
+	GPIO_PinConfig( KEY_PORT, KEY_1, GPIO_IN_FLOATING );		// OK
+	GPIO_PinConfig( KEY_PORT, KEY_2, GPIO_IN_PULL_DOWN );		// LEFT
+	GPIO_PinConfig( KEY_PORT, KEY_3, GPIO_IN_PULL_DOWN );		// DOWN
+	GPIO_PinConfig( KEY_PORT, KEY_4, GPIO_IN_PULL_DOWN );		// RIGHT
+	GPIO_PinConfig( KEY_PORT, KEY_5, GPIO_IN_PULL_DOWN );		// UP
 }

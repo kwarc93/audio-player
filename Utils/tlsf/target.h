@@ -12,5 +12,4 @@
 #define TLSF_RELEASE_LOCK(l)    xSemaphoreGive(l)
 #endif
 
-
 #endif
