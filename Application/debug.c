@@ -44,20 +44,21 @@ void Debug_Printf( const char* fmt, ... )
 #ifdef USE_FREERTOS
 	if(xSemaphoreTake(shMutexUSART, 10))
 	{
-#endif
+#else
 	enter_critical();
+#endif
 
 	va_start( args, fmt );
 	vsnprintf( debug_buffer, sizeof(debug_buffer), fmt, args );
 	va_end( args );
-
-	exit_critical();
 
 	USART_TxDMA( debug_buffer, strlen( debug_buffer ) );
 	USART_TxDMA( "\r\n", 2 );
 
 #ifdef USE_FREERTOS
 	xSemaphoreGive(shMutexUSART);
-}
+	}
+#else
+	exit_critical();
 #endif
 }

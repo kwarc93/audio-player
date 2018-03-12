@@ -47,8 +47,6 @@
 // The normal configuration is standalone, with all support
 // functions implemented locally.
 //
-// For this to be called, the project linker must be configured without
-// the startup sequence (-nostartfiles).
 // ----------------------------------------------------------------------------
 #include <stdint.h>
 #include <sys/types.h>
@@ -188,9 +186,6 @@ void Reset_Handler( void )
 
 	__initialize_hardware_early();
 
-	// Use Old Style DATA and BSS section initialisation,
-	// that will manage a single BSS sections.
-
 	// Copy the DATA segment from Flash to RAM (inlined).
 	__initialize_data( &__data_init_start, &__data_start, &__data_end );
 
@@ -215,8 +210,7 @@ void Reset_Handler( void )
 
 	// Should never reach this, _exit() should have already
 	// performed a reset.
-	for( ;; )
-		;
+	while(1);
 }
 
 // ----------------------------------------------------------------------------

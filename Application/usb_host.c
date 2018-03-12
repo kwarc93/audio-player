@@ -18,7 +18,7 @@
 // +--------------------------------------------------------------------------
 // | @ Defines
 // +--------------------------------------------------------------------------
-#define TEST_FATFS		1
+
 /* for FS and HS identification */
 #define HOST_HS 		0
 #define HOST_FS 		1
@@ -46,9 +46,8 @@ static struct context
 // | @ Private functions
 // +--------------------------------------------------------------------------
 static void USBH_UserProcess( USBH_HandleTypeDef *phost, uint8_t id );
-#if TEST_FATFS
 static _Bool FatFS_Test( void );
-#endif
+
 
 /* USB Host Background task */
 static void USB_HOST_Process( void )
@@ -112,26 +111,31 @@ static void USBH_TaskProcess( void )
 
 		case USB_HOST_DISCONNECT:
 			ctx.disk_ready = false;
-			DBG_SIMPLE( "USBH disconnection event" );
+			DBG_SIMPLE( "disconnection event" );
 			f_mount( 0, "", 0 );
 			LED_SetGreen( false );
 			break;
 
 		case USB_HOST_READY:
-			DBG_SIMPLE( "USBH host ready" );
+			DBG_SIMPLE( "host ready" );
 
 			if( f_mount( &ctx.fs, "", 1 ) == FR_OK )
 			{
-#if TEST_FATFS == 1
-				FatFS_Test();
-#endif
-				ctx.disk_ready = true;
-				LED_SetGreen( true );
+				if( FatFS_Test() )
+				{
+					DBG_SIMPLE( "storage ok" );
+					ctx.disk_ready = true;
+					LED_SetGreen( true );
+				}
+			}
+			else
+			{
+				DBG_SIMPLE( "storage failed" );
 			}
 			break;
 
 		case USB_HOST_START:
-			DBG_SIMPLE( "USBH connection event" );
+			DBG_SIMPLE( "connection event" );
 			break;
 
 		default:
@@ -150,7 +154,6 @@ static void vTaskUSB( void *pvParameters )
 	// Task's infinite loop
 	for( ;; )
 	{
-
 		USBH_TaskProcess();
 
 		// Delay 10ms
@@ -194,7 +197,6 @@ void OTG_FS_IRQHandler( void )
  * @}
  */
 
-#if TEST_FATFS == 1
 static _Bool FatFS_Test( void )
 {
 	FIL MyFile; /* File object */
@@ -278,4 +280,3 @@ static _Bool FatFS_Test( void )
 		}
 	}
 }
-#endif
