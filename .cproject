@@ -79,7 +79,7 @@
 									<listOptionValue builtIn="false" value="USE_STM32L476G_DISCO_REVC"/>
 									<listOptionValue builtIn="false" value="HAL_HCD_MODULE_ENABLED"/>
 									<listOptionValue builtIn="false" value="USE_FREERTOS=1"/>
-									<listOptionValue builtIn="false" value="TLSF_USE_LOCKS=1"/>
+									<listOptionValue builtIn="false" value="TLSF_USE_LOCKS=0"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.2072796612" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
@@ -113,6 +113,7 @@
 									<listOptionValue builtIn="false" value="USE_STM32L476G_DISCO_REVC"/>
 									<listOptionValue builtIn="false" value="HAL_HCD_MODULE_ENABLED"/>
 									<listOptionValue builtIn="false" value="USE_FREERTOS=1"/>
+									<listOptionValue builtIn="false" value="TLSF_USE_LOCKS=0"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.391788266" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 							</tool>
@@ -146,6 +147,7 @@
 									<listOptionValue builtIn="false" value="USE_STM32L476G_DISCO_REVC"/>
 									<listOptionValue builtIn="false" value="HAL_HCD_MODULE_ENABLED"/>
 									<listOptionValue builtIn="false" value="USE_FREERTOS=1"/>
+									<listOptionValue builtIn="false" value="TLSF_USE_LOCKS=0"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.1255064585" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input"/>
 							</tool>
@@ -289,7 +291,7 @@
 									<listOptionValue builtIn="false" value="USE_STM32L476G_DISCO_REVC"/>
 									<listOptionValue builtIn="false" value="HAL_HCD_MODULE_ENABLED"/>
 									<listOptionValue builtIn="false" value="USE_FREERTOS=1"/>
-									<listOptionValue builtIn="false" value="TLSF_USE_LOCKS=1"/>
+									<listOptionValue builtIn="false" value="TLSF_USE_LOCKS=0"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.238670726" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
@@ -324,6 +326,7 @@
 									<listOptionValue builtIn="false" value="USE_STM32L476G_DISCO_REVC"/>
 									<listOptionValue builtIn="false" value="HAL_HCD_MODULE_ENABLED"/>
 									<listOptionValue builtIn="false" value="USE_FREERTOS=1"/>
+									<listOptionValue builtIn="false" value="TLSF_USE_LOCKS=0"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.219611986" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 							</tool>
@@ -358,6 +361,7 @@
 									<listOptionValue builtIn="false" value="HAL_HCD_MODULE_ENABLED"/>
 									<listOptionValue builtIn="false" value="DEBUG=1"/>
 									<listOptionValue builtIn="false" value="USE_FREERTOS=1"/>
+									<listOptionValue builtIn="false" value="TLSF_USE_LOCKS=0"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.abiversion.591897449" name="ABI version" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.abiversion" useByScannerDiscovery="true" value="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.abiversion.default" valueType="enumerated"/>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.1316487618" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input"/>

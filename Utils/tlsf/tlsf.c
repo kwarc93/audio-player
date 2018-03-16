@@ -60,7 +60,7 @@
 #endif
 
 #ifndef TLSF_STATISTIC
-#define	TLSF_STATISTIC 	(0)
+#define	TLSF_STATISTIC 	(1)
 #endif
 
 #ifndef USE_MMAP
@@ -174,8 +174,8 @@
 # endif
 #endif
 
-typedef unsigned int u32_t; /* NOTE: Make sure that this type is 4 bytes long on your computer */
-typedef unsigned char u8_t; /* NOTE: Make sure that this type is 1 byte on your computer */
+typedef uint32_t u32_t; /* NOTE: Make sure that this type is 4 bytes long on your computer */
+typedef uint8_t  u8_t;  /* NOTE: Make sure that this type is 1 byte on your computer */
 
 typedef struct free_ptr_struct
 {
@@ -475,7 +475,7 @@ size_t init_memory_pool( size_t mem_pool_size, void *mem_pool )
 
 	tlsf->tlsf_signature = TLSF_SIGNATURE;
 
-	TLSF_CREATE_LOCK( &tlsf->lock );
+	TLSF_CREATE_LOCK( tlsf->lock );
 
 	ib = process_area( GET_NEXT_BLOCK( mem_pool, ROUNDUP_SIZE(sizeof(tlsf_t)) ),
 			ROUNDDOWN_SIZE( mem_pool_size - sizeof(tlsf_t) ) );

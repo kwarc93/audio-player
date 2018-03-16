@@ -41,7 +41,7 @@
 #define PLAYER_MAX_VOLUME		100
 #define PLAYER_MIN_VOLUME		0
 
-#define PLAYER_TIMER_PERIOD_MS		1000
+#define PLAYER_TIMER_PERIOD_MS	1000
 
 // +--------------------------------------------------------------------------
 // | @ Public variables
@@ -72,7 +72,7 @@ static struct player_context
 static void vTimerCallback( TimerHandle_t xTimer )
 {
 #if DEBUG_PLAYER_STATS
-	extern uint8_t appHeap[];
+	extern uint32_t appHeap[];
 	extern size_t get_used_size( void *mem_pool );
 
 	DBG_PRINTF( "CPU Load: %u%%", Get_CPU_Usage() );
