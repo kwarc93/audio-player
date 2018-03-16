@@ -60,7 +60,7 @@
 #endif
 
 #ifndef TLSF_STATISTIC
-#define	TLSF_STATISTIC 	(1)
+#define	TLSF_STATISTIC 	(0)
 #endif
 
 #ifndef USE_MMAP
@@ -451,13 +451,13 @@ size_t init_memory_pool( size_t mem_pool_size, void *mem_pool )
 	if( !mem_pool || !mem_pool_size || mem_pool_size < sizeof(tlsf_t) + BHDR_OVERHEAD * 8 )
 	{
 		ERROR_MSG("init_memory_pool (): memory_pool invalid\n");
-		return -1;
+		return 0;
 	}
 
 	if( ((unsigned long) mem_pool & PTR_MASK) )
 	{
 		ERROR_MSG("init_memory_pool (): mem_pool must be aligned to a word\n");
-		return -1;
+		return 0;
 	}
 	tlsf = (tlsf_t *) mem_pool;
 	/* Check if already initialised */

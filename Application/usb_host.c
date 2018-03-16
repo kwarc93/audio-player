@@ -204,7 +204,7 @@ static _Bool FatFS_Test( void )
 	uint32_t byteswritten, bytesread; /* File write/read counts */
 	uint8_t wtext[] = "This is STM32 working with FatFs"; /* File write buffer */
 	uint8_t rtext[64]; /* File read buffer */
-	const char* fname = "ROOT.INF"; /* File name */
+	const char* fname = "test.txt"; /* File name */
 
 	/* Create and Open a new text file object with write access */
 	if( f_open( &MyFile, fname, FA_CREATE_ALWAYS | FA_WRITE ) != FR_OK )

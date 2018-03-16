@@ -241,3 +241,11 @@ void Player_PlayPrev( void )
 {
 	/* Not implemented yet */
 }
+
+void Player_PlayPause( void )
+{
+	if( Player_GetState() == PLAYER_PAUSED )
+		Player_SendCommand( PLAYER_RESUME );
+	else if( Player_GetState() == PLAYER_PLAYING )
+		Player_SendCommand( PLAYER_PAUSE );
+}

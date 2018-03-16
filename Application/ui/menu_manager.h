@@ -9,5 +9,7 @@
 #define UI_MENU_MANAGER_H_
 
 void MenuManager_CreateMenu( void );
+_Bool MenuManager_IsOnMainWindow( void );
+void MenuManager_ShowMainWindow( void );
 
 #endif /* UI_MENU_MANAGER_H_ */

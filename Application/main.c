@@ -27,9 +27,9 @@
 /* Heap pool for FreeRTOS */
 uint8_t ucHeap[configTOTAL_HEAP_SIZE] AT_CCMRAM;
 
-/* Heap pool for application */
+/* Heap pool for application (bytes) */
 #define APP_HEAP_SIZE	(72 * 1024)
-uint8_t appHeap[APP_HEAP_SIZE];
+uint32_t appHeap[APP_HEAP_SIZE / sizeof(uint32_t)];
 
 static void prvConfigureClock( void );
 
@@ -37,10 +37,14 @@ int main( void )
 {
 	// Clock configuration
 	prvConfigureClock();
-	// Init application memory pool
-	init_memory_pool( APP_HEAP_SIZE, appHeap );
 	// Init debug module
 	Debug_Init();
+	// Init application memory pool
+	if(!init_memory_pool( APP_HEAP_SIZE, appHeap ))
+	{
+		DBG_PRINTF("TLSF INIT FAIL!");
+		while(1);
+	}
 
 	DBG_PRINTF( "-STM32L4 AUDIO PLAYER-" );
 	// Tasks startup
@@ -52,7 +56,6 @@ int main( void )
 	Player_StartTasks( mainFLASH_TASK_PRIORITY );
 	Display_StartTasks( mainFLASH_TASK_PRIORITY + 1 );
 	// Scheduler startup
-	DBG_PRINTF( "RTOS heap bytes left: %u", xPortGetFreeHeapSize() );
 	DBG_PRINTF( "Starting scheduler..." );
 	vTaskStartScheduler();
 }

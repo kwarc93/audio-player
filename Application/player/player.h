@@ -42,4 +42,6 @@ void Player_Mute( _Bool state );
 void Player_PlayNext( void );
 void Player_PlayPrev( void );
 
+void Player_PlayPause( void );
+
 #endif /* APP_PLAYER_H_ */

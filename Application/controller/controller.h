@@ -30,6 +30,6 @@ enum menu_action
 
 void Controller_StartTasks(unsigned portBASE_TYPE uxPriority);
 void Controller_SetUserAction( enum user_action action );
-void Controller_SetMenuAction( enum menu_action action, char* txt );
+void Controller_SetMenuAction( enum menu_action action );
 
 #endif /* CONTROLLER_H_ */

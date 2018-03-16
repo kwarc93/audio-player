@@ -45,7 +45,9 @@ static void vTaskDisplay( void * pvParameters )
 	SSD1306_CpyDirtyPages();
 
 	vTaskDelay( 1500 );
-	Menu_Show();
+
+	/* Create menu & how main view */
+	MenuManager_CreateMenu();
 
 	// Task's infinite loop
 	for( ;; )
@@ -71,8 +73,6 @@ void Display_StartTasks( unsigned portBASE_TYPE uxPriority )
 {
 	// Init hardware
 	SSD1306_Init();
-
-	MenuManager_CreateMenu();
 
 	// Create queue for display text
 	qhDisplayText = xQueueCreate( 1, sizeof(char*) );

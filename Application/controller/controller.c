@@ -18,6 +18,7 @@
 
 #include "player/player.h"
 #include "Menu/menu.h"
+#include "ui/menu_manager.h"
 
 #include <string.h>
 #include <stdbool.h>
@@ -52,28 +53,37 @@ static struct controller_context
 // +--------------------------------------------------------------------------
 static void press_ok_handle( void )
 {
-	Menu_Click();
+	if( MenuManager_IsOnMainWindow() )
+		Player_PlayPause();
+	else
+		Menu_Click();
 }
 
 static void press_up_handle( void )
 {
-	Menu_SelectPrev();
+	Player_VolumeUp();
 }
 
 static void press_down_handle( void )
 {
-	Menu_SelectNext();
+	Player_VolumeDown();
 }
 
 static void press_left_handle( void )
 {
-	Player_VolumeDown();
+	if( MenuManager_IsOnMainWindow() )
+		// Player_SendCommand( PLAYER_PREV ); // Not implemented yet
+		Menu_Click();
+	else
+		Menu_SelectPrev();
 }
 
 static void press_right_handle( void )
 {
-	Player_VolumeUp();
-	Player_PlayNext();
+	if( MenuManager_IsOnMainWindow() )
+		Player_SendCommand( PLAYER_NEXT );
+	else
+		Menu_SelectNext();
 }
 
 static void TaskProcess( void )
@@ -109,7 +119,9 @@ static void TaskProcess( void )
 		// Menu actions
 		case SELECT_THIS:
 		{
+			Player_SetSongName( Menu_GetCurrentMenuItem()->text );
 			Player_SendCommand( PLAYER_PLAY );
+			MenuManager_ShowMainWindow();
 			break;
 		}
 		case SELECT_PREV:
@@ -163,10 +175,8 @@ void Controller_SetUserAction( enum user_action action )
 	}
 }
 
-void Controller_SetMenuAction( enum menu_action action, char* txt )
+void Controller_SetMenuAction( enum menu_action action )
 {
-	Player_SetSongName( txt );
-
 	if( !xQueueSend( controller.menu_queue, (void* )&action, 0 ) )
 	{
 		// Error!

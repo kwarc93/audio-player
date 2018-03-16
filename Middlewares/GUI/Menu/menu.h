@@ -17,7 +17,7 @@ struct _menuitem
 	const struct _menuitem* next;		// Next item
 };
 
-struct _menuitem *Menu_GetCurrentMenuItem(void);
+const struct _menuitem *Menu_GetCurrentMenuItem(void);
 void Menu_SetCurrentMenuItem(struct _menuitem* menu_item);
 
 void Menu_Init(struct _menuitem* main_menu);

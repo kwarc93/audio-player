@@ -216,9 +216,9 @@ void Menu_Click()
   Menu_Show();
 }
 
-struct _menuitem *Menu_GetCurrentMenuItem(void)
+const struct _menuitem *Menu_GetCurrentMenuItem(void)
 {
-  return (struct _menuitem *)Menu_GetMenuItem(menuindex);
+  return Menu_GetMenuItem(menuindex);
 }
 
 void Menu_SetCurrentMenuItem(struct _menuitem* menu_item)
