@@ -313,8 +313,7 @@ void I2S_TransferCompleteCallback( void )
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-	decoder.buffers.out_ptr =
-			&decoder.buffers.out[decoder.buffers.out_size / (sizeof(int16_t) * 2)];
+	decoder.buffers.out_ptr = &decoder.buffers.out[decoder.buffers.out_size / (sizeof(int16_t) * 2)];
 	xSemaphoreGiveFromISR( decoder.shI2SEvent, &xHigherPriorityTaskWoken );
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 }

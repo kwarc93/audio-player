@@ -168,6 +168,65 @@ _Bool FB_DeleteItemsList( struct fb_item** list, uint8_t list_size )
 
 	return true;
 }
+
+
+_Bool FB_FindFirstItem( const char* path, const char* pattern, char* item_found )
+{
+	_Bool result;
+	FRESULT fr;
+	DIR dj;
+	FILINFO fno;
+
+	/* Start to search for pattern in filenames */
+	fr = f_findfirst( &dj, &fno, path, pattern );
+
+	if( fr == FR_OK && fno.fname[0] )
+	{
+		strcpy(item_found, fno.fname);
+		result = true;
+	}
+	else
+	{
+		result = false;
+	}
+
+	f_closedir( &dj );
+
+	return result;
+}
+
+_Bool FB_FindNextItem( const char* path, const char* filename, char* item_found )
+{
+	FRESULT fr;
+	DIR dj;
+	FILINFO fno;
+	_Bool result = false;
+
+	/* Start to search for filename in filenames */
+	fr = f_findfirst( &dj, &fno, path, filename );
+
+	if( fr == FR_OK && fno.fname[0] )
+	{
+		/* Replace pattern to match only original file extension */
+		char pattern[16] = "*.";
+		dj.pat = strcat(pattern, FB_GetFileExtension(fno.fname));
+
+		fr = f_findnext(&dj, &fno);
+		if( fr == FR_OK && fno.fname[0] )
+		{
+			strcpy(item_found, fno.fname);
+			result = true;
+		}
+	}
+	else
+	{
+		result = false;
+	}
+
+	f_closedir( &dj );
+
+	return result;
+}
 // +--------------------------------------------------------------------------
 // | @ Interrupt handlers
 // +--------------------------------------------------------------------------

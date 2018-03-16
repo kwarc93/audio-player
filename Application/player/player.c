@@ -19,6 +19,7 @@
 #include "usb_host.h"
 #include "ui/display.h"
 #include "decoder/decoder.h"
+#include "filebrowser/file_browser.h"
 #include "cpu_utils.h"
 #include "misc.h"
 
@@ -82,6 +83,11 @@ static void vTimerCallback( TimerHandle_t xTimer )
 
 static void TaskProcess( void )
 {
+	if( player.decoder.is_working() == false && player.state == PLAYER_PLAYING )
+	{
+		Player_SendCommand( PLAYER_STOP );
+	}
+
 	if( xQueueReceive( player.queue, &player.command, 0 ) )
 	{
 		switch( player.command )
@@ -115,8 +121,16 @@ static void TaskProcess( void )
 			CS43L22_Stop( CS43L22_I2C_ADDRESS, CODEC_PDWN_SW );
 			player.decoder.stop();
 			player.state = PLAYER_STOPPED;
+			// Autoplay feature
+			Player_PlayNext();
 			break;
 		case PLAYER_NEXT:
+		{
+			if(FB_FindNextItem(FB_GetCurrentPath(), player.song_name, player.song_name))
+			{
+				Player_SendCommand( PLAYER_PLAY );
+			}
+		}
 			break;
 		case PLAYER_PREV:
 			break;
@@ -220,12 +234,10 @@ void Player_SetSongName( char* name )
 }
 void Player_PlayNext( void )
 {
-	Player_SendCommand( PLAYER_STOP );
-	Player_SendCommand( PLAYER_PLAY );
+	Player_SendCommand( PLAYER_NEXT );
 }
 
 void Player_PlayPrev( void )
 {
-	Player_SendCommand( PLAYER_STOP );
-	Player_SendCommand( PLAYER_PLAY );
+	/* Not implemented yet */
 }

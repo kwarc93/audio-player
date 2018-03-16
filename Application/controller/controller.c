@@ -73,6 +73,7 @@ static void press_left_handle( void )
 static void press_right_handle( void )
 {
 	Player_VolumeUp();
+	Player_PlayNext();
 }
 
 static void TaskProcess( void )
@@ -108,7 +109,6 @@ static void TaskProcess( void )
 		// Menu actions
 		case SELECT_THIS:
 		{
-			Player_SendCommand( PLAYER_STOP );
 			Player_SendCommand( PLAYER_PLAY );
 			break;
 		}
