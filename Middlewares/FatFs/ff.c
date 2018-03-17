@@ -728,7 +728,7 @@ int lock_fs (		/* 1:Ok, 0:timeout */
 	FATFS* fs		/* Filesystem object */
 )
 {
-	return ff_req_grant(&fs->sobj);
+	return ff_req_grant(fs->sobj);
 }
 
 
@@ -739,7 +739,7 @@ void unlock_fs (
 )
 {
 	if (fs && res != FR_NOT_ENABLED && res != FR_INVALID_DRIVE && res != FR_TIMEOUT) {
-		ff_rel_grant(&fs->sobj);
+		ff_rel_grant(fs->sobj);
 	}
 }
 
@@ -3328,7 +3328,7 @@ FRESULT f_mount (
 		clear_lock(cfs);
 #endif
 #if FF_FS_REENTRANT						/* Discard sync object of the current volume */
-		if (!ff_del_syncobj(&cfs->sobj)) return FR_INT_ERR;
+		if (!ff_del_syncobj(cfs->sobj)) return FR_INT_ERR;
 #endif
 		cfs->fs_type = 0;				/* Clear old fs object */
 	}

@@ -68,11 +68,11 @@ int ff_cre_syncobj (	/* 1:Function succeeded, 0:Could not create the sync object
  */
 
 int ff_del_syncobj (	/* 1:Function succeeded, 0:Could not delete due to an error */
-		FF_SYNC_t *sobj		/* Sync object tied to the logical drive to be deleted */
+		FF_SYNC_t sobj		/* Sync object tied to the logical drive to be deleted */
 )
 {
 	/* FreeRTOS */
-	vSemaphoreDelete(*sobj);
+	vSemaphoreDelete(sobj);
 	return 1;
 }
 
@@ -85,11 +85,11 @@ int ff_del_syncobj (	/* 1:Function succeeded, 0:Could not delete due to an error
  */
 
 int ff_req_grant (	/* 1:Got a grant to access the volume, 0:Could not get a grant */
-		FF_SYNC_t *sobj	/* Sync object to wait */
+		FF_SYNC_t sobj	/* Sync object to wait */
 )
 {
 	/* FreeRTOS */
-	return (int)(xSemaphoreTake(*sobj, FF_FS_TIMEOUT) == pdTRUE);
+	return (int)(xSemaphoreTake(sobj, FF_FS_TIMEOUT) == pdTRUE);
 }
 
 
@@ -100,11 +100,11 @@ int ff_req_grant (	/* 1:Got a grant to access the volume, 0:Could not get a gran
  */
 
 void ff_rel_grant (
-		FF_SYNC_t *sobj	/* Sync object to be signaled */
+		FF_SYNC_t sobj	/* Sync object to be signaled */
 )
 {
 	/* FreeRTOS */
-	xSemaphoreGive(*sobj);
+	xSemaphoreGive(sobj);
 }
 
 #endif
