@@ -8,13 +8,14 @@
 // +--------------------------------------------------------------------------
 // | @ Includes
 // +--------------------------------------------------------------------------
-#include "FatFs/ff.h"
-#include "file_browser.h"
-
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+
+#include "FatFs/ff.h"
+#include "file_browser.h"
 
 #include "debug.h"
 // +--------------------------------------------------------------------------
