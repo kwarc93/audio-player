@@ -198,13 +198,17 @@ void Reset_Handler( void )
 
 	// Call the standard library initialisation (mandatory for C++ to
 	// execute the constructors for the static objects).
+#ifdef __cplusplus
 	__libc_init_array();
+#endif
 
 	// Call the main entry point, and save the exit code.
 	int code = main();
 
 	// Run the C++ static destructors.
+#ifdef __cplusplus
 	__libc_fini_array();
+#endif
 
 	_exit( code );
 

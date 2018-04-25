@@ -93,6 +93,9 @@ static void prvConfigureClock( void )
 	FLASH->ACR |= FLASH_ACR_PRFTEN;
 #endif
 
+// Enable flash data & instruction cache
+	FLASH->ACR |= FLASH_ACR_DCEN | FLASH_ACR_ICEN;
+
 // To correctly read data from FLASH memory , the number of wait states (LATECY)
 // must bue correctly programmed according to the frequency of the CPU clock (HCLK)
 // and the supply voltage of the device.

@@ -11,7 +11,7 @@
 #include "stm32l476xx.h"
 
 #define USE_HSI_CLOCK
-#define USE_ART_ACCELERATOR		(0)
+#define USE_ART_ACCELERATOR		(1)
 
 #define mainFLASH_TASK_PRIORITY ( tskIDLE_PRIORITY + 1 )
 #define TASK_STACK_BYTES(bytes)	(((bytes) < configMINIMAL_STACK_SIZE * 4) ? configMINIMAL_STACK_SIZE : ((bytes) / 4))
