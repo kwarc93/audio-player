@@ -193,6 +193,17 @@ static void prvConfigureClock( void )
 #error Wrong system clock selection!
 #endif
 
+// Enable DWT counter
+
+// Set TRCENA
+	CoreDebug->DEMCR |=  CoreDebug_DEMCR_TRCENA_Msk;
+
+// Set counter to 0
+	DWT->CYCCNT = 0;
+
+// Enable DWT in control register
+	DWT->CTRL |=  DWT_CTRL_CYCCNTENA_Msk;
+
 }
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )

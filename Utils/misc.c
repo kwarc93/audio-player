@@ -14,39 +14,24 @@
 
 #include <stdbool.h>
 
-#define DELAY_US_ASM(us) do {\
-		asm volatile (	"MOV R0,%[loops]\n\t"\
-						"1: \n\t"\
-						"SUB R0, #1\n\t"\
-						"CMP R0, #0\n\t"\
-						"BNE 1b \n\t" : : [loops] "r" (16*us) : "memory"\
-					 );\
-} while(0)
-
-#if 0
-#pragma GCC push_options
-#pragma GCC optimize ("O3")
-static inline void delayUS_DWT(uint32_t us)
+static inline void DELAY_US_DWT(uint32_t us)
 {
-	volatile uint32_t cycles = (CPU_CLOCK/1000000L)*us;
-	volatile uint32_t start = DWT->CYCCNT;
-	do
-	{
-	}while(DWT->CYCCNT - start < cycles);
+	const uint32_t cycles = (CPU_CLOCK/1000000L)*us;
+	const uint32_t start = DWT->CYCCNT;
+
+	while(DWT->CYCCNT - start <= cycles);
 }
-#pragma GCC pop_options
-#endif
 
 static uint32_t primask;
 
 void delay_us( uint32_t t )
 {
-	DELAY_US_ASM( t );
+	DELAY_US_DWT( t );
 }
 
 void delay_ms( uint32_t t )
 {
-	DELAY_US_ASM( t*1000UL );
+	DELAY_US_DWT( t*1000UL );
 }
 
 _Bool is_in_handler_mode( void )
